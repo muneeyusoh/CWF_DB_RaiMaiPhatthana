@@ -167,6 +167,7 @@
     <div class="alert alert-info border-0 mb-4" style="background-color: #EFF6FF; border-radius: 16px;">
       <p class="fw-bold text-primary mb-2" style="font-size: 0.95rem;">อย่าลืมเพิ่มเพื่อน LINE กองทุนฯ</p>
       <p class="small text-muted mb-3">เพื่อรับข่าวสารและแจ้งเตือนสถานะการอนุมัติ</p>
+      <!-- 🟢 ปุ่มเพิ่มเพื่อน LINE OA ตามที่คุณมุนีระบุ -->
       <a href="https://lin.ee/vS4t8bq"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/th.png" alt="เพิ่มเพื่อน" height="36" border="0"></a>
     </div>
     
@@ -503,7 +504,7 @@
     }
   }
 
-  // 🎁 ภารกิจเช็คอิน (วันละ 1 ครั้ง)
+  // 🎁 ภารกิจเช็คอิน (✅ เช็คอินได้วันละ 1 ครั้ง เท่านั้น!)
   async function dailyCheckIn() {
     Swal.fire({ title: 'กำลังตรวจสอบสิทธิ์...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
     try {
@@ -514,16 +515,18 @@
       if (docSnap.exists) {
           const userData = docSnap.data();
           const lastCheckIn = userData.lastCheckInDate;
-          const today = new Date().toLocaleDateString('th-TH');
+          const today = new Date().toLocaleDateString('th-TH'); // วันที่ปัจจุบัน
 
           if (lastCheckIn === today) {
+              // 🔴 ถ้าวันที่ตรงกับวันนี้ = ห้ามบวกคะแนนเพิ่ม
               Swal.fire({ icon: 'info', title: 'เช็คอินแล้ว', text: 'คุณได้รับคะแนนของวันนี้ไปแล้ว กลับมาเช็คอินใหม่พรุ่งนี้นะครับ' });
           } else {
+              // 🟢 ถ้ายังไม่เคยเช็คอินในวันนี้ = บวกคะแนนได้
               Swal.fire({ title: 'กำลังบันทึกคะแนน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
               
               await docRef.update({
                   cwfPoints: firebase.firestore.FieldValue.increment(10),
-                  lastCheckInDate: today 
+                  lastCheckInDate: today // บันทึกว่าวันนี้เช็คอินไปแล้ว
               });
               
               const updatedSnap = await docRef.get();
@@ -540,7 +543,7 @@
     }
   }
 
-  // 🔗 แชร์ข่าวสารและชวนเพื่อน (แชร์ข้ามแอป)
+  // 🔗 แชร์ข่าวสารและชวนเพื่อน (✅ แชร์ไปแอปอื่นๆ ได้)
   async function shareNewsMission() {
     const shareTitle = 'ข่าวสารกองทุนสวัสดิการชุมชน';
     const shareText = `มาร่วมสร้างความมั่นคงและคุณภาพชีวิตที่ดี กับกองทุนสวัสดิการชุมชน${CWF_CONFIG.FUND_NAME} สมัครสมาชิกได้ที่นี่เลย!`;
