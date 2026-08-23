@@ -21,8 +21,8 @@
     body { background-color: var(--bg-color); font-family: 'Prompt', sans-serif; color: var(--text-main); padding-top: 64px; padding-bottom: calc(var(--bottom-nav-height) + 20px); }
     
     .app-header { background: var(--primary-dark); color: white; position: fixed; top: 0; left: 0; width: 100%; height: 64px; z-index: 1030; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-height); background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1030; border-top: 1px solid var(--border-color); }
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #64748B; font-size: 0.7rem; font-weight: 600; background: none; border: none; padding: 5px 0; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-height); background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1030; border-top: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; }
+    .nav-item { flex: 1; display: inline-flex; flex-direction: column; align-items: center; color: #64748B; font-size: 0.65rem; font-weight: 600; background: none; border: none; padding: 5px 10px; min-width: 60px;}
     .nav-item.active { color: var(--primary-main); }
     .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
     .nav-item.active i { font-size: 1.3rem; }
@@ -30,6 +30,12 @@
     .ledger-card-total { background: linear-gradient(135deg, #0F172A 0%, #1e3a8a 100%); border-radius: 1.5rem; padding: 1.5rem; color: white; margin-bottom: 16px; }
     .data-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-color); }
     
+    .tx-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; background: #f1f5f9; color: #64748b; }
+    
+    /* ➕ Floating Action Button (FAB) */
+    .fab-btn { position: fixed; bottom: calc(var(--bottom-nav-height) + 20px); right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary-main); color: white; border: none; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4); font-size: 1.5rem; display: flex; justify-content: center; align-items: center; z-index: 1020; transition: transform 0.2s; }
+    .fab-btn:active { transform: scale(0.9); }
+
     #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(5px); color: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
     #loginGate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-dark); color: white; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -44,12 +50,12 @@
 <!-- ⏳ Loader -->
 <div id="loader"><div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;"></div><h5 class="fw-bold" id="loaderText">กำลังตรวจสอบระบบ...</h5></div>
 
-<!-- 🔐 Security Gate (Login) -->
+<!-- 🔐 Security Gate (Login) - มีแค่อีเมลและรหัสผ่านเท่านั้น -->
 <div id="loginGate" style="display: none;">
   <div class="login-box">
     <i class="fa-solid fa-fingerprint fa-3x text-success mb-3"></i>
     <h5 class="fw-bold">CWF Executive Login</h5>
-    <p class="text-white-50 small mb-4">กรุณายืนยันสิทธิ์ผู้ดูแลระบบ</p>
+    <p class="text-white-50 small mb-4">เข้าสู่ระบบสำหรับผู้ดูแลเท่านั้น</p>
     
     <div id="manualLoginSection">
       <input type="email" id="adminEmail" class="form-control-custom" placeholder="อีเมลแอดมิน">
@@ -71,8 +77,10 @@
 <nav class="bottom-nav" id="bottomNav" style="display: none;">
   <button class="nav-item active" onclick="switchTab('view-overview', this); loadDashboardOverview();"><i class="fa-solid fa-chart-pie"></i> ภาพรวม</button>
   <button class="nav-item" onclick="switchTab('view-members', this); loadMembersData();"><i class="fa-solid fa-users"></i> สมาชิก</button>
-  <button class="nav-item" onclick="switchTab('view-transactions', this); loadTransactions();"><i class="fa-solid fa-wallet"></i> รอรับเงิน</button>
+  <button class="nav-item" onclick="switchTab('view-transactions', this); loadTransactions();"><i class="fa-solid fa-wallet"></i> รอรับ</button>
   <button class="nav-item" onclick="switchTab('view-claims', this); loadClaims();"><i class="fa-solid fa-hand-holding-medical"></i> รอจ่าย</button>
+  <!-- แท็บผู้ดูแลระบบใหม่ -->
+  <button class="nav-item" onclick="switchTab('view-admins', this); loadAdminsData();"><i class="fa-solid fa-user-shield"></i> ตั้งค่า</button>
   <button class="nav-item text-danger" onclick="logoutAdmin();"><i class="fa-solid fa-power-off"></i> ออก</button>
 </nav>
 
@@ -117,6 +125,20 @@
     <div id="list-claims">กำลังโหลด...</div>
   </div>
 
+  <!-- 🛡️ 5. ตั้งค่าผู้ดูแลระบบ (เฉพาะ Admin-Master) -->
+  <div class="tab-pane d-none" id="view-admins">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0 text-dark">บัญชีผู้ดูแลระบบ</h5>
+    </div>
+    <div class="alert alert-info small rounded-4 border-0 mb-3">
+      <i class="fa-solid fa-circle-info me-1"></i> เฉพาะ <b>Admin-Master</b> เท่านั้นที่สามารถเพิ่มหรือระงับสิทธิ์แอดมินท่านอื่นได้
+    </div>
+    <div id="list-admins">กำลังโหลด...</div>
+    
+    <!-- ปุ่มเพิ่มแอดมินจะถูกซ่อน/แสดง อัตโนมัติด้วย Javascript -->
+    <button class="fab-btn" id="btnAddAdmin" onclick="openAddAdminModal()" style="display: none;"><i class="fa-solid fa-user-plus"></i></button>
+  </div>
+
 </div>
 
 <script>
@@ -133,6 +155,9 @@
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // ตัวแปรเก็บข้อมูล Admin ปัจจุบันที่ล็อกอินอยู่
+  let currentAdminData = null;
+
   document.addEventListener("DOMContentLoaded", async () => { 
     // ตรวจสอบและสร้าง Admin อัตโนมัติ (ถ้ายังไม่มี)
     await initializeDefaultAdmin();
@@ -140,7 +165,7 @@
     document.getElementById('loginGate').style.display = 'flex';
   });
 
-  // 🌟 1. ฟังก์ชันสร้าง Master Admin เริ่มต้น (รวดเร็ว)
+  // 🌟 1. ฟังก์ชันสร้าง Master Admin เริ่มต้น (อัตโนมัติ)
   async function initializeDefaultAdmin() {
       try {
           const defaultEmail = "mr.munee@gmail.com";
@@ -156,7 +181,8 @@
                   name: "มุนี ยูโซ๊ะ",
                   role: "Admin-Master",
                   center: "ALL",
-                  status: "ใช้งาน"
+                  status: "ใช้งาน",
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
               });
               console.log("สร้าง Master Admin เรียบร้อย");
           }
@@ -165,12 +191,12 @@
       }
   }
 
-  // 🌟 2. ฟังก์ชันจัดการ Login (เช็คจาก Firestore โดยตรง)
+  // 🌟 2. ฟังก์ชันจัดการ Login (เช็คจาก Firestore 100%)
   async function handleManualLogin() {
       const emailInput = document.getElementById('adminEmail').value.trim();
       const passInput = document.getElementById('adminPass').value.trim();
       
-      if(!emailInput || !passInput) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'warning');
+      if(!emailInput || !passInput) return Swal.fire('แจ้งเตือน', 'กรุณากรอกอีเมลและรหัสผ่าน', 'warning');
 
       document.getElementById('loaderText').innerText = "กำลังตรวจสอบสิทธิ์...";
       document.getElementById('loader').style.display = 'flex';
@@ -197,7 +223,14 @@
 
   // 🌟 3. ให้สิทธิ์เข้าถึงแดชบอร์ด
   function grantAccess(adminData) {
+      currentAdminData = adminData;
       document.getElementById('adminNameDisplay').innerText = `${adminData.name} [${adminData.role}]`;
+      
+      // แสดงปุ่มเพิ่มแอดมิน เฉพาะคนที่เป็น Admin-Master เท่านั้น
+      if(currentAdminData.role === 'Admin-Master') {
+          document.getElementById('btnAddAdmin').style.display = 'flex';
+      }
+
       document.getElementById('loginGate').style.display = 'none';
       document.getElementById('appHeader').style.display = 'flex';
       document.getElementById('bottomNav').style.display = 'flex';
@@ -214,9 +247,7 @@
           confirmButtonColor: '#EF4444',
           confirmButtonText: 'ออกจากระบบ'
       }).then((result) => {
-          if (result.isConfirmed) {
-              location.reload(); 
-          }
+          if (result.isConfirmed) { location.reload(); }
       });
   }
 
@@ -257,7 +288,7 @@
     document.getElementById('loader').style.display = 'none';
   }
 
-  // 🚀 5. โหลดรายชื่อสมาชิก
+  // 🚀 โหลดรายชื่อสมาชิก
   async function loadMembersData() {
     document.getElementById('list-members').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-primary spinner-border-sm"></div></div>';
     try {
@@ -274,7 +305,7 @@
     } catch(e) { document.getElementById('list-members').innerHTML = "เกิดข้อผิดพลาดในการโหลด"; }
   }
 
-  // 🚀 6. โหลดรายการรออนุมัติรับเงิน
+  // 🚀 โหลดรายการรอรับเงิน
   async function loadTransactions() {
     document.getElementById('list-transactions').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-success spinner-border-sm"></div></div>';
     try {
@@ -290,11 +321,11 @@
           </div>
         </div></div>`;
       });
-      document.getElementById('list-transactions').innerHTML = html || "<p class='text-center text-muted'>ไม่มีรายการค้างตรวจสอบ</p>";
+      document.getElementById('list-transactions').innerHTML = html || "<p class='text-center text-muted'>ไม่มีรายการค้าง</p>";
     } catch(e) { document.getElementById('list-transactions').innerHTML = "เกิดข้อผิดพลาดในการโหลด"; }
   }
 
-  // 🚀 7. โหลดรายการคำขอเบิกสวัสดิการ
+  // 🚀 โหลดรายการขอเบิกสวัสดิการ
   async function loadClaims() {
     document.getElementById('list-claims').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-danger spinner-border-sm"></div></div>';
     try {
@@ -314,7 +345,113 @@
     } catch(e) { document.getElementById('list-claims').innerHTML = "เกิดข้อผิดพลาดในการโหลด"; }
   }
 
-  // 🔴 8. ฟังก์ชันอนุมัติธุรกรรม
+  // 🚀 โหลดรายชื่อผู้ดูแลระบบ (Admins)
+  async function loadAdminsData() {
+    document.getElementById('list-admins').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-info spinner-border-sm"></div></div>';
+    try {
+      const snap = await db.collection("admins").get();
+      let html = "";
+      snap.forEach(doc => {
+        const d = doc.data();
+        const badgeColor = d.status === 'ใช้งาน' ? 'bg-success' : 'bg-danger';
+        
+        // ถ้าเป็น Admin-Master จะมีปุ่มให้กดระงับ/ใช้งานได้
+        let toggleStatusBtn = "";
+        if (currentAdminData.role === 'Admin-Master' && doc.id !== currentAdminData.email) {
+            toggleStatusBtn = `<button onclick="toggleAdminStatus('${doc.id}', '${d.status}')" class="btn btn-sm btn-outline-secondary mt-1" style="font-size:0.7rem;">สลับสถานะ</button>`;
+        }
+
+        html += `
+        <div class="data-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center" style="width:40px;height:40px;"><i class="fa-solid fa-user-shield"></i></div>
+              <div>
+                <h6 class="fw-bold text-dark mb-0" style="font-size:0.9rem;">${d.name}</h6>
+                <small class="text-muted d-block" style="font-size:0.75rem;">${d.email}</small>
+                <small class="text-primary fw-bold d-block" style="font-size:0.75rem;">${d.role}</small>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge ${badgeColor} rounded-pill">${d.status}</span><br>
+              ${toggleStatusBtn}
+            </div>
+          </div>
+        </div>`;
+      });
+      document.getElementById('list-admins').innerHTML = html;
+    } catch(e) { document.getElementById('list-admins').innerHTML = "เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ดูแลระบบ"; }
+  }
+
+  // ➕ ฟังก์ชันเพิ่มผู้ดูแลระบบคนใหม่ (สำหรับ Admin-Master)
+  async function openAddAdminModal() {
+      const centersHtml = `<option value="ALL">ทั้งหมด (การเงิน/ส่วนกลาง)</option>
+                           <option value="ศูนย์ชุมชนปารีย์">ศูนย์ชุมชนปารีย์</option>
+                           <option value="ศูนย์ชุมชนมาโมง">ศูนย์ชุมชนมาโมง</option>`; // สามารถเพิ่มศูนย์ที่รับผิดชอบได้ตามต้องการ
+
+      Swal.fire({ 
+        title: 'เพิ่มผู้ดูแลระบบ (Admin)', 
+        html: `
+          <input type="text" id="newAdminName" class="form-control mb-2" placeholder="ชื่อ-นามสกุล">
+          <input type="email" id="newAdminEmail" class="form-control mb-2" placeholder="อีเมลสำหรับล็อกอิน">
+          <input type="text" id="newAdminPass" class="form-control mb-2" placeholder="ตั้งรหัสผ่าน">
+          <select id="newAdminRole" class="form-select mb-2">
+              <option value="Admin-ศูนย์ประสานงาน">แอดมินประจำศูนย์</option>
+              <option value="Admin-Master">แอดมินสูงสุด (Master)</option>
+          </select>
+          <select id="newAdminCenter" class="form-select">${centersHtml}</select>
+        `, 
+        showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#2563EB',
+        preConfirm: async () => {
+          const email = document.getElementById('newAdminEmail').value.trim();
+          const pass = document.getElementById('newAdminPass').value.trim();
+          const name = document.getElementById('newAdminName').value.trim();
+          if(!email || !pass || !name) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ'); return false; }
+          
+          document.getElementById('loaderText').innerText = "กำลังสร้างแอดมิน...";
+          document.getElementById('loader').style.display = 'flex';
+          
+          try {
+              // ตรวจสอบว่ามีอีเมลนี้แล้วหรือยัง
+              const existCheck = await db.collection("admins").doc(email).get();
+              if(existCheck.exists) throw new Error("อีเมลนี้ถูกใช้งานเป็นผู้ดูแลระบบแล้ว");
+
+              // บันทึกแอดมินใหม่
+              await db.collection("admins").doc(email).set({
+                  email: email,
+                  password: pass,
+                  name: name,
+                  role: document.getElementById('newAdminRole').value,
+                  center: document.getElementById('newAdminCenter').value,
+                  status: "ใช้งาน",
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              return true;
+          } catch(err) {
+              Swal.showValidationMessage(err.message);
+              document.getElementById('loader').style.display = 'none';
+              return false;
+          }
+        } 
+      }).then((res) => {
+          document.getElementById('loader').style.display = 'none';
+          if(res.isConfirmed) {
+              Swal.fire({icon: 'success', title: 'เพิ่มผู้ดูแลสำเร็จ', showConfirmButton: false, timer: 1500});
+              loadAdminsData();
+          }
+      });
+  }
+
+  // 🔄 ฟังก์ชันสลับสถานะ ใช้งาน/ระงับ ของ Admin
+  async function toggleAdminStatus(email, currentStatus) {
+      if(confirm(`ต้องการเปลี่ยนสถานะของ ${email} ใช่หรือไม่?`)) {
+          const newStatus = (currentStatus === 'ใช้งาน') ? 'ระงับ' : 'ใช้งาน';
+          await db.collection("admins").doc(email).update({ status: newStatus });
+          loadAdminsData();
+      }
+  }
+
+  // 🔴 ฟังก์ชันอนุมัติรับเงิน
   async function approveTx(txId, memberUid, amount) {
     if(confirm("ยืนยันการรับเงินสมทบ?")) {
       document.getElementById('loaderText').innerText = "กำลังอนุมัติ...";
@@ -333,7 +470,7 @@
     }
   }
 
-  // 🔴 9. ฟังก์ชันอนุมัติสวัสดิการ
+  // 🔴 ฟังก์ชันอนุมัติสวัสดิการ
   async function approveClaim(claimId, memberUid, amount) {
     if(confirm("ยืนยันการจ่ายเงินสวัสดิการ?")) {
       document.getElementById('loaderText').innerText = "กำลังอนุมัติ...";
