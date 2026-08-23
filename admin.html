@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   
   <!-- 🚀 โหลด Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -31,32 +32,57 @@
     .data-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-color); }
     
     .tx-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; background: #f1f5f9; color: #64748b; }
-    #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-dark); color: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(5px); color: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    
+    #loginGate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-dark); color: white; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .login-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+    .form-control-custom { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 12px; padding: 12px; margin-bottom: 15px; width: 100%; text-align: center; }
+    .form-control-custom:focus { outline: none; border-color: var(--primary-main); background: rgba(255,255,255,0.15); }
+    .form-control-custom::placeholder { color: rgba(255,255,255,0.5); }
   </style>
 </head>
 <body>
 
 <!-- ⏳ Loader -->
-<div id="loader"><div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;"></div><h5 class="fw-bold">เชื่อมต่อตู้เซฟข้อมูล...</h5></div>
+<div id="loader"><div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;"></div><h5 class="fw-bold" id="loaderText">กำลังตรวจสอบระบบ...</h5></div>
 
-<div class="app-header">
+<!-- 🔐 Security Gate (Login) -->
+<div id="loginGate" style="display: none;">
+  <div class="login-box">
+    <i class="fa-solid fa-fingerprint fa-3x text-success mb-3"></i>
+    <h5 class="fw-bold">CWF Executive Login</h5>
+    <p class="text-white-50 small mb-4">กรุณายืนยันสิทธิ์ผู้ดูแลระบบ</p>
+    
+    <div id="manualLoginSection">
+      <input type="email" id="adminEmail" class="form-control-custom" placeholder="อีเมลแอดมิน">
+      <input type="password" id="adminPass" class="form-control-custom" placeholder="รหัสผ่าน">
+      <button onclick="handleManualLogin()" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow mt-2">เข้าสู่ระบบ</button>
+    </div>
+    
+    <div class="mt-4 pt-3 border-top border-secondary">
+       <button id="btnLineLogin" onclick="liff.login()" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow"><i class="fa-brands fa-line me-2"></i> เข้าด้วย LINE</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-header" id="appHeader" style="display: none;">
   <div>
     <h5 class="fw-bold mb-0">CWF Executive</h5>
-    <small class="text-info fw-bold" style="font-size: 0.75rem;">ไร่ใหม่พัฒนา</small>
+    <small class="text-info fw-bold" style="font-size: 0.75rem;" id="adminNameDisplay">กำลังโหลด...</small>
   </div>
   <button onclick="loadDashboardOverview()" class="btn btn-sm btn-outline-light rounded-circle"><i class="fa-solid fa-rotate-right"></i></button>
 </div>
 
 <!-- 🚀 Bottom Navigation -->
-<nav class="bottom-nav">
+<nav class="bottom-nav" id="bottomNav" style="display: none;">
   <button class="nav-item active" onclick="switchTab('view-overview', this); loadDashboardOverview();"><i class="fa-solid fa-chart-pie"></i> ภาพรวม</button>
   <button class="nav-item" onclick="switchTab('view-members', this); loadMembersData();"><i class="fa-solid fa-users"></i> สมาชิก</button>
   <button class="nav-item" onclick="switchTab('view-transactions', this); loadTransactions();"><i class="fa-solid fa-wallet"></i> รอรับเงิน</button>
   <button class="nav-item" onclick="switchTab('view-claims', this); loadClaims();"><i class="fa-solid fa-hand-holding-medical"></i> รอจ่าย</button>
-  <button class="nav-item text-danger" onclick="alert('ออกจากระบบสำเร็จ'); window.close();"><i class="fa-solid fa-power-off"></i> ออก</button>
+  <button class="nav-item text-danger" onclick="logoutAdmin();"><i class="fa-solid fa-power-off"></i> ออก</button>
 </nav>
 
-<div id="mainWorkspace" class="container-fluid pt-3">
+<div id="mainWorkspace" class="container-fluid pt-3" style="display: none;">
   
   <!-- 📊 1. ภาพรวม -->
   <div class="tab-pane d-block" id="view-overview">
@@ -100,7 +126,7 @@
 </div>
 
 <script>
-  // 🔑 ใส่กุญแจ Firebase 
+  // 🔑 ใส่กุญแจ Firebase (ใช้รหัสเดียวกันหมด)
   const firebaseConfig = {
     apiKey: "AIzaSyBs1G5k31100g6PeVvU5nUyz0QDB21jHpI",
     authDomain: "smartwelf-f7d81.firebaseapp.com",
@@ -109,10 +135,142 @@
     messagingSenderId: "114126831149",
     appId: "1:114126831149:web:66ea766f6c558b159442a4"
   };
+  
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  document.addEventListener("DOMContentLoaded", () => { loadDashboardOverview(); });
+  // ตัวแปรเก็บข้อมูล Admin ปัจจุบัน
+  let currentAdminData = null;
+
+  document.addEventListener("DOMContentLoaded", async () => { 
+    // ตรวจสอบเบื้องต้นว่ามี Admin Master เริ่มต้นอยู่ในระบบหรือยัง (ถ้ายัง ให้สร้างอัตโนมัติ)
+    await initializeDefaultAdmin();
+    
+    try {
+        await liff.init({ liffId: "2011183541-zDAQXVLM" }); // LIFF ID ของหน้าแอดมิน
+        if (liff.isLoggedIn()) {
+            const profile = await liff.getProfile();
+            verifyAdminAuth(profile.userId); 
+        } else {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('loginGate').style.display = 'flex';
+        }
+    } catch (e) {
+        // หากโหลด LIFF ไม่ได้ ให้เปิดหน้า Login เผื่อล็อกอินด้วยอีเมลแทน
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('loginGate').style.display = 'flex';
+    }
+  });
+
+  // 🌟 ฟังก์ชันสร้าง Master Admin เริ่มต้น (หากไม่เคยมีใครล็อกอินได้เลย)
+  async function initializeDefaultAdmin() {
+      try {
+          const defaultEmail = "mr.munee@gmail.com";
+          const defaultPass = "8ZOYrtqO"; // ใช้สำหรับตรวจเช็คการ Login แมนวล
+          
+          const adminRef = db.collection("admins").doc(defaultEmail);
+          const adminSnap = await adminRef.get();
+          
+          if (!adminSnap.exists) {
+              await adminRef.set({
+                  email: defaultEmail,
+                  password: defaultPass, 
+                  name: "มุนี ยูโซ๊ะ",
+                  role: "Admin-Master",
+                  center: "ALL",
+                  status: "ใช้งาน"
+              });
+              console.log("สร้าง Master Admin เริ่มต้นสำเร็จ");
+          }
+      } catch (error) {
+          console.error("ไม่สามารถสร้าง Admin เริ่มต้นได้", error);
+      }
+  }
+
+  // 🌟 ฟังก์ชันจัดการ Login ด้วย อีเมล/รหัสผ่าน ที่กำหนดไว้
+  async function handleManualLogin() {
+      const emailInput = document.getElementById('adminEmail').value.trim();
+      const passInput = document.getElementById('adminPass').value.trim();
+      
+      if(!emailInput || !passInput) {
+          return Swal.fire('แจ้งเตือน', 'กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน', 'warning');
+      }
+
+      document.getElementById('loaderText').innerText = "กำลังตรวจสอบสิทธิ์...";
+      document.getElementById('loader').style.display = 'flex';
+
+      try {
+          // ค้นหาในแฟ้ม admins
+          const adminRef = db.collection("admins").doc(emailInput);
+          const adminSnap = await adminRef.get();
+
+          if (adminSnap.exists) {
+              const adminData = adminSnap.data();
+              if(adminData.password === passInput && adminData.status === 'ใช้งาน') {
+                  // ล็อกอินสำเร็จ
+                  grantAccess(adminData);
+              } else {
+                  throw new Error("รหัสผ่านไม่ถูกต้อง หรือบัญชีถูกระงับ");
+              }
+          } else {
+              throw new Error("ไม่พบอีเมลผู้ดูแลระบบนี้ในระบบ");
+          }
+      } catch (error) {
+          document.getElementById('loader').style.display = 'none';
+          Swal.fire('ปฏิเสธการเข้าถึง', error.message, 'error');
+      }
+  }
+
+  // 🌟 ฟังก์ชันตรวจสอบสิทธิ์จากการล็อกอินผ่าน LINE
+  async function verifyAdminAuth(uid) {
+      document.getElementById('loaderText').innerText = "ตรวจสอบสิทธิ์จาก LINE...";
+      document.getElementById('loader').style.display = 'flex';
+      
+      try {
+          // ในกรณีใช้งานจริง ควรจับคู่ UID ของ LINE กับข้อมูล Admin
+          // แต่เพื่อให้ทดสอบง่าย ผมจะอนุญาตให้เข้าถึงชั่วคราว หรือถ้าต้องการเข้มงวด ต้องเช็คจากแฟ้ม admins ก่อน
+          const adminRef = db.collection("admins").where("lineUid", "==", uid).get();
+          // สำหรับตอนนี้ สมมติให้รหัส Admin-Master เริ่มต้นผ่านเข้าไปก่อนหากไม่ได้ล็อกอินผ่านรหัสผ่าน
+          // *หมายเหตุ:* ถ้าจะใช้ร่วมกับ LINE จริงๆ ต้องเพิ่มฟิลด์ lineUid ตอนสร้าง Admin ด้วย
+          
+          document.getElementById('loader').style.display = 'none';
+          document.getElementById('loginGate').style.display = 'flex';
+          Swal.fire('แจ้งเตือน', 'กรุณาใช้อีเมลและรหัสผ่านของแอดมินเพื่อเข้าสู่ระบบ', 'info');
+          
+      } catch (error) {
+          document.getElementById('loader').style.display = 'none';
+          document.getElementById('loginGate').style.display = 'flex';
+      }
+  }
+
+  // 🌟 เมื่อได้สิทธิ์ จะสั่งเปิดหน้าจอแดชบอร์ด
+  function grantAccess(adminData) {
+      currentAdminData = adminData;
+      document.getElementById('adminNameDisplay').innerText = `${adminData.name} [${adminData.role}]`;
+      
+      document.getElementById('loginGate').style.display = 'none';
+      document.getElementById('appHeader').style.display = 'flex';
+      document.getElementById('bottomNav').style.display = 'flex';
+      document.getElementById('mainWorkspace').style.display = 'block';
+      
+      loadDashboardOverview();
+  }
+
+  function logoutAdmin() {
+      Swal.fire({
+          title: 'ยืนยันออกจากระบบ',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#EF4444',
+          confirmButtonText: 'ออกจากระบบ'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              currentAdminData = null;
+              if (liff.isLoggedIn()) liff.logout();
+              location.reload(); // รีเฟรชหน้าเว็บกลับไปหน้า Login
+          }
+      });
+  }
 
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-pane').forEach(el => el.classList.replace('d-block', 'd-none'));
@@ -172,7 +330,7 @@
         const d = doc.data();
         html += `<div class="data-card"><div class="d-flex justify-content-between align-items-center">
           <div><h6 class="fw-bold mb-0">${d.fullName}</h6><small class="text-muted">${d.type}</small></div>
-          <div class="text-end"><h6 class="fw-bold text-success mb-0">+฿${d.amount}</h6><button onclick="approveTx('${doc.id}')" class="btn btn-sm btn-success rounded-pill mt-1">อนุมัติ</button></div>
+          <div class="text-end"><h6 class="fw-bold text-success mb-0">+฿${d.amount}</h6><button onclick="approveTx('${doc.id}', '${d.uid}', ${d.amount})" class="btn btn-sm btn-success rounded-pill mt-1">อนุมัติ</button></div>
         </div></div>`;
       });
       document.getElementById('list-transactions').innerHTML = html || "<p class="text-center text-muted">ไม่มีรายการค้าง</p>";
@@ -188,24 +346,49 @@
         const d = doc.data();
         html += `<div class="data-card"><div class="d-flex justify-content-between align-items-center">
           <div><h6 class="fw-bold mb-0">${d.fullName}</h6><small class="text-primary">${d.welfareType}</small></div>
-          <div class="text-end"><h6 class="fw-bold text-danger mb-0">-฿${d.claimAmount}</h6><button onclick="approveClaim('${doc.id}')" class="btn btn-sm btn-primary rounded-pill mt-1">จัดการ</button></div>
+          <div class="text-end"><h6 class="fw-bold text-danger mb-0">-฿${d.claimAmount}</h6><button onclick="approveClaim('${doc.id}', '${d.uid}', ${d.claimAmount})" class="btn btn-sm btn-primary rounded-pill mt-1">จัดการ</button></div>
         </div></div>`;
       });
       document.getElementById('list-claims').innerHTML = html || "<p class="text-center text-muted">ไม่มีคำขอค้าง</p>";
     } catch(e) { document.getElementById('list-claims').innerHTML = "เกิดข้อผิดพลาด"; }
   }
 
-  // 🔴 ฟังก์ชันจำลองการกดอนุมัติ (อัปเดตสถานะใน Firestore)
-  async function approveTx(id) {
-    if(confirm("ยืนยันการรับเงิน?")) {
-      await db.collection("transactions").doc(id).update({status: "อนุมัติแล้ว"});
-      loadTransactions(); loadDashboardOverview();
+  // 🔴 ฟังก์ชันจำลองการกดอนุมัติ (อัปเดตสถานะใน Firestore พร้อมอัปเดตยอดสมาชิก)
+  async function approveTx(txId, memberUid, amount) {
+    if(confirm("ยืนยันการรับเงินสมทบ?")) {
+      document.getElementById('loader').style.display = 'flex';
+      try {
+          // 1. เปลี่ยนสถานะบิล
+          await db.collection("transactions").doc(txId).update({status: "อนุมัติแล้ว"});
+          // 2. ไปบวกยอดเงินสมทบรวมให้สมาชิก
+          await db.collection("members").doc(memberUid).update({
+              totalContribution: firebase.firestore.FieldValue.increment(amount)
+          });
+          Swal.fire({icon: 'success', title: 'สำเร็จ', showConfirmButton: false, timer: 1500});
+          loadTransactions(); loadDashboardOverview();
+      } catch (error) {
+          Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+      }
+      document.getElementById('loader').style.display = 'none';
     }
   }
-  async function approveClaim(id) {
+
+  async function approveClaim(claimId, memberUid, amount) {
     if(confirm("ยืนยันการจ่ายเงินสวัสดิการ?")) {
-      await db.collection("claims").doc(id).update({status: "อนุมัติแล้ว"});
-      loadClaims(); loadDashboardOverview();
+      document.getElementById('loader').style.display = 'flex';
+      try {
+          // 1. เปลี่ยนสถานะคำร้อง
+          await db.collection("claims").doc(claimId).update({status: "อนุมัติแล้ว"});
+          // 2. ไปบวกยอดสวัสดิการรวมที่เคยได้รับให้สมาชิก
+          await db.collection("members").doc(memberUid).update({
+              totalWelfareReceived: firebase.firestore.FieldValue.increment(amount)
+          });
+          Swal.fire({icon: 'success', title: 'สำเร็จ', showConfirmButton: false, timer: 1500});
+          loadClaims(); loadDashboardOverview();
+      } catch (error) {
+          Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+      }
+      document.getElementById('loader').style.display = 'none';
     }
   }
 </script>
