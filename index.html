@@ -59,7 +59,7 @@
     .mission-hub { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid #334155; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3); }
     .mission-hub .hub-title { color: #F8FAFC !important; }
     .mission-hub .hub-icon { color: #60A5FA !important; text-shadow: 0 0 10px rgba(96, 165, 250, 0.5); }
-    .mission-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.2s; backdrop-filter: blur(10px); }
+    .mission-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.2s; backdrop-filter: blur(10px); cursor: pointer;}
     .mission-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
     .mission-btn span { color: white !important; }
     .mission-btn i.text-success { color: #34D399 !important; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
@@ -93,7 +93,7 @@
 
 <div class="app-header">
   <h4 class="fw-bold mb-1">กองทุนสวัสดิการชุมชน</h4>
-  <p class="text-white-50 small mb-0" id="headerFundName">เทศบาลตำบลสุคิริน จังหวัดนราธิวาส</p>
+  <p class="text-white-50 small mb-0" id="headerFundName">ไร่ใหม่พัฒนา จังหวัดเพชรบุรี</p>
 </div>
 
 <div class="container mb-5 px-3">
@@ -156,6 +156,23 @@
     </form>
   </div>
 
+  <!-- 🎉 Registration Success View -->
+  <div id="registrationSuccessView" class="card-box text-center" style="display: none;">
+    <div class="icon-box bg-success bg-opacity-10 text-success mx-auto mb-4" style="width: 80px; height: 80px; font-size: 2.5rem;">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h4 class="fw-bold text-dark mb-2">ลงทะเบียนสำเร็จ!</h4>
+    <p class="text-muted mb-4">ข้อมูลของคุณถูกส่งไปยังคณะกรรมการแล้ว โปรดรอการตรวจสอบ</p>
+    
+    <div class="alert alert-info border-0 mb-4" style="background-color: #EFF6FF; border-radius: 16px;">
+      <p class="fw-bold text-primary mb-2" style="font-size: 0.95rem;">อย่าลืมเพิ่มเพื่อน LINE กองทุนฯ</p>
+      <p class="small text-muted mb-3">เพื่อรับข่าวสารและแจ้งเตือนสถานะการอนุมัติ</p>
+      <a href="https://lin.ee/vS4t8bq"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/th.png" alt="เพิ่มเพื่อน" height="36" border="0"></a>
+    </div>
+    
+    <button onclick="location.reload()" class="btn btn-outline-primary rounded-pill px-4 mt-2">เข้าสู่หน้าหลักสมาชิก</button>
+  </div>
+
   <!-- 📊 Dashboard View -->
   <div id="dashboardView" class="card-box text-center" style="display: none;">
     <div class="profile-wrapper">
@@ -181,7 +198,7 @@
             <h4 class="fw-bold mb-0 text-dark"><span id="dashCwfPoints">0</span> <small class="fs-6 fw-normal" style="color: #92400E;">แต้ม</small></h4>
           </div>
         </div>
-        <button onclick="shareRefLink()" class="btn-action-sm"><i class="fa-solid fa-share-nodes"></i> ชวนเพื่อน</button>
+        <button onclick="shareRefLink()" class="btn-action-sm"><i class="fa-solid fa-user-group me-1"></i> ชวนเพื่อน</button>
       </div>
 
       <!-- 💰 Stat Card 2: Contributions -->
@@ -220,16 +237,16 @@
       </div>
       <div class="row g-2">
         <div class="col-6 text-center">
-          <button class="mission-btn w-100" onclick="dailyCheckIn()">
+          <div class="mission-btn w-100" onclick="dailyCheckIn()" role="button">
             <i class="fa-solid fa-calendar-check d-block fs-3 mb-2 text-success"></i>
             <span class="small fw-bold text-dark">เช็คอินรายวัน</span>
-          </button>
+          </div>
         </div>
         <div class="col-6 text-center">
-          <button class="mission-btn w-100" onclick="shareNewsMission()">
-            <i class="fa-brands fa-line d-block fs-3 mb-2 text-primary"></i>
+          <div class="mission-btn w-100" onclick="shareNewsMission()" role="button">
+            <i class="fa-solid fa-share-from-square d-block fs-3 mb-2 text-primary"></i>
             <span class="small fw-bold text-dark">แชร์ข่าวสาร</span>
-          </button>
+          </div>
         </div>
       </div>
     </div>
@@ -335,7 +352,7 @@
 
 <script>
   // ==========================================================
-  // ⚙️ 1. ตั้งค่าพื้นฐาน (อ้างอิงพื้นที่ตามที่คุณมุนีตั้งค่าไว้)
+  // ⚙️ 1. ตั้งค่าพื้นฐาน (ข้อมูลของไร่ใหม่พัฒนา 100%)
   // ==========================================================
   const CWF_CONFIG = {
       FUND_NAME: "ไร่ใหม่พัฒนา", 
@@ -345,7 +362,7 @@
   };
 
   // ==========================================================
-  // 🔑 2. ติดตั้ง Firebase (รหัสสำหรับโปรเจกต์ smartwelf-f7d81)
+  // 🔑 2. ติดตั้ง Firebase
   // ==========================================================
   const firebaseConfig = {
     apiKey: "AIzaSyBs1G5k31100g6PeVvU5nUyz0QDB21jHpI",
@@ -399,23 +416,20 @@
   });
 
   // ==========================================================
-  // 💾 4. เชื่อมต่อ Firestore โดยตรง (แทน Google Sheets)
+  // 💾 4. เชื่อมต่อ Firestore
   // ==========================================================
   async function checkMemberOnCloud(uid, pictureUrl) {
     try {
-      // 🚀 ดึงข้อมูลจาก Firestore ตรงๆ
       const docRef = db.collection("members").doc(uid);
       const docSnap = await docRef.get();
       
       document.getElementById('systemLoading').style.display = 'none';
 
       if (docSnap.exists) {
-        // มีข้อมูลสมาชิกแล้ว
         const memberData = docSnap.data();
         cachedUserData = memberData;
         renderDashboardData(memberData, pictureUrl);
       } else { 
-        // ยังไม่มีข้อมูล ให้เปิดหน้าลงทะเบียน
         document.getElementById('registerView').style.display = 'block'; 
         requestLocation();
       }
@@ -440,23 +454,26 @@
     
     const uid = document.getElementById('uid').value;
     
-    // สร้างแพ็คเกจข้อมูลเริ่มต้น (Default Data)
     const newMemberData = {
         ...payload,
-        memberId: "CWF" + Date.now().toString().slice(-5), // สุ่มเลขสมาชิกชั่วคราว
+        memberId: "CWF" + Date.now().toString().slice(-5), 
         status: "รอตรวจสอบ",
         cwfPoints: 0,
         totalContribution: 0,
         totalWelfareReceived: 0,
-        outstandingBalance: 365, // ค่าตั้งต้นที่ต้องสมทบ
+        outstandingBalance: 365, 
         welfareHistory: [],
         timestamp: new Date().toLocaleDateString('th-TH')
     };
 
     try {
-      // 🚀 บันทึกลง Firestore
       await db.collection("members").doc(uid).set(newMemberData);
-      Swal.fire('สำเร็จ', 'ลงทะเบียนเข้าสู่ระบบเรียบร้อย', 'success').then(() => location.reload()); 
+      
+      // ✅ โชว์ Success และปุ่มเพิ่มเพื่อน LINE OA
+      document.getElementById('registerView').style.display = 'none';
+      document.getElementById('registrationSuccessView').style.display = 'block';
+      window.scrollTo(0, 0);
+
     } catch (error) { 
       console.error("Firebase Register Error:", error);
       Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); 
@@ -474,10 +491,9 @@
     const payload = Object.fromEntries(formData.entries());
     const uid = document.getElementById('editUid').value;
     
-    delete payload.uid; // ไม่ต้องอัปเดต uid ลงไปซ้ำ
+    delete payload.uid; 
 
     try {
-      // 🚀 อัปเดตเฉพาะฟิลด์ที่มีการเปลี่ยนแปลงลง Firestore
       await db.collection("members").doc(uid).update(payload);
       Swal.fire('สำเร็จ', 'อัปเดตข้อมูลเรียบร้อย', 'success').then(() => location.reload()); 
     } catch (error) { 
@@ -487,69 +503,91 @@
     }
   }
 
-  // 🎁 ภารกิจรับคะแนน (เพิ่มแต้มทันทีผ่าน Firestore)
+  // 🎁 ภารกิจเช็คอิน (วันละ 1 ครั้ง)
   async function dailyCheckIn() {
-    Swal.fire({ title: 'กำลังเช็คอิน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+    Swal.fire({ title: 'กำลังตรวจสอบสิทธิ์...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
     try {
       const uid = document.getElementById('uid').value;
-      
-      // 🚀 สั่งบวกคะแนนใน Firestore ตรงๆ
-      await db.collection("members").doc(uid).update({
-          cwfPoints: firebase.firestore.FieldValue.increment(10)
-      });
-      
-      // ดึงคะแนนใหม่มาโชว์
-      const snap = await db.collection("members").doc(uid).get();
-      const newPoints = snap.data().cwfPoints;
-      
-      document.getElementById('dashCwfPoints').innerText = newPoints;
-      updateTierOnScreen(newPoints);
-      Swal.fire({ icon: 'success', title: 'เยี่ยมมาก!', text: 'ได้รับ 10 คะแนนจากการเช็คอิน', confirmButtonColor: '#10B981' });
+      const docRef = db.collection("members").doc(uid);
+      const docSnap = await docRef.get();
+
+      if (docSnap.exists) {
+          const userData = docSnap.data();
+          const lastCheckIn = userData.lastCheckInDate;
+          const today = new Date().toLocaleDateString('th-TH');
+
+          if (lastCheckIn === today) {
+              Swal.fire({ icon: 'info', title: 'เช็คอินแล้ว', text: 'คุณได้รับคะแนนของวันนี้ไปแล้ว กลับมาเช็คอินใหม่พรุ่งนี้นะครับ' });
+          } else {
+              Swal.fire({ title: 'กำลังบันทึกคะแนน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+              
+              await docRef.update({
+                  cwfPoints: firebase.firestore.FieldValue.increment(10),
+                  lastCheckInDate: today 
+              });
+              
+              const updatedSnap = await docRef.get();
+              const newPoints = updatedSnap.data().cwfPoints;
+              
+              document.getElementById('dashCwfPoints').innerText = newPoints;
+              updateTierOnScreen(newPoints);
+              Swal.fire({ icon: 'success', title: 'เยี่ยมมาก!', text: 'คุณได้รับ 10 คะแนนจากการเช็คอินวันนี้', confirmButtonColor: '#10B981' });
+          }
+      }
     } catch (error) { 
         console.error("Firebase Checkin Error:", error);
         Swal.fire('Error', 'ไม่สามารถประมวลผลได้', 'error'); 
     }
   }
 
+  // 🔗 แชร์ข่าวสารและชวนเพื่อน (แชร์ข้ามแอป)
   async function shareNewsMission() {
-    if (!liff.isLoggedIn()) { Swal.fire('เตือน', 'กรุณาล็อกอิน', 'warning'); return liff.login(); }
-    if (!liff.isApiAvailable('shareTargetPicker')) { Swal.fire('ขออภัย', 'แชร์ได้บนมือถือเท่านั้น', 'warning'); return; }
+    const shareTitle = 'ข่าวสารกองทุนสวัสดิการชุมชน';
+    const shareText = `มาร่วมสร้างความมั่นคงและคุณภาพชีวิตที่ดี กับกองทุนสวัสดิการชุมชน${CWF_CONFIG.FUND_NAME} สมัครสมาชิกได้ที่นี่เลย!`;
+    const shareUrl = `https://liff.line.me/${CWF_CONFIG.LIFF_ID}`;
 
-    try {
-      const bannerImageUrl = "https://images.unsplash.com/photo-1555421689-d68471e189f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-      const res = await liff.shareTargetPicker([{
-        type: "flex", altText: "ข่าวสารกองทุนสวัสดิการชุมชน",
-        contents: {
-          type: "bubble",
-          hero: { type: "image", url: bannerImageUrl, size: "full", aspectRatio: "20:13", aspectMode: "cover" },
-          body: { type: "box", layout: "vertical", contents: [
-              { type: "text", text: "กองทุนสวัสดิการชุมชน", weight: "bold", size: "sm", color: "#2563EB" },
-              { type: "text", text: "กองทุนเพื่อคุณภาพชีวิต", weight: "bold", size: "xl", margin: "md", wrap: true },
-              { type: "text", text: "มาร่วมสร้างความมั่นคงและคุณภาพชีวิตที่ดี", wrap: true, color: "#6B7280", size: "sm", margin: "md" }
-            ] },
-          footer: { type: "box", layout: "vertical", spacing: "sm", contents: [{ type: "button", style: "primary", height: "sm", color: "#2563EB", action: { type: "uri", label: "เข้าระบบ", uri: `https://liff.line.me/${CWF_CONFIG.LIFF_ID}` } }], flex: 0 }
-        }
-      }]);
-      
-      if (res) {
-        Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-        const uid = document.getElementById('uid').value;
-        
-        // 🚀 สั่งบวกคะแนนใน Firestore ตรงๆ
-        await db.collection("members").doc(uid).update({
-            cwfPoints: firebase.firestore.FieldValue.increment(20)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
         });
-        
-        const snap = await db.collection("members").doc(uid).get();
-        const newPoints = snap.data().cwfPoints;
-        
-        document.getElementById('dashCwfPoints').innerText = newPoints;
-        updateTierOnScreen(newPoints); 
-        Swal.fire({ icon: 'success', title: 'แชร์สำเร็จ!', text: 'ได้รับ 20 คะแนน', confirmButtonColor: '#10B981' });
+        awardSharePoints();
+      } catch (error) {
+        console.error('Error sharing:', error);
       }
-    } catch(e) { console.error(e); }
+    } else {
+      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      Swal.fire('คัดลอกลิงก์แล้ว', 'นำลิงก์ไปวางเพื่อแชร์ในแอปอื่นๆ ได้เลย', 'success');
+      awardSharePoints(); 
+    }
   }
 
+  function shareRefLink() {
+      shareNewsMission(); 
+  }
+  
+  // 🌟 ฟังก์ชันแจกคะแนนเมื่อแชร์
+  async function awardSharePoints() {
+      Swal.fire({ title: 'กำลังประมวลผลคะแนน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+      try {
+          const uid = document.getElementById('uid').value;
+          await db.collection("members").doc(uid).update({
+              cwfPoints: firebase.firestore.FieldValue.increment(20)
+          });
+          
+          const snap = await db.collection("members").doc(uid).get();
+          const newPoints = snap.data().cwfPoints;
+          
+          document.getElementById('dashCwfPoints').innerText = newPoints;
+          updateTierOnScreen(newPoints); 
+          Swal.fire({ icon: 'success', title: 'แชร์สำเร็จ!', text: 'ได้รับ 20 คะแนนจากการแชร์', confirmButtonColor: '#10B981' });
+      } catch (e) {
+          console.error("Firebase Share Points Error:", e);
+          Swal.fire('Error', 'ไม่สามารถบันทึกคะแนนได้', 'error');
+      }
+  }
 
   // ==========================================================
   // 🎨 ส่วนของการจัดการหน้าตา UI (ไม่ต้องแก้โค้ดส่วนนี้)
@@ -670,13 +708,6 @@
   }
   
   function closeProfileEditor() { document.getElementById('editProfileView').style.display = 'none'; document.getElementById('dashboardView').style.display = 'block'; window.scrollTo(0,0); }
-
-  function shareRefLink() {
-    const url = `https://liff.line.me/${CWF_CONFIG.LIFF_ID}?ref=${cachedUserData.memberId}`;
-    if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) {
-      liff.shareTargetPicker([{ type: "flex", altText: "ชวนเพื่อน", contents: { type: "bubble", body: { type: "box", layout: "vertical", contents: [{ type: "text", text: "สมัครกองทุนสวัสดิการชุมชนคลิก!", weight: "bold", size: "md", color: "#0F172A" }] }, footer: { type: "box", layout: "vertical", contents: [{ type: "button", action: { type: "uri", label: "สมัครสมาชิก", uri: url }, style: "primary", color: "#2563EB" }] } } }]);
-    } else { navigator.clipboard.writeText(url); Swal.fire('สำเร็จ', 'คัดลอกลิงก์เรียบร้อย', 'success'); }
-  }
 
   function updateTierOnScreen(points) {
       let tierName = "ร่วมใจ (Unity)"; let tierColor = "#64748B"; 
