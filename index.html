@@ -59,7 +59,7 @@
     .mission-hub { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid #334155; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3); }
     .mission-hub .hub-title { color: #F8FAFC !important; }
     .mission-hub .hub-icon { color: #60A5FA !important; text-shadow: 0 0 10px rgba(96, 165, 250, 0.5); }
-    .mission-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.2s; backdrop-filter: blur(10px); }
+    .mission-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.2s; backdrop-filter: blur(10px); cursor: pointer;}
     .mission-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
     .mission-btn span { color: white !important; }
     .mission-btn i.text-success { color: #34D399 !important; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
@@ -93,7 +93,7 @@
 
 <div class="app-header">
   <h4 class="fw-bold mb-1">กองทุนสวัสดิการชุมชน</h4>
-  <p class="text-white-50 small mb-0" id="headerFundName">ตำบลมาโมง จังหวัดนราธิวาส</p>
+  <p class="text-white-50 small mb-0" id="headerFundName">ไร่ใหม่พัฒนา จังหวัดเพชรบุรี</p>
 </div>
 
 <div class="container mb-5 px-3">
@@ -167,11 +167,11 @@
     <div class="alert alert-info border-0 mb-4" style="background-color: #EFF6FF; border-radius: 16px;">
       <p class="fw-bold text-primary mb-2" style="font-size: 0.95rem;">อย่าลืมเพิ่มเพื่อน LINE กองทุนฯ</p>
       <p class="small text-muted mb-3">เพื่อรับข่าวสารและแจ้งเตือนสถานะการอนุมัติ</p>
-      <!-- ปุ่มแอด LINE OA -->
+      <!-- ปุ่มแอด LINE OA ตามที่คุณมุนีระบุ -->
       <a href="https://lin.ee/vS4t8bq"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/th.png" alt="เพิ่มเพื่อน" height="40" border="0"></a>
     </div>
     
-    <button onclick="location.reload()" class="btn btn-outline-primary rounded-pill px-4">กลับไปหน้าหลัก</button>
+    <button onclick="location.reload()" class="btn btn-outline-primary rounded-pill px-4 mt-2">เข้าสู่หน้าหลักสมาชิก</button>
   </div>
 
   <!-- 📊 Dashboard View -->
@@ -199,7 +199,7 @@
             <h4 class="fw-bold mb-0 text-dark"><span id="dashCwfPoints">0</span> <small class="fs-6 fw-normal" style="color: #92400E;">แต้ม</small></h4>
           </div>
         </div>
-        <button onclick="shareRefLink()" class="btn-action-sm"><i class="fa-solid fa-share-nodes"></i> ชวนเพื่อน</button>
+        <button onclick="shareRefLink()" class="btn-action-sm"><i class="fa-solid fa-user-group me-1"></i> ชวนเพื่อน</button>
       </div>
 
       <!-- 💰 Stat Card 2: Contributions -->
@@ -214,6 +214,7 @@
             </small>
           </div>
         </div>
+        <!-- ใช้ลิงก์ใหม่เชื่อมไปหน้า contribution.html -->
         <a href="contribution.html" class="btn-action-sm text-decoration-none"><i class="fa-solid fa-plus"></i> สมทบ</a>
       </div>
 
@@ -226,6 +227,7 @@
             <h4 class="fw-bold mb-0 text-dark"><span id="dashTotalWelfare">0</span> <small class="fs-6 fw-normal" style="color: #1E3A8A;">฿</small></h4>
           </div>
         </div>
+        <!-- ใช้ลิงก์ใหม่เชื่อมไปหน้า claim.html -->
         <a href="claim.html" class="btn-action-sm text-decoration-none"><i class="fa-solid fa-file-medical"></i> ขอเบิก</a>
       </div>
     </div>
@@ -238,16 +240,16 @@
       </div>
       <div class="row g-2">
         <div class="col-6 text-center">
-          <button class="mission-btn w-100" onclick="dailyCheckIn()">
+          <div class="mission-btn w-100" onclick="dailyCheckIn()" role="button">
             <i class="fa-solid fa-calendar-check d-block fs-3 mb-2 text-success"></i>
             <span class="small fw-bold text-dark">เช็คอินรายวัน</span>
-          </button>
+          </div>
         </div>
         <div class="col-6 text-center">
-          <button class="mission-btn w-100" onclick="shareNewsMission()">
+          <div class="mission-btn w-100" onclick="shareNewsMission()" role="button">
             <i class="fa-solid fa-share-from-square d-block fs-3 mb-2 text-primary"></i>
             <span class="small fw-bold text-dark">แชร์ข่าวสาร</span>
-          </button>
+          </div>
         </div>
       </div>
     </div>
@@ -353,17 +355,17 @@
 
 <script>
   // ==========================================================
-  // ⚙️ 1. ตั้งค่าพื้นฐาน
+  // ⚙️ 1. ตั้งค่าพื้นฐาน (ข้อมูลของไร่ใหม่พัฒนา 100%)
   // ==========================================================
   const CWF_CONFIG = {
-      FUND_NAME: "ตำบลมาโมง", 
-      LIFF_ID: "2010764982-RCKkyPZG", // แทนที่ด้วย LIFF ID ของคุณ
-      CENTERS: ["ศูนย์ชุมชนปารีย์", "ศูนย์ชุมชนเกียร์", "ศูนย์ชุมชนราษฎร์สามัคคี", "ศูนย์ชุมชนกลันตัน", "ศูนย์ชุมชนมาโมง", "ศูนย์ชุมชนสุคิริน"],
-      VILLAGES: ["บ้านจารังตาดง", "บ้านมาโมง", "บ้านภูเขาทอง", "บ้านปารีย์", "บ้านเกียร์", "บ้านราษฎร์สามัคคี", "บ้านกลันตัน", "บ้านสุคิริน", "อื่นๆ"]
+      FUND_NAME: "ไร่ใหม่พัฒนา", 
+      LIFF_ID: "2011183541-9UDIqf8P", 
+      CENTERS: ["หมู่ 1 บ้านทุ่งขาม","หมู่ 2 บ้านไร่ใหม่พัฒนา","หมู่ 3 บ้านรางจิก","หมู่ 4 บ้านหนองเขื่อน","หมู่ 5 บ้านไร่ดง","หมู่ 6 บ้านโป่งแย้","หมู่ 7 บ้านหนองช้างเหยียบ","หมู่ 8 บ้านโป่งเก่งพัฒนา"],
+      VILLAGES: ["หมู่ 1 บ้านทุ่งขาม","หมู่ 2 บ้านไร่ใหม่พัฒนา","หมู่ 3 บ้านรางจิก","หมู่ 4 บ้านหนองเขื่อน","หมู่ 5 บ้านไร่ดง","หมู่ 6 บ้านโป่งแย้","หมู่ 7 บ้านหนองช้างเหยียบ","หมู่ 8 บ้านโป่งเก่งพัฒนา"]
   };
 
   // ==========================================================
-  // 🔑 2. ติดตั้ง Firebase
+  // 🔑 2. ติดตั้ง Firebase (รหัสสำหรับโปรเจกต์ smartwelf-f7d81)
   // ==========================================================
   const firebaseConfig = {
     apiKey: "AIzaSyBs1G5k31100g6PeVvU5nUyz0QDB21jHpI",
@@ -387,7 +389,7 @@
   // ==========================================================
   document.addEventListener("DOMContentLoaded", async () => {
     const headerTitle = document.getElementById('headerFundName');
-    if(headerTitle) headerTitle.innerText = `${CWF_CONFIG.FUND_NAME} จังหวัดนราธิวาส`;
+    if(headerTitle) headerTitle.innerText = `${CWF_CONFIG.FUND_NAME} จังหวัดเพชรบุรี`;
 
     // วาด Dropdown
     const regCenter = document.getElementById('regCenterSelect');
@@ -417,7 +419,7 @@
   });
 
   // ==========================================================
-  // 💾 4. เชื่อมต่อ Firestore
+  // 💾 4. เชื่อมต่อ Firestore โดยตรง
   // ==========================================================
   async function checkMemberOnCloud(uid, pictureUrl) {
     try {
@@ -469,9 +471,12 @@
 
     try {
       await db.collection("members").doc(uid).set(newMemberData);
-      // เปลี่ยนแปลงให้แสดงหน้าต่าง Success แทนการโหลดหน้าใหม่
+      
+      // ✅ สลับหน้าไปโชว์ Success และปุ่มเพิ่มเพื่อน LINE OA ทันที
       document.getElementById('registerView').style.display = 'none';
       document.getElementById('registrationSuccessView').style.display = 'block';
+      window.scrollTo(0, 0);
+
     } catch (error) { 
       console.error("Firebase Register Error:", error);
       Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); 
@@ -501,7 +506,7 @@
     }
   }
 
-  // 🎁 ภารกิจรับคะแนน (เพิ่มแต้มทันทีผ่าน Firestore)
+  // 🎁 ภารกิจเช็คอิน (วันละ 1 ครั้ง)
   async function dailyCheckIn() {
     Swal.fire({ title: 'กำลังตรวจสอบสิทธิ์...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
     try {
@@ -515,15 +520,13 @@
           const today = new Date().toLocaleDateString('th-TH');
 
           if (lastCheckIn === today) {
-              // เช็คอินไปแล้วในวันนี้
-              Swal.fire({ icon: 'info', title: 'เช็คอินแล้ว', text: 'คุณได้รับคะแนนของวันนี้ไปแล้ว กลับมาใหม่พรุ่งนี้นะครับ' });
+              Swal.fire({ icon: 'info', title: 'เช็คอินแล้ว', text: 'คุณได้รับคะแนนของวันนี้ไปแล้ว กลับมาเช็คอินใหม่พรุ่งนี้นะครับ' });
           } else {
-              // ยังไม่ได้เช็คอินในวันนี้
               Swal.fire({ title: 'กำลังบันทึกคะแนน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
               
               await docRef.update({
                   cwfPoints: firebase.firestore.FieldValue.increment(10),
-                  lastCheckInDate: today // บันทึกวันที่เช็คอินล่าสุด
+                  lastCheckInDate: today 
               });
               
               const updatedSnap = await docRef.get();
@@ -531,7 +534,7 @@
               
               document.getElementById('dashCwfPoints').innerText = newPoints;
               updateTierOnScreen(newPoints);
-              Swal.fire({ icon: 'success', title: 'เยี่ยมมาก!', text: 'ได้รับ 10 คะแนนจากการเช็คอิน', confirmButtonColor: '#10B981' });
+              Swal.fire({ icon: 'success', title: 'เยี่ยมมาก!', text: 'คุณได้รับ 10 คะแนนจากการเช็คอินวันนี้', confirmButtonColor: '#10B981' });
           }
       }
     } catch (error) { 
@@ -540,10 +543,10 @@
     }
   }
 
-  // 🔗 แชร์ข่าวสารผ่าน Web Share API
+  // 🔗 แชร์ข่าวสารและชวนเพื่อน (แชร์ไปแอปอื่นๆ ด้วย Web Share API)
   async function shareNewsMission() {
     const shareTitle = 'ข่าวสารกองทุนสวัสดิการชุมชน';
-    const shareText = 'มาร่วมสร้างความมั่นคงและคุณภาพชีวิตที่ดี กับกองทุนสวัสดิการชุมชนเทศบาลตำบลสุคิริน';
+    const shareText = `มาร่วมสร้างความมั่นคงและคุณภาพชีวิตที่ดี กับกองทุนสวัสดิการชุมชน${CWF_CONFIG.FUND_NAME} สมัครสมาชิกได้ที่นี่เลย!`;
     const shareUrl = `https://liff.line.me/${CWF_CONFIG.LIFF_ID}`;
 
     if (navigator.share) {
@@ -553,20 +556,22 @@
           text: shareText,
           url: shareUrl,
         });
-        
-        // เมื่อแชร์สำเร็จ ให้คะแนน
         awardSharePoints();
-
       } catch (error) {
         console.error('Error sharing:', error);
       }
     } else {
-      // Fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Web Share API
-      Swal.fire('ขออภัย', 'เบราว์เซอร์ของคุณไม่รองรับการแชร์', 'warning');
+      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      Swal.fire('คัดลอกลิงก์แล้ว', 'นำลิงก์ไปวางเพื่อแชร์ในแอปอื่นๆ ได้เลย', 'success');
+      awardSharePoints(); 
     }
   }
+
+  function shareRefLink() {
+      shareNewsMission(); 
+  }
   
-  // ให้คะแนนเมื่อแชร์สำเร็จ
+  // 🌟 ฟังก์ชันแจกคะแนนเมื่อแชร์สำเร็จ
   async function awardSharePoints() {
       Swal.fire({ title: 'กำลังประมวลผลคะแนน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
       try {
@@ -580,7 +585,7 @@
           
           document.getElementById('dashCwfPoints').innerText = newPoints;
           updateTierOnScreen(newPoints); 
-          Swal.fire({ icon: 'success', title: 'แชร์สำเร็จ!', text: 'ได้รับ 20 คะแนน', confirmButtonColor: '#10B981' });
+          Swal.fire({ icon: 'success', title: 'แชร์สำเร็จ!', text: 'ได้รับ 20 คะแนนจากการแชร์', confirmButtonColor: '#10B981' });
       } catch (e) {
           console.error("Firebase Share Points Error:", e);
           Swal.fire('Error', 'ไม่สามารถบันทึกคะแนนได้', 'error');
@@ -706,21 +711,6 @@
   }
   
   function closeProfileEditor() { document.getElementById('editProfileView').style.display = 'none'; document.getElementById('dashboardView').style.display = 'block'; window.scrollTo(0,0); }
-
-  function shareRefLink() {
-    const url = `https://liff.line.me/${CWF_CONFIG.LIFF_ID}?ref=${cachedUserData.memberId}`;
-    if (navigator.share) {
-      navigator.share({
-        title: 'ชวนเพื่อนสมัครกองทุนสวัสดิการชุมชน',
-        text: 'สมัครกองทุนสวัสดิการชุมชนคลิก!',
-        url: url,
-      })
-      .catch((error) => console.log('Error sharing', error));
-    } else {
-        // Fallback
-        navigator.clipboard.writeText(url); Swal.fire('สำเร็จ', 'คัดลอกลิงก์เรียบร้อย', 'success');
-    }
-  }
 
   function updateTierOnScreen(points) {
       let tierName = "ร่วมใจ (Unity)"; let tierColor = "#64748B"; 
