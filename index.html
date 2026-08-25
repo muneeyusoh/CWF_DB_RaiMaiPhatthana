@@ -13,25 +13,35 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-  <!-- 🚀 โหลด Firebase -->
+  <!-- 🚀 โหลดระบบ Firebase เข้ามาในหน้าเว็บ -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   
   <style>
-    :root { --fintech-primary: #0F172A; --fintech-accent: #2563EB; --fintech-success: #10B981; --bg-light: #F3F4F6; --card-border: #E5E7EB; }
+    :root { 
+      --fintech-primary: #0F172A; 
+      --fintech-accent: #2563EB; 
+      --fintech-success: #10B981; 
+      --bg-light: #F3F4F6;
+      --card-border: #E5E7EB;
+    }
     body { background-color: var(--bg-light); font-family: 'Prompt', sans-serif; color: #1E293B; -webkit-tap-highlight-color: transparent; }
+    
+    /* 📱 Modern Header & Card Setup */
     .app-header { background: var(--fintech-primary); background-image: radial-gradient(circle at top right, #1E293B 0%, transparent 60%); color: white; padding: 40px 20px 100px; text-align: center; }
     .card-box { background: white; padding: 25px 20px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); max-width: 500px; margin: -60px auto 30px; position: relative; border: 1px solid var(--card-border); }
     .profile-wrapper { position: relative; margin-top: -65px; text-align: center; margin-bottom: 15px; }
     .profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
     
+    /* 🌟 Status, Tier Badge & Type Badge */
     .badge-status { padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-bottom: 10px; }
     .status-pending { background-color: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; } 
     .status-active { background-color: #D1FAE5; color: #059669; border: 1px solid #A7F3D0; } 
     .status-inactive { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; } 
-    
+    .badge-type { background-color: #E0E7FF; color: #1D4ED8; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: block; width: fit-content; margin: 0 auto 15px; }
     .badge-tier { padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     
+    /* 💳 Clean FinTech Stat Cards */
     .stat-card { border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; transition: transform 0.2s, box-shadow 0.2s; }
     .stat-card:active { transform: scale(0.98); }
     .stat-card-points { background: linear-gradient(135deg, #FFFBEB 0%, #FEF08A 100%); border: 1px solid #FDE047; box-shadow: 0 4px 15px rgba(253, 224, 71, 0.2); }
@@ -46,6 +56,7 @@
     .stat-card-contrib .btn-action-sm { color: #059669; border: 1px solid #6EE7B7; }
     .stat-card-welfare .btn-action-sm { color: #2563EB; border: 1px solid #93C5FD; }
     
+    /* 🎮 Mission Hub Styling */
     .mission-hub { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid #334155; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3); }
     .mission-hub .hub-title { color: #F8FAFC !important; }
     .mission-hub .hub-icon { color: #60A5FA !important; text-shadow: 0 0 10px rgba(96, 165, 250, 0.5); }
@@ -55,18 +66,21 @@
     .mission-btn i.text-success { color: #34D399 !important; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
     .mission-btn i.text-primary { color: #60A5FA !important; text-shadow: 0 0 15px rgba(96, 165, 250, 0.4); }
     
+    /* 📋 Member Info Section */
     .info-list { background: white; border-radius: 16px; border: 1px solid var(--card-border); margin-bottom: 20px; overflow: hidden; }
     .info-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #F3F4F6; }
     .info-row:last-child { border-bottom: none; }
     .info-label { color: #6B7280; font-size: 0.85rem; font-weight: 500; }
     .info-data { color: #111827; font-size: 0.9rem; font-weight: 600; text-align: right; display: flex; align-items: center; gap: 8px;}
     
+    /* ⚙️ General Setup */
     .section-title { font-size: 0.95rem; font-weight: 700; color: #374151; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; text-align: left; }
     .form-control, .form-select { border-radius: 12px; border: 1px solid #D1D5DB; background-color: white; font-size: 0.95rem; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
     .form-control:focus, .form-select:focus { border-color: var(--fintech-accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
     .form-control:read-only { background-color: #F3F4F6; color: #6B7280; border-color: #E5E7EB; }
     .btn-fintech { background-color: var(--fintech-primary); color: white; border-radius: 14px; padding: 14px; font-weight: 600; font-size: 1.05rem; border: none; transition: 0.3s; box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2); width: 100%;}
     
+    /* 🌟 PDPA & GIS Box Style */
     .pdpa-box { background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 16px; padding: 16px; font-size: 0.85rem; text-align: left; }
     #systemLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
     
@@ -179,6 +193,7 @@
     </div>
     
     <div id="dashStatusBadge" class="badge-status">รอตรวจสอบ</div>
+    <div id="dashTypeBadge" class="badge-type">สมาชิกสามัญ</div>
     <h4 id="dashName" class="fw-bold mb-0 text-dark"></h4>
     <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-1"></i><span id="dashCenterText"></span></p>
     
@@ -258,7 +273,6 @@
       
       <div class="info-list">
         <div class="info-row"><span class="info-label">รหัสสมาชิก</span><span class="info-data text-primary fs-6" id="dashMemberId"></span></div>
-        <div class="info-row"><span class="info-label">ประเภทสมาชิก</span><span class="info-data" id="dashMemberTypeBadge"></span></div>
         <div class="info-row"><span class="info-label">เลข ปชช.</span><span class="info-data"><span id="dashNatIdMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('NatId')"></i></span></div>
         <div class="info-row"><span class="info-label">เบอร์โทรศัพท์</span><span class="info-data"><span id="dashPhoneMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('Phone')"></i></span></div>
         <div class="info-row"><span class="info-label">อายุสมาชิก</span><span class="info-data text-success" id="dashAgeYears"></span></div>
@@ -299,21 +313,54 @@
 
       <!-- ที่อยู่และการติดต่อ -->
       <div class="section-title"><i class="fa-solid fa-map-location-dot text-muted me-2"></i> ที่อยู่และการติดต่อ</div>
+      
+      <!-- 🌟 เพิ่มการเลือกประเภทที่อยู่ (ในเขต/นอกเขต) -->
+      <div class="mb-3 p-3 bg-light rounded-3 border">
+        <label class="small text-muted fw-bold mb-2 d-block">ลักษณะที่พักอาศัย (มีผลกับประเภทสมาชิก)</label>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="addressZoneType" id="zoneIn" value="ในเขต" checked>
+          <label class="form-check-label fw-bold text-success" for="zoneIn">ในเขตตำบล</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="addressZoneType" id="zoneOut" value="นอกเขต">
+          <label class="form-check-label fw-bold text-danger" for="zoneOut">นอกเขตตำบล</label>
+        </div>
+      </div>
+
       <div class="mb-3"><label class="small text-muted fw-bold ms-1 mb-1">รายละเอียดที่อยู่ (บ้านเลขที่, ถนน)</label><input type="text" id="editAddrFull" name="addressDetail" class="form-control" placeholder="บ้านเลขที่, ถนน"></div>
       
       <div class="row g-2 mb-3">
         <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">หมู่ที่</label><input type="text" id="editAddrMoo" name="addressMoo" class="form-control"></div>
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">หมู่บ้าน</label><select id="editVillage" name="village" class="form-select"></select></div>
+        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">ชื่อหมู่บ้าน</label><input type="text" id="editVillage" name="village" class="form-control" placeholder="ระบุชื่อหมู่บ้าน"></div>
+      </div>
+
+      <!-- 🌟 Dynamic Dropdown (จังหวัด -> อำเภอ -> ตำบล) -->
+      <div class="mb-3">
+        <label class="small text-muted fw-bold ms-1 mb-1">จังหวัด</label>
+        <select id="editAddrProvince" name="addressProvince" class="form-select" onchange="updateAmphoeDropdown()">
+          <option value="">-- เลือกจังหวัด --</option>
+          <option value="นราธิวาส">นราธิวาส</option>
+          <option value="อื่นๆ">อื่นๆ</option>
+        </select>
       </div>
       <div class="row g-2 mb-3">
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">ตำบล</label><input type="text" id="editAddrTumbol" name="addressTumbol" class="form-control" value="สุคิริน"></div>
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">อำเภอ</label><input type="text" id="editAddrAmphur" name="addressAmphur" class="form-control" value="สุคิริน"></div>
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">จังหวัด</label><input type="text" id="editAddrProvince" name="addressProvince" class="form-control" value="นราธิวาส"></div>
+        <div class="col-6">
+          <label class="small text-muted fw-bold ms-1 mb-1">อำเภอ</label>
+          <select id="editAddrAmphur" name="addressAmphur" class="form-select" disabled onchange="updateTumbolDropdown()">
+            <option value="">-- เลือกอำเภอ --</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="small text-muted fw-bold ms-1 mb-1">ตำบล</label>
+          <select id="editAddrTumbol" name="addressTumbol" class="form-select" disabled>
+            <option value="">-- เลือกตำบล --</option>
+          </select>
+        </div>
       </div>
       <div class="mb-3"><label class="small text-muted fw-bold ms-1 mb-1">รหัสไปรษณีย์</label><input type="tel" id="editAddrZip" name="addressZip" class="form-control" maxlength="5"></div>
 
       <div class="row g-2 mb-3">
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">เบอร์โทรศัพท์</label><input type="tel" id="editPhone" name="phone" class="form-control" maxlength="10"></div>
+        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">เบอร์โทรศัพท์</label><input type="tel" id="editPhone" name="phone" class="form-control" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"></div>
         <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">อีเมล</label><input type="email" id="editEmail" name="email" class="form-control"></div>
       </div>
       
@@ -427,6 +474,23 @@
   
   let vulnerableList = []; // เก็บ Array ของผู้เปราะบาง
 
+  // 🌟 ข้อมูลที่อยู่จังหวัดนราธิวาส (13 อำเภอ และตำบลตัวอย่าง)
+  const locationData = {
+      "เมืองนราธิวาส": ["บางนาค", "ลำภู", "มะนังตายอ", "กะลุวอ", "กะลุวอเหนือ", "โคกเคียน", "โคกสุมุ"],
+      "ตากใบ": ["เจ๊ะเห", "พร่อน", "ศาลาใหม่", "บางขุนทอง", "นานาค", "โฆษิต", "เกาะสะท้อน", "นานาค"],
+      "บาเจาะ": ["บาเจาะ", "ลุโบะสาวอ", "กาเยาะมาตี", "ปะลุกาสาเมาะ", "บาเระเหนือ", "บาเระใต้"],
+      "ยี่งอ": ["ยี่งอ", "จอเบาะ", "ลุโบะบือซา", "ลุโบะบายะ", "ตะปอเยาะ", "ละหาร"],
+      "ระแงะ": ["ตันหยงมัส", "ตันหยงลิมอ", "บองอ", "กาลิซา", "บาโงสะโต", "มะรือโบตก", "เฉลิม"],
+      "รือเสาะ": ["รือเสาะ", "รือเสาะออก", "สาวอ", "เรียง", "สามัคคี", "บาตง", "ลาโล๊ะ", "สุวารี", "โคกสะตอ"],
+      "ศรีสาคร": ["ศรีสาคร", "ซากอ", "ตามะยู", "เชิงคีรี", "กาหลง", "ศรีบรรพต"],
+      "แว้ง": ["แว้ง", "กายูคละ", "ฆอเลาะ", "โละจูด", "แม่ดง", "เอราวัณ"],
+      "สุคิริน": ["สุคิริน", "เกียร์", "ภูเขาทอง", "มาโมง", "ร่มไทร"],
+      "สุไหงโก-ลก": ["สุไหงโก-ลก", "ปาเสมัส", "มูโนะ", "ปูโยะ"],
+      "สุไหงปาดี": ["แว้ง", "สุไหงปาดี", "ปะลุรู", "ริโก๋", "สากอ", "โต๊ะเด็ง", "กาวะ"],
+      "จะแนะ": ["จะแนะ", "ดุซงญอ", "ผดุงมาตร", "ช้างเผือก"],
+      "เจาะไอร้อง": ["จวบ", "บูกิต", "มะรือโบออก"]
+  };
+
   document.addEventListener("DOMContentLoaded", async () => {
     try {
       // 🌟 ดึงข้อมูลตั้งค่าระบบ (Centers & Villages) จาก Firestore
@@ -473,7 +537,7 @@
     }
   }
 
-  // 📝 บันทึกข้อมูลสมาชิกลง Firestore
+  // 📝 บันทึกข้อมูลสมาชิกใหม่ลง Firestore
   async function handleRegister(e) {
     e.preventDefault(); 
     const btn = document.getElementById('submitRegBtn'); btn.disabled = true; btn.innerHTML = 'กำลังบันทึก...';
@@ -485,11 +549,11 @@
     if (payload.nationalId.length !== 13) { Swal.fire('เตือน', 'เลข ปชช. ต้องมี 13 หลัก', 'warning'); btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก'; return; }
     const uid = document.getElementById('uid').value;
     
-    // 🌟 กำหนดประเภทสมาชิก (สามัญ/สมทบ) ตามเขตหมู่บ้าน
+    // 🌟 กำหนดประเภทสมาชิก (สามัญ/สมทบ) ตามหมู่บ้านเริ่มต้น (ตอนสมัครใช้หมู่บ้านไปก่อน)
     let mType = 'สมาชิกสมทบ';
     if((fundSettings.inZoneVillages || []).includes(payload.village)) { mType = 'สมาชิกสามัญ'; }
     
-    // 🌟 วันที่สมัคร 
+    // 🌟 วันที่สมัคร (ปี พ.ศ.)
     const d = new Date();
     const thaiYear = d.getFullYear() + 543;
     const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${thaiYear}`;
@@ -499,6 +563,7 @@
         memberId: "CWF" + Date.now().toString().slice(-5), 
         status: "รอตรวจสอบ",
         memberType: mType, 
+        addressZoneType: mType === 'สมาชิกสามัญ' ? 'ในเขต' : 'นอกเขต', // บันทึกโซนเริ่มต้น
         cwfPoints: 0, totalContribution: 0, totalWelfareReceived: 0,
         outstandingBalance: fundSettings.annualFee || 365, 
         welfareHistory: [], vulnerableData: [],
@@ -537,6 +602,9 @@
     
     // ดึงข้อมูลผู้เปราะบาง
     payload.vulnerableData = vulnerableList;
+    
+    // 🌟 กำหนดประเภทสมาชิกตาม Zone ที่ติ๊กเลือก
+    payload.memberType = payload.addressZoneType === 'ในเขต' ? 'สมาชิกสามัญ' : 'สมาชิกสมทบ';
 
     try {
       await db.collection("members").doc(uid).update(payload);
@@ -564,6 +632,7 @@
               await docRef.update({ cwfPoints: firebase.firestore.FieldValue.increment(10), lastCheckInDate: today });
               const newPoints = (await docRef.get()).data().cwfPoints;
               document.getElementById('dashCwfPoints').innerText = newPoints;
+              updateTierOnScreen(newPoints);
               Swal.fire({ icon: 'success', title: 'เยี่ยมมาก!', text: 'ได้รับ 10 คะแนนจากการเช็คอินวันนี้' });
           }
       }
@@ -598,7 +667,9 @@
           
           if(docSnap.data().lastShareDate !== today) {
               await docRef.update({ cwfPoints: firebase.firestore.FieldValue.increment(10), lastShareDate: today });
-              document.getElementById('dashCwfPoints').innerText = (await docRef.get()).data().cwfPoints;
+              const updatedData = (await docRef.get()).data();
+              document.getElementById('dashCwfPoints').innerText = updatedData.cwfPoints;
+              updateTierOnScreen(updatedData.cwfPoints);
               Swal.fire('แชร์สำเร็จ', 'ได้รับ 10 แต้มจากการแชร์ข่าวสาร', 'success');
           }
       }
@@ -608,6 +679,23 @@
   // ==========================================================
   // 🎨 ระบบจัดการ UI (ซ่อนเลข, พิกัด, เรนเดอร์)
   // ==========================================================
+  function updateTierOnScreen(points) {
+      let tierName = "ร่วมใจ (Unity)"; let tierColor = "#64748B"; 
+      if (points >= 5000) { tierName = "เกียรติภูมิชุมชน (Legacy)"; tierColor = "#D97706"; }
+      else if (points >= 2500) { tierName = "ทรงคุณค่า (Precious)"; tierColor = "#1D4ED8"; }
+      else if (points >= 1000) { tierName = "ต้นแบบ (Role Model)"; tierColor = "#059669"; }
+      else if (points >= 600) { tierName = "อุทิศตน (Dedication)"; tierColor = "#7C3AED"; }
+      else if (points >= 300) { tierName = "แบ่งปัน (Sharing)"; tierColor = "#EA580C"; }
+      else if (points >= 100) { tierName = "เกื้อกูล (Solidarity)"; tierColor = "#0284C7"; }
+      
+      const tierBadge = document.getElementById('dashTierBadge');
+      if(tierBadge) {
+          tierBadge.innerHTML = `<i class="fa-solid fa-crown"></i> ${tierName}`;
+          tierBadge.style.backgroundColor = tierColor;
+          tierBadge.style.display = 'inline-flex';
+      }
+  }
+
   function requestLocation() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -639,10 +727,12 @@
     document.getElementById('dashCenterText').innerText = " " + (data.center || "ยังไม่ระบุศูนย์");
     document.getElementById('dashCwfPoints').innerText = data.cwfPoints || 0;
     
+    if (data.cwfPoints !== undefined) updateTierOnScreen(data.cwfPoints);
+
     document.getElementById('dashStatusBadge').innerText = data.status || "รอตรวจสอบ";
     document.getElementById('dashStatusBadge').className = `badge-status ${data.status === 'เป็นสมาชิก' ? 'status-active' : 'status-pending'}`;
     
-    // 🌟 ย้ายประเภทสมาชิกมาลงในการ์ดส่วนตัว
+    // 🌟 ประเภทสมาชิก
     document.getElementById('dashMemberTypeBadge').innerText = data.memberType || "สมาชิกสามัญ";
 
     document.getElementById('dashTotalContrib').innerText = (data.totalContribution || 0).toLocaleString();
@@ -721,6 +811,45 @@
       });
   }
 
+  // 🌟 ระบบ Dynamic Dropdown (จังหวัด > อำเภอ > ตำบล)
+  function updateAmphoeDropdown() {
+      const prov = document.getElementById('editAddrProvince').value;
+      const ampSelect = document.getElementById('editAddrAmphur');
+      const tumSelect = document.getElementById('editAddrTumbol');
+      
+      ampSelect.innerHTML = '<option value="">-- เลือกอำเภอ --</option>';
+      tumSelect.innerHTML = '<option value="">-- เลือกตำบล --</option>';
+      tumSelect.disabled = true;
+
+      if(prov === 'นราธิวาส') {
+          ampSelect.disabled = false;
+          Object.keys(locationData).forEach(amp => {
+              ampSelect.add(new Option(amp, amp));
+          });
+      } else if (prov === 'อื่นๆ') {
+          // หากเลือกจังหวัดอื่น (ไม่ได้ทำลิสต์อำเภอไว้) ให้ผู้ใช้พิมพ์เองโดยการเปลี่ยนเป็น text input
+          ampSelect.outerHTML = '<input type="text" id="editAddrAmphur" name="addressAmphur" class="form-control" placeholder="พิมพ์ชื่ออำเภอ">';
+          tumSelect.outerHTML = '<input type="text" id="editAddrTumbol" name="addressTumbol" class="form-control" placeholder="พิมพ์ชื่อตำบล">';
+      } else {
+          ampSelect.disabled = true;
+      }
+  }
+
+  function updateTumbolDropdown() {
+      const amp = document.getElementById('editAddrAmphur').value;
+      const tumSelect = document.getElementById('editAddrTumbol');
+      
+      tumSelect.innerHTML = '<option value="">-- เลือกตำบล --</option>';
+      if(locationData[amp]) {
+          tumSelect.disabled = false;
+          locationData[amp].forEach(tum => {
+              tumSelect.add(new Option(tum, tum));
+          });
+      } else {
+          tumSelect.disabled = true;
+      }
+  }
+
   function openProfileEditor() {
     if(!cachedUserData) return; const d = cachedUserData;
     document.getElementById('editMemId').value = d.memberId || "";
@@ -731,20 +860,42 @@
     document.getElementById('editPhone').value = d.phone || "";
     document.getElementById('editEmail').value = d.email || ""; 
     
-    // ตั้งค่า Dropdown หมู่บ้านและศูนย์
+    // ตั้งค่า Zone (ในเขต/นอกเขต)
+    if(d.addressZoneType) {
+        if(d.addressZoneType === 'ในเขต') document.getElementById('zoneIn').checked = true;
+        else document.getElementById('zoneOut').checked = true;
+    }
+
+    // ตั้งค่า Dropdown หมู่บ้านและศูนย์ (ดึงจาก Settings ของ Admin)
     const editCenter = document.getElementById('editCenter'); editCenter.innerHTML = '';
-    const editVillage = document.getElementById('editVillage'); editVillage.innerHTML = '';
     (fundSettings.centers || []).forEach(c => editCenter.add(new Option(c, c)));
-    (fundSettings.villages || []).forEach(v => editVillage.add(new Option(v, v)));
-    
     if(d.center) editCenter.value = d.center; 
-    if(d.village) editVillage.value = d.village;
-    
+
+    // ตั้งค่าที่อยู่แบบละเอียด
     document.getElementById('editAddrFull').value = d.addressDetail || "";
     document.getElementById('editAddrMoo').value = d.addressMoo || "";
-    if(d.addressTumbol) document.getElementById('editAddrTumbol').value = d.addressTumbol;
-    if(d.addressAmphur) document.getElementById('editAddrAmphur').value = d.addressAmphur;
-    if(d.addressProvince) document.getElementById('editAddrProvince').value = d.addressProvince;
+    document.getElementById('editVillage').value = d.village || "";
+    
+    const provSelect = document.getElementById('editAddrProvince');
+    if(d.addressProvince) provSelect.value = d.addressProvince;
+    updateAmphoeDropdown(); // Trigger dropdown
+    
+    // หน่วงเวลาเล็กน้อยเพื่อให้ Dropdown สร้าง option เสร็จก่อนเลือกค่าเดิม
+    setTimeout(() => {
+        const ampSelect = document.getElementById('editAddrAmphur');
+        if(d.addressAmphur && ampSelect.tagName === 'SELECT') {
+            ampSelect.value = d.addressAmphur;
+            updateTumbolDropdown();
+            setTimeout(() => {
+                const tumSelect = document.getElementById('editAddrTumbol');
+                if(d.addressTumbol && tumSelect.tagName === 'SELECT') tumSelect.value = d.addressTumbol;
+            }, 100);
+        } else if (d.addressAmphur && ampSelect.tagName === 'INPUT') {
+            ampSelect.value = d.addressAmphur;
+            document.getElementById('editAddrTumbol').value = d.addressTumbol || "";
+        }
+    }, 100);
+
     document.getElementById('editAddrZip').value = d.addressZip || "";
 
     if(d.education) document.getElementById('editEdu').value = d.education; 
