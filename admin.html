@@ -196,7 +196,7 @@
 </div>
 
 <div id="mainWorkspace" class="container-fluid pt-3" style="display: none;">
-  
+
   <!-- 📊 1. ภาพรวม -->
   <div class="tab-pane d-block" id="view-overview">
     <div class="ledger-card-total">
@@ -270,6 +270,7 @@
 
   <!-- 💳 3. สมุดบัญชีกลาง (Ledger & Transactions) -->
   <div class="tab-pane d-none" id="view-ledger">
+    
     <h5 class="fw-bold text-dark mb-3">สมุดบัญชีรับเงิน (รออนุมัติ)</h5>
 
     
@@ -330,11 +331,26 @@
           </div>
           <button type="submit" class="btn btn-dark w-100 mt-3 rounded-pill py-2 fw-bold">โอนเงิน</button>
       </form>
+    
+    <!-- 🔴 จุดยึดกราฟในแท็บ "การเงิน" (Ledger) กราฟจะถูกย้ายมาตรงนี้อัตโนมัติ -->
+    <div id="ledgerChartArea"></div>
 
-    <h6 class="fw-bold text-dark mb-3">รายการรอตรวจสอบ</h6>
+    <h6 class="fw-bold text-dark mb-3 mt-4">รายการรอตรวจสอบ</h6>
     <div id="list-pending-transactions">ไม่มีรายการค้าง</div>
-    <h6 class="fw-bold text-dark mb-3 mt-4">ประวัติล่าสุด (อนุมัติแล้ว)</h6>
+    
+    <!-- 🔴 เพิ่มช่องค้นหาวันที่ และ ปุ่มแบ่งหน้า -->
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+      <h6 class="fw-bold text-dark mb-0">ประวัติ (อนุมัติแล้ว)</h6>
+      <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-light text-danger" onclick="clearTxFilter()" title="ล้างการค้นหา"><i class="fa-solid fa-xmark"></i></button>
+          <input type="date" id="searchTxDate" class="form-control form-control-sm w-auto text-primary fw-bold" onchange="filterTxByDate(this.value)" title="ค้นหาจากวันที่ทำรายการ">
+      </div>
+    </div>
     <div id="list-approved-transactions"></div>
+    
+    <!-- 🔴 คอนเทนเนอร์สำหรับปุ่มเปลี่ยนหน้า (Pagination) -->
+    <div id="tx-pagination" class="d-flex justify-content-center flex-wrap gap-2 mt-4 mb-3"></div>
+
   </div>
   
   <!-- 🏥 4. อนุมัติสวัสดิการ (Claims) -->
@@ -522,9 +538,29 @@
       }).then((r) => { if(r.isConfirmed) Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success'); });
   }
 
+// ==========================================
+  // 🧭 ฟังก์ชันสลับหน้าต่างแท็บเมนู
+  // ==========================================
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-pane').forEach(el => { el.classList.remove('d-block'); el.classList.add('d-none'); });
     document.getElementById(tabId).classList.replace('d-none', 'd-block');
+    
+    // 🔴 ย้ายตำแหน่งกล่องกราฟสถิติกระแสเงินสดให้อยู่ถูกที่ และแสดงเฉพาะ 2 แท็บที่กำหนด
+    const trendChartEl = document.getElementById('sharedTrendChart');
+    if(trendChartEl) {
+        if(tabId === 'view-overview') {
+            document.getElementById('overviewChartArea').appendChild(trendChartEl);
+            trendChartEl.style.display = 'block';
+            if(typeof renderTrendChart === 'function') renderTrendChart();
+        } else if (tabId === 'view-ledger') {
+            document.getElementById('ledgerChartArea').appendChild(trendChartEl);
+            trendChartEl.style.display = 'block';
+            if(typeof renderTrendChart === 'function') renderTrendChart();
+        } else {
+            trendChartEl.style.display = 'none'; // หน้าอื่นๆ ให้ซ่อนกราฟทิ้ง
+        }
+    }
+
     if(btn) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); btn.classList.add('active'); window.scrollTo(0,0); }
   }
 
@@ -640,7 +676,9 @@
       
     } catch (e) { console.error(e); } showLoader(false);
   }
-  // 🌟 ฟังก์ชันคำนวณและวาดกราฟเปรียบเทียบกระแสเงินสด (รองรับการกรองหลายรูปแบบ)
+
+
+// 🌟 ฟังก์ชันคำนวณและวาดกราฟเปรียบเทียบกระแสเงินสด (แยก 8 หมวดหมู่ทุนสะสม + รายจ่าย)
   async function renderTrendChart() {
       const filter = document.getElementById('trendFilter').value;
       const ctx = document.getElementById('trendChart');
@@ -648,24 +686,22 @@
       
       showLoader(true, "กำลังประมวลผลกราฟ...");
       try {
-          // ดึงเฉพาะธุรกรรมที่ 'อนุมัติแล้ว' (รายการเบิกจ่ายสวัสดิการรวมอยู่ในนี้แล้ว)
           const snap = await db.collection("transactions").where("status", "==", "อนุมัติแล้ว").get();
           
           let rawData = [];
           snap.forEach(doc => {
               const d = doc.data();
-              if (d.type === 'โอนย้ายสภาพคล่อง') return; // ข้ามรายการโอนย้ายภายใน
+              if (d.type === 'โอนย้ายสภาพคล่อง') return; 
               
               let txDate = new Date();
               if (d.transactionDate) txDate = new Date(d.transactionDate);
               else if (d.timestamp) txDate = d.timestamp.toDate();
               
-              rawData.push({ type: d.type, amount: parseFloat(d.amount), dateObj: txDate });
+              rawData.push({ type: d.type, amount: parseFloat(d.amount), dateObj: txDate, note: d.note || "" });
           });
 
-          // กำหนดจุดเริ่มต้นของช่วงเวลาที่จะดึงข้อมูล
           const now = new Date();
-          let startDate = new Date('2000-01-01'); // ค่าเริ่มต้นดึงทั้งหมด (allYears)
+          let startDate = new Date('2000-01-01');
           
           if (filter === '1month') {
               startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -676,9 +712,8 @@
           } else if (filter === 'thisYear' || filter === 'quarter') {
               startDate = new Date(now.getFullYear(), 0, 1);
           } else if (filter === 'fiscal') {
-              // 📌 การคำนวณปีงบประมาณไทย (เริ่ม 1 ต.ค.)
               let startYear = now.getFullYear();
-              if (now.getMonth() < 9) startYear -= 1; // ถ้ายังไม่ถึง ต.ค. ให้ดึงของปีที่แล้ว
+              if (now.getMonth() < 9) startYear -= 1; 
               startDate = new Date(startYear, 9, 1);
           }
           
@@ -686,14 +721,13 @@
           let grouped = {};
           const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
-          // ประมวลผลและจัดกลุ่มข้อมูลเพื่อวาดกราฟ
           filteredData.forEach(d => {
               let dObj = d.dateObj;
               let thYear = dObj.getFullYear() + 543;
               let thMonth = dObj.getMonth();
               
-              let sortKey = "";    // ใช้สำหรับเรียงลำดับเวลา (ซ้ายไปขวา)
-              let displayKey = ""; // ใช้สำหรับแสดงผลบนแกน X
+              let sortKey = "";
+              let displayKey = "";
               
               if (filter === '1month') {
                   sortKey = `${dObj.getFullYear()}-${String(thMonth+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
@@ -710,61 +744,68 @@
                   sortKey = `${dObj.getFullYear()}-${String(thMonth+1).padStart(2,'0')}`;
                   displayKey = `${monthNames[thMonth]} ${fiscalYear.toString().slice(-2)}`;
               } else {
-                  // สำหรับ 3 เดือน, 6 เดือน, ปีปัจจุบัน
                   sortKey = `${dObj.getFullYear()}-${String(thMonth+1).padStart(2,'0')}`;
                   displayKey = `${monthNames[thMonth]} ${thYear.toString().slice(-2)}`;
               }
 
-              if (!grouped[sortKey]) grouped[sortKey] = { label: displayKey, income: 0, expense: 0 };
+              // เตรียมโครงสร้าง 8 หมวดหมู่ + 1 รายจ่าย
+              if (!grouped[sortKey]) {
+                  grouped[sortKey] = { 
+                      label: displayKey, 
+                      member: 0, codi: 0, local: 0, privateStore: 0, 
+                      donate: 0, interest: 0, profit: 0, other: 0, expense: 0 
+                  };
+              }
               
               let isIncome = d.type.includes('รับ') || d.type.includes('สมทบ');
-              if (isIncome) grouped[sortKey].income += d.amount;
-              else grouped[sortKey].expense += d.amount;
+              if (isIncome) {
+                  let noteStr = d.note.toLowerCase();
+                  if(d.type === 'สมทบเงินกองทุน' || noteStr.includes('สมาชิก')) grouped[sortKey].member += d.amount;
+                  else if(noteStr.includes('พอช.')) grouped[sortKey].codi += d.amount;
+                  else if(noteStr.includes('ท้องถิ่น')) grouped[sortKey].local += d.amount;
+                  else if(noteStr.includes('เอกชน') || noteStr.includes('ร้านค้า')) grouped[sortKey].privateStore += d.amount;
+                  else if(noteStr.includes('บริจาค')) grouped[sortKey].donate += d.amount;
+                  else if(noteStr.includes('ดอกเบี้ย')) grouped[sortKey].interest += d.amount;
+                  else if(noteStr.includes('กำไร')) grouped[sortKey].profit += d.amount;
+                  else grouped[sortKey].other += d.amount;
+              } else {
+                  grouped[sortKey].expense += d.amount;
+              }
           });
 
-          // เรียงลำดับจากอดีตไปปัจจุบัน
           const sortedKeys = Object.keys(grouped).sort();
           const labels = sortedKeys.map(k => grouped[k].label);
-          const dataIncome = sortedKeys.map(k => grouped[k].income);
-          const dataExpense = sortedKeys.map(k => grouped[k].expense);
           
-          // สรุปยอดคงเหลือเติบโต (Net Growth) ในแต่ละจุด
-          const dataNet = sortedKeys.map(k => grouped[k].income - grouped[k].expense);
+          // ดึงข้อมูลแต่ละเส้น
+          const dMember = sortedKeys.map(k => grouped[k].member);
+          const dCodi = sortedKeys.map(k => grouped[k].codi);
+          const dLocal = sortedKeys.map(k => grouped[k].local);
+          const dPrivate = sortedKeys.map(k => grouped[k].privateStore);
+          const dDonate = sortedKeys.map(k => grouped[k].donate);
+          const dInterest = sortedKeys.map(k => grouped[k].interest);
+          const dProfit = sortedKeys.map(k => grouped[k].profit);
+          const dOther = sortedKeys.map(k => grouped[k].other);
+          const dExpense = sortedKeys.map(k => grouped[k].expense);
 
-          // ทำลายกราฟตัวเก่าเพื่ออัปเดตข้อมูลใหม่
+          if (!window.charts) window.charts = {}; 
           if (charts.trendChartObj) charts.trendChartObj.destroy();
           
+          // วาดกราฟ 9 เส้นแยกสี (8 รับ + 1 จ่าย)
+          // ตั้งค่า fill: false เพื่อไม่ให้สีทับกันจนดูไม่รู้เรื่อง
           charts.trendChartObj = new Chart(ctx.getContext('2d'), {
               type: 'line',
               data: {
                   labels: labels,
                   datasets: [
-                      { 
-                          label: 'รายรับ', 
-                          data: dataIncome, 
-                          borderColor: '#10B981', 
-                          backgroundColor: 'rgba(16, 185, 129, 0.15)', 
-                          tension: 0.4, 
-                          fill: true, 
-                          pointRadius: 4 
-                      },
-                      { 
-                          label: 'รายจ่าย', 
-                          data: dataExpense, 
-                          borderColor: '#EF4444', 
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                          tension: 0.4, 
-                          fill: true, 
-                          pointRadius: 4 
-                      },
-                      { 
-                          label: 'คงเหลือ (Net)', 
-                          data: dataNet, 
-                          borderColor: '#3B82F6', 
-                          borderDash: [5, 5], 
-                          tension: 0.3, 
-                          pointRadius: 3 
-                      }
+                      { label: 'สมาชิก', data: dMember, borderColor: '#2563EB', backgroundColor: '#2563EB', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'พอช.', data: dCodi, borderColor: '#10B981', backgroundColor: '#10B981', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'ท้องถิ่น', data: dLocal, borderColor: '#F59E0B', backgroundColor: '#F59E0B', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'เอกชน/ร้านค้า', data: dPrivate, borderColor: '#8B5CF6', backgroundColor: '#8B5CF6', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'บริจาค', data: dDonate, borderColor: '#EC4899', backgroundColor: '#EC4899', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'ดอกเบี้ยฯ', data: dInterest, borderColor: '#06B6D4', backgroundColor: '#06B6D4', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'กำไร', data: dProfit, borderColor: '#14B8A6', backgroundColor: '#14B8A6', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'อื่นๆ', data: dOther, borderColor: '#94A3B8', backgroundColor: '#94A3B8', tension: 0.3, fill: false, pointRadius: 4 },
+                      { label: 'รายจ่ายรวม', data: dExpense, borderColor: '#EF4444', backgroundColor: '#EF4444', borderDash: [5, 5], tension: 0.3, fill: false, pointRadius: 4 }
                   ]
               },
               options: { 
@@ -772,12 +813,15 @@
                   maintainAspectRatio: false, 
                   interaction: { mode: 'index', intersect: false },
                   plugins: { 
-                      legend: { position: 'top', labels: { boxWidth: 10, font: { family: "'Prompt', sans-serif", size: 11 } } },
+                      legend: { 
+                          position: 'top', 
+                          labels: { boxWidth: 10, font: { family: "'Prompt', sans-serif", size: 10 } } 
+                      },
                       tooltip: { titleFont: { family: "'Prompt'" }, bodyFont: { family: "'Prompt'" } }
                   },
-                  scales: {
-                      y: { beginAtZero: true, ticks: { font: { family: "'Prompt'", size: 10 } } },
-                      x: { ticks: { font: { family: "'Prompt'", size: 10 } } }
+                  scales: { 
+                      y: { beginAtZero: true, ticks: { font: { family: "'Prompt'" } } }, 
+                      x: { ticks: { font: { family: "'Prompt'" } } } 
                   }
               }
           });
@@ -785,7 +829,6 @@
       } catch (e) { console.error("Trend Chart Error:", e); }
       showLoader(false);
   }
-
   // ==========================================
   // 👥 TAB 2: ทะเบียนสมาชิก
   // ==========================================
@@ -817,11 +860,30 @@
       if (newStatus && newStatus !== currStatus) { showLoader(true); await db.collection("members").doc(id).update({ status: newStatus }); loadMembersData(); loadDashboardOverview(); }
   }
 
-  /// ==========================================
-  // 💳 TAB 3: สมุดบัญชี & รับเงิน (อัปเดตสมบูรณ์ 100%)
+  // ==========================================
+  // 💳 TAB 3: สมุดบัญชี & รับเงิน (มี Pagination, ค้นหา, และ TX-ID)
   // ==========================================
   let incomeNotes = [];
   let expenseNotes = [];
+  
+  // 🔴 ตัวแปรสำหรับระบบแบ่งหน้าและค้นหา
+  let allTransactionsCache = []; 
+  let currentTxPage = 1;         
+  const itemsPerTxPage = 10;     
+  let txSearchDate = "";         
+
+  // 🌟 ฟังก์ชันสร้างเลขที่รายการอัตโนมัติ (Transaction ID)
+  function generateTxId() {
+      const now = new Date();
+      const yy = (now.getFullYear() + 543).toString().slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const sec = String(now.getSeconds()).padStart(2, '0');
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      return `TX${yy}${mm}${dd}${hh}${min}${sec}-${random}`;
+  }
 
   async function loadLedgerNotes() {
       try {
@@ -843,32 +905,19 @@
       
       select.className = `form-select border-primary fw-bold ${colorClass}`;
       select.innerHTML = '<option value="" selected disabled>-- เลือกหมวดหมู่รายการ --</option>';
-      
-      notes.forEach(note => {
-          select.innerHTML += `<option value="${note}" class="${colorClass}">${note}</option>`;
-      });
+      notes.forEach(note => { select.innerHTML += `<option value="${note}" class="${colorClass}">${note}</option>`; });
   }
 
   async function addNewLedgerNote() {
       const isIncome = document.querySelector('input[name="ieType"]:checked').value === 'income';
-      const { value: newNote } = await Swal.fire({
-          title: isIncome ? 'เพิ่มรายการรับใหม่' : 'เพิ่มรายการจ่ายใหม่',
-          input: 'text',
-          inputPlaceholder: 'พิมพ์ชื่อหมวดหมู่...',
-          showCancelButton: true,
-          confirmButtonText: 'บันทึก',
-          confirmButtonColor: isIncome ? '#10B981' : '#EF4444'
-      });
-
+      const { value: newNote } = await Swal.fire({ title: isIncome ? 'เพิ่มรายการรับใหม่' : 'เพิ่มรายการจ่ายใหม่', input: 'text', inputPlaceholder: 'พิมพ์ชื่อหมวดหมู่...', showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: isIncome ? '#10B981' : '#EF4444' });
       if (newNote && newNote.trim() !== '') {
           showLoader(true, "กำลังบันทึก...");
           const field = isIncome ? 'incomeNotes' : 'expenseNotes';
           try {
               await db.collection("settings").doc("master").set({ [field]: firebase.firestore.FieldValue.arrayUnion(newNote.trim()) }, { merge: true });
               if(isIncome) incomeNotes.push(newNote.trim()); else expenseNotes.push(newNote.trim());
-              renderNoteDropdown();
-              document.getElementById('ieNote').value = newNote.trim();
-              showLoader(false);
+              renderNoteDropdown(); document.getElementById('ieNote').value = newNote.trim(); showLoader(false);
           } catch(e) { showLoader(false); Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
       }
   }
@@ -877,120 +926,166 @@
       const isIncome = document.querySelector('input[name="ieType"]:checked').value === 'income';
       const select = document.getElementById('ieNote');
       const noteToDelete = select.value;
-
       if(!noteToDelete) return Swal.fire('เตือน', 'กรุณาเลือกหมวดหมู่ที่ต้องการลบก่อน', 'warning');
-
       if(confirm(`ยืนยันการลบ "${noteToDelete}" ออกจากตัวเลือก?`)) {
           showLoader(true, "กำลังลบ...");
           const field = isIncome ? 'incomeNotes' : 'expenseNotes';
           try {
               await db.collection("settings").doc("master").set({ [field]: firebase.firestore.FieldValue.arrayRemove(noteToDelete) }, { merge: true });
               if(isIncome) incomeNotes = incomeNotes.filter(n => n !== noteToDelete); else expenseNotes = expenseNotes.filter(n => n !== noteToDelete);
-              renderNoteDropdown();
-              showLoader(false);
+              renderNoteDropdown(); showLoader(false);
           } catch(e) { showLoader(false); Swal.fire('Error', 'ไม่สามารถลบได้', 'error'); }
       }
   }
 
-  
-// 🌟 ฟังก์ชันตั้งค่าวันที่ปัจจุบันให้ช่อง Input อัตโนมัติ
-function setTodayDate() {
+  function setTodayDate() {
       const today = new Date().toISOString().split('T')[0];
       if (document.getElementById('ieDate')) document.getElementById('ieDate').value = today;
       if (document.getElementById('tfDate')) document.getElementById('tfDate').value = today;
   }
 
-  // 🌟 ฟังก์ชันสลับแท็บ (อัปเดตให้ดึงวันที่ปัจจุบันมาแสดง)
   function switchLedgerTab(tab) {
-      document.getElementById('tab-ie').classList.remove('active'); 
-      document.getElementById('tab-tf').classList.remove('active');
-      document.getElementById('form-ie').classList.add('d-none'); 
-      document.getElementById('form-tf').classList.add('d-none');
-      document.getElementById(`tab-${tab}`).classList.add('active'); 
-      document.getElementById(`form-${tab}`).classList.remove('d-none');
-      setTodayDate(); // ดึงค่าเริ่มต้นเป็นวันที่ปัจจุบันทุกครั้งที่สลับแท็บ
+      document.getElementById('tab-ie').classList.remove('active'); document.getElementById('tab-tf').classList.remove('active');
+      document.getElementById('form-ie').classList.add('d-none'); document.getElementById('form-tf').classList.add('d-none');
+      document.getElementById(`tab-${tab}`).classList.add('active'); document.getElementById(`form-${tab}`).classList.remove('d-none');
+      setTodayDate();
   }
 
-  // 🌟 บันทึกรายการรับ-จ่าย
   async function submitLedgerIE(e) {
       e.preventDefault(); 
-      const wallet = document.getElementById('ieWallet').value; 
-      const amt = document.getElementById('ieAmt').value; 
-      const selectedType = document.getElementById('ieNote').value; 
-      const additionalNote = document.getElementById('ieAddNote').value.trim(); 
-      const txDate = document.getElementById('ieDate').value; // 🔴 ดึงวันที่ทำธุรกรรม
-      
+      const wallet = document.getElementById('ieWallet').value; const amt = document.getElementById('ieAmt').value; 
+      const selectedType = document.getElementById('ieNote').value; const additionalNote = document.getElementById('ieAddNote').value.trim(); 
+      const txDate = document.getElementById('ieDate').value; 
       if (!selectedType) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกหมวดหมู่รายการ', 'warning');
 
       showLoader(true);
       await db.collection("transactions").add({ 
-          type: selectedType, 
-          note: additionalNote, 
-          amount: parseFloat(amt), 
-          paymentMethod: wallet === 'bank' ? 'ธนาคาร' : 'เงินสด', 
-          transactionDate: txDate, // 🔴 บันทึกวันที่เกิดรายการจริง
-          fullName: 'แอดมิน: ' + currentAdminData.name, 
-          status: 'อนุมัติแล้ว', 
-          timestamp: firebase.firestore.FieldValue.serverTimestamp() // 🔴 บันทึกเวลาที่กดลงระบบ
+          txId: generateTxId(), // 🔴 เพิ่มเลขที่รายการ
+          type: selectedType, note: additionalNote, amount: parseFloat(amt), 
+          paymentMethod: wallet === 'bank' ? 'ธนาคาร' : 'เงินสด', transactionDate: txDate, 
+          fullName: 'แอดมิน: ' + currentAdminData.name, status: 'อนุมัติแล้ว', 
+          timestamp: firebase.firestore.FieldValue.serverTimestamp() 
       });
       Swal.fire({icon:'success', title:'บันทึกสำเร็จ', timer:1500, showConfirmButton:false}); 
-      e.target.reset(); 
-      setTodayDate(); // รีเซ็ตวันที่
-      loadLedgerData(); 
-      loadDashboardOverview();
+      e.target.reset(); setTodayDate(); loadLedgerData(); loadDashboardOverview();
   }
 
-  // 🌟 บันทึกการโอนย้าย
   async function submitLedgerTF(e) {
       e.preventDefault(); 
-      const from = document.getElementById('tfFrom').value; 
-      const to = document.getElementById('tfTo').value; 
-      const amt = document.getElementById('tfAmt').value;
-      const txDate = document.getElementById('tfDate').value; // 🔴 ดึงวันที่ทำธุรกรรม
-      
-      if (from === to) return Swal.fire('แจ้งเตือน', 'บัญชีต้นทางและปลายทางต้องไม่ซ้ำกัน', 'warning');
+      const from = document.getElementById('tfFrom').value; const to = document.getElementById('tfTo').value; 
+      const amt = document.getElementById('tfAmt').value; const txDate = document.getElementById('tfDate').value; 
+      if (from === to) return Swal.fire('แจ้งเตือน', 'บัญชีต้องไม่ซ้ำกัน', 'warning');
 
       showLoader(true, "กำลังโอนเงิน...");
       try {
           await db.collection("transactions").add({ 
-              type: 'โอนย้ายสภาพคล่อง', 
-              amount: parseFloat(amt), 
-              paymentMethod: 'ภายใน', 
-              note: `โอนจาก ${from} ไป ${to}`, 
-              transactionDate: txDate, // 🔴 บันทึกวันที่เกิดรายการจริง
-              fullName: 'แอดมิน: ' + currentAdminData.name, 
-              status: 'อนุมัติแล้ว', 
+              txId: generateTxId(), // 🔴 เพิ่มเลขที่รายการ
+              type: 'โอนย้ายสภาพคล่อง', amount: parseFloat(amt), paymentMethod: 'ภายใน', 
+              note: `โอนจาก ${from} ไป ${to}`, transactionDate: txDate, 
+              fullName: 'แอดมิน: ' + currentAdminData.name, status: 'อนุมัติแล้ว', 
               timestamp: firebase.firestore.FieldValue.serverTimestamp() 
           });
-          
           Swal.fire({icon:'success', title:'โอนเงินสำเร็จ', timer:1500, showConfirmButton:false}); 
-          e.target.reset(); 
-          setTodayDate(); // รีเซ็ตวันที่
-          loadLedgerData(); 
-          loadDashboardOverview();
-      } catch (error) {
-          showLoader(false); 
-          Swal.fire('Error', 'ไม่สามารถโอนเงินได้', 'error');
-      }
-  }
-  
-  async function loadLedgerData() { 
-      setTodayDate(); // 🔴 ให้สร้างวันที่ปัจจุบันทันทีที่คลิกเข้าหน้านี้
-      loadLedgerNotes();
-      loadTransactions(); 
+          e.target.reset(); setTodayDate(); loadLedgerData(); loadDashboardOverview();
+      } catch (error) { showLoader(false); Swal.fire('Error', 'ไม่สามารถโอนเงินได้', 'error'); }
   }
 
-// 🌟 โหลดประวัติธุรกรรม (อัปเดตให้แสดงทั้ง "วันที่ธุรกรรม" และ "เวลาบันทึก")
-async function loadTransactions() {
+  async function loadLedgerData() { setTodayDate(); loadLedgerNotes(); loadTransactions(); }
+
+  // 🌟 โหลดข้อมูลทั้งหมดลง Cache
+  // 🌟 โหลดข้อมูลทั้งหมดลง Cache (เพิ่มระบบจัดเรียงตามวันเกิดรายการ)
+  async function loadTransactions() {
     document.getElementById('list-pending-transactions').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-success spinner-border-sm"></div></div>'; 
-    document.getElementById('list-approved-transactions').innerHTML = '';
+    document.getElementById('list-approved-transactions').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-success spinner-border-sm"></div></div>';
     
     try {
+      // ดึงข้อมูลพื้นฐานจากฐานข้อมูล
       const snap = await db.collection("transactions").orderBy("timestamp", "desc").get(); 
-      let p_html = "", a_html = "";
+      allTransactionsCache = [];
       
-      snap.forEach(doc => {
-        const d = doc.data();
+      snap.forEach(doc => { 
+          const d = doc.data();
+          
+          // 🔴 1. สร้างค่าเวลา (Timestamp) ของ "วันเกิดรายการ" เพื่อใช้จัดเรียง
+          let sDate = 0;
+          if (d.transactionDate) {
+              sDate = new Date(d.transactionDate).getTime(); // วันที่แอดมินเลือก
+          } else if (d.timestamp) {
+              sDate = d.timestamp.toDate().getTime(); // ถ้าไม่มีให้ใช้วันที่ระบบ
+          }
+          
+          allTransactionsCache.push({ id: doc.id, sortDate: sDate, ...d }); 
+      });
+
+      // 🔴 2. จัดเรียงข้อมูลใน Cache ใหม่ทั้งหมด (ใหม่สุด -> เก่าสุด)
+      allTransactionsCache.sort((a, b) => {
+          if (b.sortDate === a.sortDate) {
+              // ถ้าวันเกิดรายการเป็น "วันเดียวกัน" ให้เรียงจากเวลาที่แอดมินกดบันทึกล่าสุด
+              const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+              const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+              return timeB - timeA; 
+          }
+          return b.sortDate - a.sortDate;
+      });
+
+      currentTxPage = 1; 
+      renderTransactions();
+    } catch(e) { console.error("Load Transaction Error:", e); }
+  }
+
+  // 🌟 ฟังก์ชันจัดการการค้นหาและเปลี่ยนหน้า
+  function filterTxByDate(dateVal) { txSearchDate = dateVal; currentTxPage = 1; renderTransactions(); }
+  function clearTxFilter() { document.getElementById('searchTxDate').value = ""; txSearchDate = ""; currentTxPage = 1; renderTransactions(); }
+  function changeTxPage(page) { currentTxPage = page; renderTransactions(); document.getElementById('list-approved-transactions').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+  // 🌟 ฟังก์ชันวาด HTML ประวัติแบบแบ่งหน้า (Pagination)
+  function renderTransactions() {
+      let filteredData = allTransactionsCache;
+      // กรองด้วยวันที่ทำธุรกรรม
+      if (txSearchDate) {
+          filteredData = filteredData.filter(d => {
+              if (d.transactionDate && d.transactionDate === txSearchDate) return true;
+              if (!d.transactionDate && d.timestamp) { // กรณีข้อมูลเก่าไม่มี transactionDate
+                  const tzOffset = new Date().getTimezoneOffset() * 60000;
+                  const localISOTime = (new Date(d.timestamp.toDate() - tzOffset)).toISOString().slice(0, -1);
+                  return localISOTime.split('T')[0] === txSearchDate;
+              }
+              return false;
+          });
+      }
+
+      const pendingTxs = filteredData.filter(d => d.status === 'รอตรวจสอบ');
+      const approvedTxs = filteredData.filter(d => d.status === 'อนุมัติแล้ว');
+
+      // คำนวณหน้า Pagination
+      const totalPages = Math.ceil(approvedTxs.length / itemsPerTxPage);
+      if (currentTxPage > totalPages && totalPages > 0) currentTxPage = totalPages;
+      const startIdx = (currentTxPage - 1) * itemsPerTxPage;
+      const paginatedApproved = approvedTxs.slice(startIdx, startIdx + itemsPerTxPage);
+
+      document.getElementById('list-pending-transactions').innerHTML = buildTxHtmlString(pendingTxs) || "<p class='text-muted small'>ไม่มีรายการค้าง</p>";
+      document.getElementById('list-approved-transactions').innerHTML = buildTxHtmlString(paginatedApproved) || "<p class='text-muted small'>ไม่พบประวัติในระบบ/วันที่ระบุ</p>";
+
+      // วาดปุ่ม Pagination
+      let paginationHtml = "";
+      if (totalPages > 1) {
+          paginationHtml += `<button class="btn btn-sm ${currentTxPage === 1 ? 'btn-light disabled' : 'btn-outline-primary'}" onclick="changeTxPage(${currentTxPage - 1})"><i class="fa-solid fa-chevron-left"></i> ก่อนหน้า</button>`;
+          for (let i = 1; i <= totalPages; i++) {
+              if (i === 1 || i === totalPages || (i >= currentTxPage - 1 && i <= currentTxPage + 1)) {
+                  paginationHtml += `<button class="btn btn-sm ${currentTxPage === i ? 'btn-primary' : 'btn-outline-primary'} fw-bold" onclick="changeTxPage(${i})">${i}</button>`;
+              } else if (i === currentTxPage - 2 || i === currentTxPage + 2) {
+                  paginationHtml += `<span class="px-1 text-muted">...</span>`;
+              }
+          }
+          paginationHtml += `<button class="btn btn-sm ${currentTxPage === totalPages ? 'btn-light disabled' : 'btn-outline-primary'}" onclick="changeTxPage(${currentTxPage + 1})">ถัดไป <i class="fa-solid fa-chevron-right"></i></button>`;
+      }
+      document.getElementById('tx-pagination').innerHTML = paginationHtml;
+  }
+
+  // 🌟 ฟังก์ชันประกอบ HTML Accordion
+  function buildTxHtmlString(txArray) {
+      let html = "";
+      txArray.forEach(d => {
         let isTransfer = d.type === 'โอนย้ายสภาพคล่อง';
         let isIncome = d.type.includes('รับ') || d.type.includes('สมทบ');
         
@@ -998,172 +1093,111 @@ async function loadTransactions() {
         let icon = isTransfer ? 'fa-arrow-right-arrow-left' : (isIncome ? 'fa-arrow-up' : 'fa-arrow-down');
         let sign = isTransfer ? '' : (isIncome ? '+' : '-');
         
-        // 🔴 1. จัดการวันที่บันทึก (เวลาที่ลงระบบ)
         let recordDateStr = "ไม่มีระบุเวลา";
         if (d.timestamp) {
             const rDate = d.timestamp.toDate();
-            const rDay = rDate.getDate().toString().padStart(2, '0');
-            const rMonth = (rDate.getMonth() + 1).toString().padStart(2, '0');
-            const rYear = (rDate.getFullYear() + 543).toString();
-            const rTime = rDate.getHours().toString().padStart(2, '0') + ':' + rDate.getMinutes().toString().padStart(2, '0');
-            recordDateStr = `${rDay}/${rMonth}/${rYear} [${rTime} น.]`;
+            recordDateStr = `${rDate.getDate().toString().padStart(2,'0')}/${(rDate.getMonth()+1).toString().padStart(2,'0')}/${rDate.getFullYear()+543} [${rDate.getHours().toString().padStart(2,'0')}:${rDate.getMinutes().toString().padStart(2,'0')} น.]`;
         }
 
-        // 🔴 2. จัดการวันที่เกิดธุรกรรมจริง
         let txDateDisplay = "ไม่ระบุ";
         if (d.transactionDate) {
             const [y, m, dNum] = d.transactionDate.split('-');
-            const thaiYear = parseInt(y) + 543;
-            txDateDisplay = `${dNum}/${m}/${thaiYear}`;
-        } else {
-            // ถ้าเป็นข้อมูลเก่าที่ยังไม่มีฟิลด์นี้ ให้ดึงจากวันที่บันทึกมาแสดงแทน
-            txDateDisplay = recordDateStr.split(' ')[0]; 
-        }
+            txDateDisplay = `${dNum}/${m}/${parseInt(y) + 543}`;
+        } else { txDateDisplay = recordDateStr.split(' ')[0]; }
 
         let safeType = d.type ? d.type.replace(/'/g, "\\'") : "";
         let safeNote = d.note ? d.note.replace(/'/g, "\\'") : "";
         let safeUid = d.uid ? d.uid : "";
+        let displayTxId = d.txId ? d.txId : "-"; // 🔴 ดึงเลขที่รายการ
 
         let actionBtns = `
-            <button onclick="editTransaction('${doc.id}', ${d.amount}, '${safeType}', '${safeNote}', '${d.paymentMethod}', '${safeUid}')" class="btn btn-sm btn-outline-warning py-1 px-2" title="แก้ไขรายการ"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteTransaction('${doc.id}', ${d.amount}, '${safeType}', '${safeUid}')" class="btn btn-sm btn-outline-danger py-1 px-2 ms-1" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+            <button onclick="editTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeNote}', '${d.paymentMethod}', '${safeUid}')" class="btn btn-sm btn-outline-warning py-1 px-2" title="แก้ไขรายการ"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeUid}')" class="btn btn-sm btn-outline-danger py-1 px-2 ms-1" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
         `;
         
         let historyHtml = "";
         if(d.editHistory && d.editHistory.length > 0 && currentAdminData.role === 'Admin-Master') {
-            historyHtml = `<div class="mt-2 p-2 bg-light rounded border border-warning" style="font-size:0.75rem;">
-                <span class="text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติเดิม (Master):</span>
-                <ul class="mb-0 ps-3 text-muted">`;
-            d.editHistory.forEach(h => {
-                historyHtml += `<li>จากเดิม: ${h.oldType} ${h.oldNote ? `(${h.oldNote})` : ''} <strong class="text-dark">(${h.oldMethod} ฿${h.oldAmount})</strong> แกัโดย ${h.editedBy}</li>`;
-            });
+            historyHtml = `<div class="mt-2 p-2 bg-light rounded border border-warning" style="font-size:0.75rem;"><span class="text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติเดิม (Master):</span><ul class="mb-0 ps-3 text-muted">`;
+            d.editHistory.forEach(h => { historyHtml += `<li>จากเดิม: ${h.oldType} ${h.oldNote ? `(${h.oldNote})` : ''} <strong class="text-dark">(${h.oldMethod} ฿${h.oldAmount})</strong> แกัโดย ${h.editedBy}</li>`; });
             historyHtml += `</ul></div>`;
         }
 
-        let card = `<div class="data-card p-3">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="d-flex align-items-start gap-3 w-100" style="overflow: hidden;">
+        // โครงสร้าง HTML แบบย่อ/ขยาย (Accordion)
+        html += `<div class="data-card p-3">
+          <!-- 🟢 ส่วนหัว (แสดงตลอดเวลา) -->
+          <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapse-${d.id}" aria-expanded="false" onclick="document.getElementById('arrow-${d.id}').classList.toggle('fa-rotate-180')">
+            <div class="d-flex align-items-center gap-3 w-100" style="overflow: hidden;">
                 <div class="tx-icon ${iconClass} m-0 flex-shrink-0"><i class="fa-solid ${icon}"></i></div>
                 <div style="min-width: 0;">
-                    <h6 class="mb-1 fw-bold text-dark text-truncate" style="font-size:0.85rem;">${d.type}</h6>
-                    ${d.note ? `<small class="text-primary d-block text-truncate mb-1" style="font-size:0.75rem;"><i class="fa-regular fa-comment-dots"></i> ${d.note}</small>` : ''}
-                    
-                    <!-- 🔴 แสดงทั้ง 2 วันที่ -->
-                    <small class="text-dark fw-bold d-block text-truncate" style="font-size:0.65rem;"><i class="fa-regular fa-calendar-check text-success"></i> วันเกิดรายการ: ${txDateDisplay}</small>
-                    <small class="text-muted d-block text-truncate" style="font-size:0.65rem;"><i class="fa-solid fa-clock-rotate-left"></i> ลงระบบเมื่อ: ${recordDateStr}</small>
-                    
-                    <small class="text-muted d-block text-truncate mt-1" style="font-size:0.65rem;"><i class="fa-solid fa-user-pen"></i> ${d.fullName}</small>
+                    <h6 class="mb-0 fw-bold text-dark text-truncate" style="font-size:0.85rem;">${d.type}</h6>
                 </div>
             </div>
-            <div class="text-end flex-shrink-0 ms-2">
-                <h6 class="fw-bold mb-1">${sign}฿${parseFloat(d.amount).toLocaleString()}</h6>
-                ${d.status === 'รอตรวจสอบ' 
-                  ? `<button onclick="approveTx('${doc.id}', '${safeUid}', ${d.amount})" class="btn btn-sm btn-success rounded-pill mt-2 py-0 px-3">อนุมัติ</button>` 
-                  : `<div class="mt-2">${actionBtns}</div>`}
+            <div class="text-end flex-shrink-0 ms-2 d-flex align-items-center gap-2">
+                <h6 class="fw-bold mb-0">${sign}฿${parseFloat(d.amount).toLocaleString()}</h6>
+                <i class="fa-solid fa-chevron-down text-muted" id="arrow-${d.id}" style="transition: transform 0.3s; font-size: 0.8rem;"></i>
             </div>
           </div>
-          ${historyHtml}
+          
+          <!-- 🔴 ส่วนเนื้อหาที่ถูกซ่อน (ขยายเมื่อกดลูกศร) -->
+          <div class="collapse mt-3 pt-3 border-top" id="collapse-${d.id}">
+            <div class="mb-2">
+                <!-- 🔴 แสดงเลขที่รายการธุรกรรมใต้ชื่อแอดมิน -->
+                <small class="text-muted d-block text-truncate mt-1" style="font-size:0.65rem;"><i class="fa-solid fa-user-pen"></i> ${d.fullName}</small>
+                <small class="text-primary fw-bold d-block text-truncate mb-2" style="font-size:0.65rem;"><i class="fa-solid fa-receipt"></i> เลขที่อ้างอิง: ${displayTxId}</small>
+
+                ${d.note ? `<small class="text-dark d-block text-truncate mb-1" style="font-size:0.75rem;"><i class="fa-regular fa-comment-dots"></i> ${d.note}</small>` : ''}
+                <small class="text-dark fw-bold d-block text-truncate" style="font-size:0.65rem;"><i class="fa-regular fa-calendar-check text-success"></i> วันเกิดรายการ: ${txDateDisplay}</small>
+                <small class="text-muted d-block text-truncate" style="font-size:0.65rem;"><i class="fa-solid fa-clock-rotate-left"></i> ลงระบบเมื่อ: ${recordDateStr}</small>
+            </div>
+            <div class="d-flex justify-content-end align-items-center mt-2">
+                ${d.status === 'รอตรวจสอบ' ? `<button onclick="approveTx('${d.id}', '${safeUid}', ${d.amount})" class="btn btn-sm btn-success rounded-pill py-1 px-3">อนุมัติ</button>` : `<small class="text-success me-2" style="font-size:0.7rem;">อนุมัติแล้ว</small> ${actionBtns}`}
+            </div>
+            ${historyHtml}
+          </div>
         </div>`;
-        
-        if(d.status === 'รอตรวจสอบ') p_html += card; else a_html += card;
       });
-      
-      document.getElementById('list-pending-transactions').innerHTML = p_html || "<p class='text-muted small'>ไม่มีรายการค้าง</p>";
-      document.getElementById('list-approved-transactions').innerHTML = a_html || "<p class='text-muted small'>ไม่มีประวัติ</p>";
-    } catch(e) { console.error("Load Transaction Error:", e); }
+      return html;
   }
 
-  // 🌟 ฟังก์ชันการแก้ไขข้อมูล
   async function editTransaction(txId, oldAmt, oldType, oldNote, oldMethod, uid) {
       const { value: formValues } = await Swal.fire({
           title: 'แก้ไขประวัติ',
-          html: `
-              <label class="small fw-bold text-start w-100">หมวดหมู่รายการ:</label>
-              <input id="edit-type" type="text" class="form-control mb-2 text-primary fw-bold" value="${oldType}">
-              <label class="small fw-bold text-start w-100">คำอธิบายเพิ่มเติม:</label>
-              <input id="edit-note" type="text" class="form-control mb-2" value="${oldNote}">
-              <label class="small fw-bold text-start w-100">จำนวนเงิน:</label>
-              <input id="edit-amt" type="number" class="form-control mb-2 fw-bold text-primary" value="${oldAmt}">
-              <label class="small fw-bold text-start w-100">ช่องทางเงิน:</label>
-              <select id="edit-wallet" class="form-select">
-                  <option value="ธนาคาร" ${oldMethod.includes('ธนาคาร') ? 'selected' : ''}>ธนาคาร</option>
-                  <option value="เงินสด" ${oldMethod.includes('เงินสด') ? 'selected' : ''}>เงินสด</option>
-              </select>
-          `,
-          showCancelButton: true,
-          confirmButtonText: 'บันทึกการแก้ไข',
-          preConfirm: () => {
-              return { 
-                  type: document.getElementById('edit-type').value, 
-                  note: document.getElementById('edit-note').value, 
-                  amt: parseFloat(document.getElementById('edit-amt').value), 
-                  method: document.getElementById('edit-wallet').value 
-              }
-          }
+          html: `<label class="small fw-bold text-start w-100">หมวดหมู่รายการ:</label><input id="edit-type" type="text" class="form-control mb-2 text-primary fw-bold" value="${oldType}"><label class="small fw-bold text-start w-100">คำอธิบายเพิ่มเติม:</label><input id="edit-note" type="text" class="form-control mb-2" value="${oldNote}"><label class="small fw-bold text-start w-100">จำนวนเงิน:</label><input id="edit-amt" type="number" class="form-control mb-2 fw-bold text-primary" value="${oldAmt}"><label class="small fw-bold text-start w-100">ช่องทางเงิน:</label><select id="edit-wallet" class="form-select"><option value="ธนาคาร" ${oldMethod.includes('ธนาคาร') ? 'selected' : ''}>ธนาคาร</option><option value="เงินสด" ${oldMethod.includes('เงินสด') ? 'selected' : ''}>เงินสด</option></select>`,
+          showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข',
+          preConfirm: () => { return { type: document.getElementById('edit-type').value, note: document.getElementById('edit-note').value, amt: parseFloat(document.getElementById('edit-amt').value), method: document.getElementById('edit-wallet').value } }
       });
-
       if (formValues) {
           showLoader(true, "กำลังอัปเดต...");
           try {
               const txRef = db.collection("transactions").doc(txId);
               const historyRecord = { oldAmount: parseFloat(oldAmt), oldType: oldType, oldNote: oldNote, oldMethod: oldMethod, editedAt: new Date().toISOString(), editedBy: currentAdminData.name };
+              await txRef.update({ type: formValues.type, note: formValues.note, amount: formValues.amt, paymentMethod: formValues.method, editHistory: firebase.firestore.FieldValue.arrayUnion(historyRecord) });
 
-              await txRef.update({ 
-                  type: formValues.type, 
-                  note: formValues.note, 
-                  amount: formValues.amt, 
-                  paymentMethod: formValues.method, 
-                  editHistory: firebase.firestore.FieldValue.arrayUnion(historyRecord) 
-              });
-
-              // ปรับลดยอดถ้าเกี่ยวกับสมาชิก
               const diff = formValues.amt - parseFloat(oldAmt);
               if (diff !== 0 && uid && uid !== "") {
-                  if(oldType.includes('รับ') || oldType.includes('สมทบ')) {
-                      await db.collection("members").doc(uid).update({ totalContribution: firebase.firestore.FieldValue.increment(diff) });
-                  } else if(oldType.includes('จ่าย') || oldType === 'จ่ายสวัสดิการ') {
-                      await db.collection("members").doc(uid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(diff) });
-                  }
+                  if(oldType.includes('รับ') || oldType.includes('สมทบ')) await db.collection("members").doc(uid).update({ totalContribution: firebase.firestore.FieldValue.increment(diff) });
+                  else if(oldType.includes('จ่าย') || oldType === 'จ่ายสวัสดิการ') await db.collection("members").doc(uid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(diff) });
               }
               Swal.fire({icon:'success', title:'อัปเดตเรียบร้อย', timer:1500, showConfirmButton:false}); 
-              loadTransactions(); 
-              loadDashboardOverview();
+              loadTransactions(); loadDashboardOverview();
           } catch(e) { showLoader(false); Swal.fire('Error', 'ไม่สามารถอัปเดตได้', 'error'); }
       }
   }
 
-  // 🌟 ฟังก์ชันลบประวัติการทำธุรกรรม
   async function deleteTransaction(txId, amount, txType, uid) {
-      if(currentAdminData.role !== 'Admin-Master') {
-          return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่สามารถลบข้อมูลได้', 'error');
-      }
-
+      if(currentAdminData.role !== 'Admin-Master') return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่สามารถลบข้อมูลได้', 'error');
       Swal.fire({
-          title: 'ยืนยันการลบประวัติ?',
-          text: "หากลบรายการนี้ ยอดเงินกลางและยอดของสมาชิกที่ผูกไว้จะถูกดึงกลับอัตโนมัติ ไม่สามารถกู้คืนได้!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#EF4444',
-          cancelButtonColor: '#64748B',
-          confirmButtonText: 'ยืนยันลบข้อมูล',
-          cancelButtonText: 'ยกเลิก'
+          title: 'ยืนยันการลบประวัติ?', text: "ยอดเงินกลางและยอดของสมาชิกที่ผูกไว้จะถูกดึงกลับอัตโนมัติ ไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', cancelButtonColor: '#64748B', confirmButtonText: 'ยืนยันลบข้อมูล', cancelButtonText: 'ยกเลิก'
       }).then(async (result) => {
           if (result.isConfirmed) {
               showLoader(true, "กำลังลบและคำนวณยอดใหม่...");
               try {
                   await db.collection("transactions").doc(txId).delete();
-                  
-                  // ดึงยอดกลับถ้าเป็นรายการของสมาชิก
                   if (uid && uid !== "") {
-                      if(txType.includes('รับ') || txType.includes('สมทบ')) {
-                          await db.collection("members").doc(uid).update({ totalContribution: firebase.firestore.FieldValue.increment(-amount) });
-                      } else if(txType.includes('จ่าย') || txType === 'จ่ายสวัสดิการ') {
-                          await db.collection("members").doc(uid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(-amount) });
-                      }
+                      if(txType.includes('รับ') || txType.includes('สมทบ')) await db.collection("members").doc(uid).update({ totalContribution: firebase.firestore.FieldValue.increment(-amount) });
+                      else if(txType.includes('จ่าย') || txType === 'จ่ายสวัสดิการ') await db.collection("members").doc(uid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(-amount) });
                   }
-                  Swal.fire({icon:'success', title:'ลบข้อมูลสำเร็จ', timer:1500, showConfirmButton:false}); 
-                  loadTransactions(); 
-                  loadDashboardOverview(); 
+                  Swal.fire({icon:'success', title:'ลบข้อมูลสำเร็จ', timer:1500, showConfirmButton:false}); loadTransactions(); loadDashboardOverview(); 
               } catch(e) { showLoader(false); Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error'); }
           }
       });
@@ -1203,7 +1237,12 @@ async function loadTransactions() {
       showLoader(true, "กำลังอนุมัติ...");
       try {
           await db.collection("claims").doc(claimId).update({status: "อนุมัติแล้ว"});
-          await db.collection("transactions").add({ type: 'จ่ายสวัสดิการ', amount: parseFloat(amount), paymentMethod: 'เงินสด', note: `จ่ายเคลม ${claimId}`, fullName: 'สมาชิก', status: 'อนุมัติแล้ว', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+          await db.collection("transactions").add({ 
+              txId: generateTxId(), // 🔴 เพิ่มเลขที่รายการ
+              type: 'จ่ายสวัสดิการ', amount: parseFloat(amount), paymentMethod: 'เงินสด', 
+              note: `จ่ายเคลม ${claimId}`, fullName: 'แอดมิน: ' + currentAdminData.name, 
+              status: 'อนุมัติแล้ว', timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+          });
           if(memberUid && memberUid !== "undefined") { await db.collection("members").doc(memberUid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(amount) }); }
           Swal.fire({icon: 'success', title: 'จ่ายเงินเรียบร้อย', showConfirmButton: false, timer: 1500}); loadClaims(); loadDashboardOverview();
       } catch (error) { showLoader(false); Swal.fire('Error', 'ผิดพลาด', 'error'); }
