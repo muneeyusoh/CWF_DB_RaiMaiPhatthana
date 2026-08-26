@@ -4,77 +4,125 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0F172A">
-  <title>CWF Executive | กองทุนสวัสดิการชุมชน</title>
+  <title>SmartWelf 5.0 | กองทุนสวัสดิการชุมชน</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3QY1t2cY8gB_w_ZtSGqidVi65JBEVZIUs&libraries=visualization"></script>
 
-  <!-- 🚀 โหลด Firebase (เพิ่ม Auth สำหรับ Google Login) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   
   <style>
-    :root { --primary-dark: #0F172A; --primary-main: #2563EB; --success-main: #10B981; --danger-main: #EF4444; --warning-main: #F59E0B; --bg-color: #F8FAFC; --bottom-nav-height: 70px; --text-muted: #64748B;}
-    body { background-color: var(--bg-color); font-family: 'Prompt', sans-serif; padding-top: 64px; padding-bottom: 90px; }
+    /* ==========================================
+       1. GLOBAL VARIABLES & BASE STYLES
+       ========================================== */
+    :root { 
+        --primary-dark: #0F172A; 
+        --primary-main: #2563EB; 
+        --success-main: #10B981; 
+        --danger-main: #EF4444; 
+        --warning-main: #F59E0B; 
+        --bg-color: #F8FAFC; 
+        --bottom-nav-height: 75px; 
+        --text-muted: #64748B;
+    }
+    body { 
+        background-color: var(--bg-color); 
+        font-family: 'Prompt', sans-serif; 
+        padding-top: 70px; 
+        padding-bottom: 95px; 
+        -webkit-font-smoothing: antialiased;
+    }
     
-    .app-header { background: var(--primary-dark); color: white; position: fixed; top: 0; width: 100%; height: 64px; z-index: 1030; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: var(--bottom-nav-height); background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1030; overflow-x: auto;}
+    /* ==========================================
+       2. MODERN UI COMPONENTS (CARDS, SHADOWS, DOTS)
+       ========================================== */
+    /* การ์ดยอดเงินรวม (Gradient) */
+    .main-balance-card {
+      background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+      border-radius: 24px; padding: 1.8rem 1.5rem; color: white;
+      box-shadow: 0 12px 24px -8px rgba(5, 150, 105, 0.5);
+      position: relative; overflow: hidden;
+    }
+    .main-balance-card::after { content: ''; position: absolute; top: -50px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+    .main-balance-card::before { content: ''; position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; }
     
-    /* 🔴 อัปเดต CSS สำหรับ Navigation Bar และ Red Dot Badge */
-    .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 0.65rem; font-weight: 600; background: none; border: none; min-width: 60px; position: relative; }
-    .nav-item.active { color: var(--primary-main); }
-    .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 4px; }
-    .nav-badge { position: absolute; top: 8px; left: calc(50% + 6px); width: 12px; height: 12px; background-color: var(--danger-main); border-radius: 50%; border: 2px solid white; display: none; }
+    /* การ์ดข้อมูลทั่วไปแบบโมเดิร์น */
+    .modern-card {
+      background: white; border-radius: 20px; padding: 1.2rem; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+      border: 1px solid rgba(0,0,0,0.02); 
+      margin-bottom: 12px; transition: transform 0.2s;
+    }
+    .modern-card-hover:active { transform: scale(0.98); }
     
-    .data-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid #E2E8F0; }
-    .ledger-card-total { background: linear-gradient(135deg, #0F172A 0%, #1e3a8a 100%); border-radius: 1.5rem; padding: 1.5rem; color: white; margin-bottom: 16px; text-align: center;}
-    .ledger-stat-card { background: white; border: 1px solid #E2E8F0; border-radius: 1.2rem; padding: 1rem; display: flex; align-items: center; justify-content: space-between; height: 100%; }
-    .stat-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
-    .eq-item { background: var(--bg-color); border-radius: 16px; padding: 16px; text-align: center; border: 1px solid #E2E8F0; }
+    /* ไอคอนทรงกลม */
+    .icon-box {
+      width: 42px; height: 42px; border-radius: 14px;
+      display: flex; justify-content: center; align-items: center; font-size: 1.1rem;
+    }
     
-    /* 🔐 Login UI Styles */
+    /* จุดสีแยกประเภท */
+    .dot-green { width: 10px; height: 10px; border-radius: 50%; background-color: var(--success-main); display: inline-block; }
+    .dot-red { width: 10px; height: 10px; border-radius: 50%; background-color: var(--danger-main); display: inline-block; }
+    .dot-blue { width: 10px; height: 10px; border-radius: 50%; background-color: var(--primary-main); display: inline-block; }
+    .dot-yellow { width: 10px; height: 10px; border-radius: 50%; background-color: var(--warning-main); display: inline-block; }
+
+    /* ฟอร์ม Input แบบโมเดิร์น */
+    .form-control-modern, .form-select-modern {
+        background-color: #F1F5F9; border: 2px solid transparent; 
+        border-radius: 16px; padding: 0.75rem 1.2rem; font-weight: 500; color: #334155;
+        box-shadow: none !important; transition: 0.3s;
+    }
+    .form-control-modern:focus, .form-select-modern:focus {
+        background-color: #ffffff; border-color: var(--primary-main); 
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+    }
+
+    /* ==========================================
+       3. NAVIGATION & LAYOUT
+       ========================================== */
+    .app-header { 
+        background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+        color: white; position: fixed; top: 0; width: 100%; height: 68px; 
+        z-index: 1030; display: flex; align-items: center; justify-content: space-between; 
+        padding: 0 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .bottom-nav { 
+        position: fixed; bottom: 0; width: 100%; height: var(--bottom-nav-height); 
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+        display: flex; justify-content: space-around; align-items: center; 
+        box-shadow: 0 -4px 25px rgba(0,0,0,0.06); z-index: 1030; overflow-x: auto;
+        border-top-left-radius: 24px; border-top-right-radius: 24px;
+    }
+    .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 0.65rem; font-weight: 600; background: none; border: none; position: relative; transition: 0.3s; }
+    .nav-item.active { color: var(--primary-main); transform: translateY(-3px); }
+    .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+    .nav-badge { position: absolute; top: 2px; left: calc(50% + 5px); width: 12px; height: 12px; background-color: var(--danger-main); border-radius: 50%; border: 2px solid white; display: none; }
+    
+    .tab-btn-ledger { width: 50%; padding: 0.7rem; text-align: center; border-radius: 1rem; border: none; background: transparent; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.85rem; }
+    .tab-btn-ledger.active { background: white; color: var(--primary-main); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
+    /* ==========================================
+       4. MISC (LOGIN, LOADER)
+       ========================================== */
     #loginGate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-dark); color: white; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto;}
     .login-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); margin: 20px 0;}
-    .form-control-custom { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 12px; padding: 14px; margin-bottom: 15px; width: 100%; text-align: center; }
-    .form-control-custom:focus { outline: none; border-color: var(--primary-main); background: rgba(255,255,255,0.15); }
-    .form-control-custom::placeholder { color: rgba(255,255,255,0.5); }
-    
-    /* Login Tabs */
     .login-tabs { display: flex; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
     .login-tab { flex: 1; padding: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.5); transition: 0.3s; }
     .login-tab.active { background: var(--primary-main); color: white; }
-    
-    /* Social Buttons */
-    .social-login-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px; border-radius: 12px; font-weight: 600; margin-bottom: 10px; cursor: pointer; transition: 0.2s; border: none; }
-    .btn-google { background: white; color: #333; }
-    .btn-line { background: #00C300; color: white; }
-    .social-login-btn:active { transform: scale(0.98); }
-
-    /* PIN Pad */
-    .pin-display { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-    .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); transition: 0.2s; }
-    .pin-dot.filled { background: white; border-color: white; }
     .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 250px; margin: 0 auto; }
     .num-btn { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 1.5rem; font-weight: 600; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.1s; }
     .num-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }
-    .num-btn.text-danger { background: transparent; font-size: 1.2rem; }
-
     #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(5px); color: white; display: none; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-    
-    .tx-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; }
-    .tx-income { background: #ecfdf5; color: #10b981; }
-    .tx-expense { background: #fff1f2; color: #f43f5e; }
-    .tx-transfer { background: #f1f5f9; color: #64748b; }
-    .tab-btn-ledger { width: 50%; padding: 0.7rem; text-align: center; border-radius: 1rem; border: none; background: transparent; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.85rem; }
-    .tab-btn-ledger.active { background: var(--primary-main); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-    .chart-container { position: relative; height: 250px; width: 100%; }
-    .fab-btn { position: fixed; bottom: calc(var(--bottom-nav-height) + 20px); right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary-main); color: white; border: none; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4); font-size: 1.5rem; display: flex; justify-content: center; align-items: center; z-index: 1020; }
   </style>
 </head>
 <body>
@@ -85,339 +133,411 @@
 <!-- 🔐 Security Gate (Login) -->
 <div id="loginGate">
   <div class="login-box">
-    <i class="fa-solid fa-fingerprint fa-3x text-success mb-3"></i>
-    <h5 class="fw-bold">CWF Executive</h5>
+    <div class="bg-white bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3"><i class="fa-solid fa-shield-halved fa-3x text-success"></i></div>
+    <h5 class="fw-bold">SmartWelf 5.0</h5>
     <p class="text-white-50 small mb-4">เข้าสู่ระบบผู้ดูแลส่วนกลาง</p>
 
-    <!-- Tabs -->
     <div class="login-tabs">
       <div class="login-tab active" id="tabEmail" onclick="switchLoginMode('email')">อีเมล / รหัสผ่าน</div>
       <div class="login-tab" id="tabPin" onclick="switchLoginMode('pin')">รหัส PIN 6 หลัก</div>
     </div>
     
-    <!-- Email Mode -->
     <div id="emailLoginSection">
-      <input type="email" id="adminEmail" class="form-control-custom" placeholder="อีเมลผู้ดูแลระบบ">
-      <input type="password" id="adminPass" class="form-control-custom" placeholder="รหัสผ่าน">
-      
-      <div class="text-end mb-3">
-        <a href="#" onclick="forgotPassword()" class="text-warning small text-decoration-none">ลืมรหัสผ่าน?</a>
-      </div>
-      
-      <button onclick="handleLogin()" class="btn btn-primary w-100 rounded-pill fw-bold py-2 mb-4">เข้าสู่ระบบ</button>
+      <input type="email" id="adminEmail" class="form-control bg-white bg-opacity-10 border-0 text-white rounded-4 py-3 mb-3 text-center" placeholder="อีเมลผู้ดูแลระบบ">
+      <input type="password" id="adminPass" class="form-control bg-white bg-opacity-10 border-0 text-white rounded-4 py-3 mb-3 text-center" placeholder="รหัสผ่าน">
+      <div class="text-end mb-3"><a href="#" onclick="forgotPassword()" class="text-warning small text-decoration-none">ลืมรหัสผ่าน?</a></div>
+      <button onclick="handleLogin()" class="btn btn-primary w-100 rounded-pill fw-bold py-3 mb-4 shadow">เข้าสู่ระบบ</button>
       
       <div class="position-relative mb-4">
         <hr class="border-secondary">
-        <span class="position-absolute top-50 start-50 translate-middle px-2 small text-white-50" style="background: #111a2f;">หรือเข้าใช้งานด้วย</span>
+        <span class="position-absolute top-50 start-50 translate-middle px-3 small text-white-50" style="background: #111a2f;">หรือเข้าใช้งานด้วย</span>
       </div>
 
-      <button onclick="googleLogin()" class="social-login-btn btn-google"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="18"> เข้าด้วย Google</button>
-      <button onclick="liffLogin()" class="social-login-btn btn-line"><i class="fa-brands fa-line fs-5"></i> เข้าด้วย LINE</button>
+      <button onclick="googleLogin()" class="btn btn-light w-100 rounded-pill fw-bold py-2 mb-2"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="18" class="me-2"> เข้าด้วย Google</button>
+      <button onclick="liffLogin()" class="btn btn-success w-100 rounded-pill fw-bold py-2" style="background: #00C300; border: none;"><i class="fa-brands fa-line fs-5 me-2"></i> เข้าด้วย LINE</button>
     </div>
 
-    <!-- PIN Mode -->
     <div id="pinLoginSection" style="display: none;">
       <p class="small text-white-50 mb-3">กรุณากดรหัส PIN 6 หลักของคุณ</p>
-      <div class="pin-display" id="pinDisplay">
+      <div class="d-flex justify-content-center gap-2 mb-4" id="pinDisplay">
         <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
       </div>
-      
       <div class="numpad">
-        <button class="num-btn" onclick="pressPin(1)">1</button>
-        <button class="num-btn" onclick="pressPin(2)">2</button>
-        <button class="num-btn" onclick="pressPin(3)">3</button>
-        <button class="num-btn" onclick="pressPin(4)">4</button>
-        <button class="num-btn" onclick="pressPin(5)">5</button>
-        <button class="num-btn" onclick="pressPin(6)">6</button>
-        <button class="num-btn" onclick="pressPin(7)">7</button>
-        <button class="num-btn" onclick="pressPin(8)">8</button>
-        <button class="num-btn" onclick="pressPin(9)">9</button>
-        <div></div>
-        <button class="num-btn" onclick="pressPin(0)">0</button>
-        <button class="num-btn text-danger" onclick="deletePin()"><i class="fa-solid fa-delete-left"></i></button>
+        <button class="num-btn" onclick="pressPin(1)">1</button><button class="num-btn" onclick="pressPin(2)">2</button><button class="num-btn" onclick="pressPin(3)">3</button>
+        <button class="num-btn" onclick="pressPin(4)">4</button><button class="num-btn" onclick="pressPin(5)">5</button><button class="num-btn" onclick="pressPin(6)">6</button>
+        <button class="num-btn" onclick="pressPin(7)">7</button><button class="num-btn" onclick="pressPin(8)">8</button><button class="num-btn" onclick="pressPin(9)">9</button>
+        <div></div><button class="num-btn" onclick="pressPin(0)">0</button><button class="num-btn text-danger" onclick="deletePin()"><i class="fa-solid fa-delete-left"></i></button>
       </div>
     </div>
-
   </div>
 </div>
 
+<!-- 📱 Header -->
 <div class="app-header" id="appHeader" style="display: none;">
-  <div>
-    <h5 class="fw-bold mb-0 text-white">CWF Executive</h5>
-    <small class="text-info fw-bold" id="adminNameDisplay" style="font-size:0.75rem;"></small>
+  <div class="d-flex align-items-center gap-2">
+    <div class="bg-primary bg-opacity-25 text-primary rounded-circle d-flex justify-content-center align-items-center" style="width: 38px; height: 38px;"><i class="fa-solid fa-shield-halved"></i></div>
+    <div>
+      <h6 class="fw-bold mb-0 text-white" style="font-size: 0.95rem;">SmartWelf <span class="text-warning">5.0</span></h6>
+      <small class="text-white-50 d-block text-truncate" id="adminNameDisplay" style="font-size:0.65rem; max-width: 150px;"></small>
+    </div>
   </div>
-  <!-- Profile & Change Password Button -->
-  <button onclick="changePassword()" class="btn btn-sm btn-outline-warning rounded-pill px-3" style="font-size: 0.7rem;"><i class="fa-solid fa-key me-1"></i> เปลี่ยนรหัส</button>
+  <button onclick="changePassword()" class="btn btn-sm btn-dark bg-opacity-50 border-0 rounded-pill px-3 py-1 text-white" style="font-size: 0.7rem;"><i class="fa-solid fa-key me-1"></i> เปลี่ยนรหัส</button>
 </div>
 
-<!-- 🔴 อัปเดตโครงสร้าง HTML ตรงนี้: เพิ่ม span .nav-badge ในการเงิน และ สวัสดิการ -->
+<!-- 🔴 เมนูด้านล่าง (Bottom Nav) -->
 <nav class="bottom-nav" id="bottomNav" style="display: none;">
   <button class="nav-item active" onclick="switchTab('view-overview', this); loadDashboardOverview();"><i class="fa-solid fa-chart-pie"></i> ภาพรวม</button>
   <button class="nav-item" onclick="switchTab('view-members', this); loadMembersData();"><i class="fa-solid fa-users"></i> สมาชิก</button>
   <button class="nav-item" onclick="switchTab('view-ledger', this); loadLedgerData();">
-    <i class="fa-solid fa-wallet"></i>
-    <span class="nav-badge" id="nav-badge-ledger"></span>
-    การเงิน
+    <i class="fa-solid fa-wallet"></i><span class="nav-badge" id="nav-badge-ledger"></span> การเงิน
   </button>
   <button class="nav-item" onclick="switchTab('view-claims', this); loadClaims();">
-    <i class="fa-solid fa-hand-holding-medical"></i>
-    <span class="nav-badge" id="nav-badge-claims"></span>
-    สวัสดิการ
+    <i class="fa-solid fa-hand-holding-medical"></i><span class="nav-badge" id="nav-badge-claims"></span> สวัสดิการ
   </button>
   <button class="nav-item" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas"><i class="fa-solid fa-bars"></i> เมนู</button>
 </nav>
 
-<!-- 🗂️ Offcanvas Menu (More Options) -->
-<div class="offcanvas offcanvas-bottom" tabindex="-1" id="menuOffcanvas">
-  <div class="offcanvas-header pb-0 border-bottom-0">
-    <h6 class="fw-bold mb-0">เมนูเพิ่มเติม</h6>
+<!-- 🗂️ Offcanvas Menu -->
+<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="menuOffcanvas">
+  <div class="offcanvas-header pb-2 border-bottom border-light">
+    <h6 class="fw-bold mb-0">จัดการระบบ</h6>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
-  <div class="offcanvas-body pt-2 px-0">
-    <div class="d-flex flex-column">
-      <a href="#" class="menu-list-item" onclick="closeMenuAndSwitchTab('view-settings'); loadGlobalSettings();">
-        <div class="bg-secondary bg-opacity-10 rounded-circle p-2"><i class="fa-solid fa-gear text-secondary"></i></div> ตั้งค่าระบบ
-      </a>
-      <a href="#" class="menu-list-item" onclick="closeMenuAndSwitchTab('view-gis'); loadGISMap();">
-        <div class="bg-primary bg-opacity-10 rounded-circle p-2"><i class="fa-solid fa-map-location-dot"></i></div> แผนที่สมาชิก
-      </a>
-      <a href="#" class="menu-list-item" onclick="closeMenuAndSwitchTab('view-rules'); loadRulesData();">
-        <div class="bg-warning bg-opacity-10 rounded-circle p-2"><i class="fa-solid fa-scale-balanced text-warning"></i></div> ระเบียยจ่ายสวัสดิการ
-      </a>
-      <a href="#" class="menu-list-item" onclick="closeMenuAndSwitchTab('view-admins'); loadAdminsData();">
-        <div class="bg-info bg-opacity-10 rounded-circle p-2"><i class="fa-solid fa-user-shield text-info"></i></div> เพิ่มแอดมิน
-      </a>
-      <a href="#" class="menu-list-item mt-2 text-danger border-0" onclick="logoutAdmin();">
-        <div class="bg-danger bg-opacity-10 rounded-circle p-2"><i class="fa-solid fa-power-off text-danger"></i></div> ออกจากระบบ
-      </a>
+  <div class="offcanvas-body px-3 pt-3">
+    <div class="d-flex flex-column gap-2">
+      <button class="modern-card modern-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('view-settings'); loadGlobalSettings();">
+        <div class="icon-box bg-secondary bg-opacity-10 text-secondary me-3"><i class="fa-solid fa-gear"></i></div> 
+        <span class="fw-bold text-dark">ตั้งค่าระบบ (Global)</span>
+      </button>
+      <button class="modern-card modern-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('view-gis'); loadGISMap();">
+        <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="fa-solid fa-map-location-dot"></i></div> 
+        <span class="fw-bold text-dark">แผนที่พิกัดสมาชิก (GIS)</span>
+      </button>
+      <button class="modern-card modern-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('view-rules'); loadRulesData();">
+        <div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="fa-solid fa-scale-balanced"></i></div> 
+        <span class="fw-bold text-dark">ระเบียบจ่ายสวัสดิการ</span>
+      </button>
+      <button class="modern-card modern-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('view-admins'); loadAdminsData();">
+        <div class="icon-box bg-info bg-opacity-10 text-info me-3"><i class="fa-solid fa-user-shield"></i></div> 
+        <span class="fw-bold text-dark">ผู้ดูแลระบบ (Admins)</span>
+      </button>
+      <button class="modern-card modern-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3 mt-3 bg-danger bg-opacity-10" onclick="logoutAdmin();">
+        <div class="icon-box bg-danger text-white me-3"><i class="fa-solid fa-power-off"></i></div> 
+        <span class="fw-bold text-danger">ออกจากระบบ</span>
+      </button>
     </div>
   </div>
 </div>
 
-<div id="mainWorkspace" class="container-fluid pt-3" style="display: none;">
+<!-- ==========================================
+     MAIN WORKSPACE
+     ========================================== -->
+<div id="mainWorkspace" class="container-fluid pt-2" style="display: none; max-width: 800px; margin: 0 auto;">
 
-  <!-- 📊 1. ภาพรวม -->
+  <!-- 📊 TAB 1: ภาพรวม (Dashboard) -->
   <div class="tab-pane d-block" id="view-overview">
-    <div class="ledger-card-total">
-      <div class="d-flex justify-content-between mb-2 align-items-center"><span class="small text-white-50 fw-bold">สถานะการเงินคงเหลือปัจจุบัน</span><i class="fa-solid fa-building-columns text-white-50 fs-5"></i></div>
-      <h1 class="fw-bold mb-0 text-white"><span id="cap-total">0</span> <span style="font-size:1.2rem; font-weight:normal;">฿</span></h1>
-      <div class="d-flex justify-content-between small mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
-        <span class="text-white"><i class="fa-solid fa-arrow-trend-up text-success me-1"></i> รับสะสม <strong id="stat-total-in">0</strong></span>
-        <span class="text-white"><i class="fa-solid fa-arrow-trend-down text-danger me-1"></i> จ่ายสะสม <strong id="stat-total-out">0</strong></span>
+    
+    <!-- 🟢 การ์ดยอดเงินรวม (Modern) -->
+    <div class="main-balance-card mb-4">
+      <div class="d-flex justify-content-between mb-2 align-items-center position-relative" style="z-index: 2;">
+        <span class="small text-white-50 fw-bold">ยอดเงินกองทุนสวัสดิการชุมชน</span>
+        <i class="fa-solid fa-building-columns text-white-50 fs-5"></i>
+      </div>
+      <h1 class="fw-bold mb-3 text-white position-relative" style="z-index: 2; font-size: 2.2rem;">
+        <span style="font-size:1.2rem; font-weight:normal; opacity: 0.8;">THB</span> <span id="cap-total">0</span>
+      </h1>
+      <div class="d-flex justify-content-between small pt-3 position-relative" style="border-top: 1px solid rgba(255,255,255,0.15); z-index: 2; font-size: 0.75rem;">
+        <span class="text-white-50">ID: CWF-ADMIN</span>
+        <span class="text-white-50">อัปเดตแบบ Real-time</span>
       </div>
     </div>
 
-    <div class="row g-2 mb-4">
-        <div class="col-6"><div class="ledger-stat-card"><div><h6 class="text-muted small mb-0 fw-bold">เงินในธนาคาร</h6><h6 class="fw-bold text-dark mb-0 mt-1" id="liq-bank">฿0</h6></div><div class="bg-primary bg-opacity-10 p-2 rounded-circle text-primary"><i class="fa-solid fa-vault fs-6"></i></div></div></div>
-        <div class="col-6"><div class="ledger-stat-card"><div><h6 class="text-muted small mb-0 fw-bold">เงินสดในมือ</h6><h6 class="fw-bold text-dark mb-0 mt-1" id="liq-cash">฿0</h6></div><div class="bg-success bg-opacity-10 p-2 rounded-circle text-success"><i class="fa-solid fa-wallet fs-6"></i></div></div></div>
+    <!-- 🟢 สรุปข้อมูลการเงินเชิงลึก -->
+    <h6 class="fw-bold text-dark mb-3 ps-1">สรุปข้อมูลการเงินเชิงลึก</h6>
+    <div class="row g-3 mb-4">
+        <div class="col-6">
+            <div class="modern-card m-0 border-0">
+                <div class="d-flex align-items-center mb-2"><span class="dot-green me-2"></span><small class="text-muted fw-bold" style="font-size: 0.75rem;">รายรับรวม</small></div>
+                <h5 class="fw-bold text-dark mb-0 text-truncate" id="stat-total-in">฿0</h5>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="modern-card m-0 border-0">
+                <div class="d-flex align-items-center mb-2"><span class="dot-red me-2"></span><small class="text-muted fw-bold" style="font-size: 0.75rem;">จ่ายสวัสดิการ</small></div>
+                <h5 class="fw-bold text-dark mb-0 text-truncate" id="stat-total-out">฿0</h5>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="modern-card m-0 border-0">
+                <div class="d-flex align-items-center mb-2"><span class="dot-blue me-2"></span><small class="text-muted fw-bold" style="font-size: 0.75rem;">เงินในธนาคาร</small></div>
+                <h5 class="fw-bold text-primary mb-0 text-truncate" id="liq-bank">฿0</h5>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="modern-card m-0 border-0">
+                <div class="d-flex align-items-center mb-2"><span class="dot-yellow me-2"></span><small class="text-muted fw-bold" style="font-size: 0.75rem;">เงินสดในมือ</small></div>
+                <h5 class="fw-bold text-warning mb-0 text-truncate" id="liq-cash">฿0</h5>
+            </div>
+        </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-users-rays text-primary me-2"></i> ข้อมูลประชากร</h6>
-      <button onclick="editPopulation()" class="btn btn-sm btn-light text-primary rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-pen me-1"></i> ตั้งค่า</button>
+    <!-- 🟢 ข้อมูลฐานสมาชิก -->
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-4 ps-1">
+      <h6 class="fw-bold text-dark mb-0">ข้อมูลฐานสมาชิก</h6>
+      <button onclick="editPopulation()" class="btn btn-sm btn-light text-primary rounded-pill px-3 py-1 fw-bold shadow-sm" style="font-size: 0.7rem;"><i class="fa-solid fa-pen me-1"></i> ตั้งค่า</button>
     </div>
-    
-    <div class="stat-grid-2">
-      <div class="eq-item" style="border-top: 4px solid var(--primary-main);"><span class="small text-muted fw-bold">ประชากรตำบล</span><h2 class="text-dark mb-0 mt-2" id="eq-population">20k</h2></div>
-      <div class="eq-item" style="border-top: 4px solid var(--success-main);"><span class="small text-muted fw-bold">สมาชิกปัจจุบัน</span><h2 class="text-success mb-0 mt-2" id="eq-active">0</h2><div class="eq-sub text-success bg-success bg-opacity-10 mt-1">สัดส่วน <span id="eq-percent-active">0</span>%</div></div>
-    </div>
-    <div class="stat-grid-2 mb-4">
-      <div class="eq-item p-2" style="border-top: 4px solid var(--warning-main);"><span class="small text-muted fw-bold">พ้นสภาพ</span><h5 class="text-warning mt-1 mb-0" id="eq-resigned">0</h5></div>
-      <div class="eq-item p-2" style="border-top: 4px solid var(--danger-main);"><span class="small text-muted fw-bold">เสียชีวิต</span><h5 class="text-danger mt-1 mb-0" id="eq-dead">0</h5></div>
+    <div class="row g-3 mb-4">
+      <div class="col-6"><div class="modern-card text-center m-0 border-0 border-top border-4 border-primary"><small class="text-muted fw-bold d-block mb-1" style="font-size:0.75rem;">ประชากรเป้าหมาย</small><h4 class="text-dark mb-0 fw-bold" id="eq-population">20k</h4></div></div>
+      <div class="col-6"><div class="modern-card text-center m-0 border-0 border-top border-4 border-success"><small class="text-muted fw-bold d-block mb-1" style="font-size:0.75rem;">สมาชิกปัจจุบัน</small><h4 class="text-success mb-0 fw-bold" id="eq-active">0</h4><div class="badge bg-success bg-opacity-10 text-success mt-2 rounded-pill fw-bold" style="font-size:0.65rem;">สัดส่วน <span id="eq-percent-active">0</span>%</div></div></div>
+      <div class="col-6"><div class="modern-card text-center m-0 border-0 border-top border-4 border-warning"><small class="text-muted fw-bold d-block mb-1" style="font-size:0.75rem;">พ้นสภาพ</small><h5 class="text-warning mb-0 fw-bold" id="eq-resigned">0</h5></div></div>
+      <div class="col-6"><div class="modern-card text-center m-0 border-0 border-top border-4 border-danger"><small class="text-muted fw-bold d-block mb-1" style="font-size:0.75rem;">เสียชีวิต</small><h5 class="text-danger mb-0 fw-bold" id="eq-dead">0</h5></div></div>
     </div>
 
-    <div class="data-card text-center mt-3 bg-warning bg-opacity-10 border-warning">
-      <h6 class="text-dark fw-bold mb-1">รายการรอตรวจสอบ</h6>
-      <h3 class="text-danger fw-bold mb-0" id="statPendingBadge">0 รายการ</h3>
+    <!-- 🟢 แจ้งเตือนรายการรอตรวจสอบ -->
+    <div class="modern-card modern-card-hover border-0 bg-warning bg-opacity-10 d-flex align-items-center justify-content-between p-3 mb-4" style="cursor: pointer;" onclick="switchTab('view-ledger', document.querySelectorAll('.nav-item')[2])">
+        <div class="d-flex align-items-center gap-3">
+            <div class="icon-box bg-warning bg-opacity-25 text-warning"><i class="fa-solid fa-bell fs-5"></i></div>
+            <div>
+                <h6 class="text-dark fw-bold mb-0" style="font-size:0.9rem;">รายการรอตรวจสอบ</h6>
+                <small class="text-muted" style="font-size:0.75rem;">กดเพื่อไปยังหน้าบัญชี</small>
+            </div>
+        </div>
+        <h4 class="text-danger fw-bold mb-0" id="statPendingBadge">0</h4>
     </div>
 
-    <div class="data-card mb-5">
-      <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-pie text-warning me-2"></i> โครงสร้างทุนสะสม</h6>
+    <!-- 🟢 โครงสร้างทุนสะสม (กราฟวงกลม) -->
+    <div class="modern-card border-0 p-4 mb-4">
+      <div class="d-flex align-items-center mb-3">
+          <span class="dot-blue me-2" style="background-color:#06B6D4;"></span>
+          <h6 class="fw-bold text-dark mb-0">โครงสร้างทุนสะสม</h6>
+      </div>
       <div class="chart-container"><canvas id="doughnutChart"></canvas></div>
     </div>
-  </div>
-    
-    <!-- 📈 กราฟแสดงความเคลื่อนไหวทางการเงิน -->
-    <div class="data-card mb-5">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-chart-line text-primary me-2"></i> สถิติกระแสเงินสด</h6>
-        <select id="trendFilter" class="form-select form-select-sm w-auto fw-bold text-primary" onchange="renderTrendChart()">
-            <option value="1month">รายเดือน (เดือนนี้)</option>
-            <option value="3months">3 เดือนย้อนหลัง</option>
-            <option value="6months" selected>6 เดือนย้อนหลัง</option>
-            <option value="thisYear">ปีปัจจุบัน</option>
-            <option value="quarter">รายไตรมาส (ปีนี้)</option>
-            <option value="fiscal">ปีงบประมาณ</option>
-            <option value="allYears">แยกแต่ละปี</option>
-        </select>
-      </div>
-      <div class="chart-container" style="height: 300px; width: 100%;">
-          <canvas id="trendChart"></canvas>
-      </div>
-    </div>
 
-  <!-- 👥 2. ทะเบียนสมาชิก -->
+    <!-- 🔴 จุดยึดกราฟในแท็บ "ภาพรวม" (Overview) -->
+    <div id="overviewChartArea">
+        <div id="sharedTrendChart" class="modern-card border-0 p-4 mb-4" style="display: block;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <span class="dot-blue me-2"></span>
+                    <h6 class="fw-bold text-dark mb-0">สถิติกระแสเงินสด</h6>
+                </div>
+                <select id="trendFilter" class="form-select-modern bg-light border-0 py-1 px-3 text-primary fw-bold" style="font-size:0.8rem; width: auto;" onchange="renderTrendChart()">
+                    <option value="1month">รายเดือน</option>
+                    <option value="3months">3 เดือน</option>
+                    <option value="6months" selected>6 เดือน</option>
+                    <option value="thisYear">ปีปัจจุบัน</option>
+                    <option value="quarter">รายไตรมาส</option>
+                    <option value="fiscal">ปีงบประมาณ</option>
+                    <option value="allYears">รายปี</option>
+                </select>
+            </div>
+            <div class="chart-container" style="height: 250px; width: 100%;"><canvas id="trendChart"></canvas></div>
+
+            <!-- 🔴 ส่วนแสดงยอดเงินและสรุปใต้กราฟ -->
+            <div class="row g-2 mt-4 pt-3" style="border-top: 1px dashed #E2E8F0;">
+                <div class="col-4 text-center">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">คงเหลือทั้งหมด</small>
+                    <strong class="text-dark" style="font-size: 0.9rem;" id="chart-sum-total">฿0</strong>
+                </div>
+                <div class="col-4 text-center border-start">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">ธนาคาร</small>
+                    <strong class="text-primary" style="font-size: 0.9rem;" id="chart-sum-bank">฿0</strong>
+                </div>
+                <div class="col-4 text-center border-start">
+                    <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">เงินสด</small>
+                    <strong class="text-success" style="font-size: 0.9rem;" id="chart-sum-cash">฿0</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- 👥 TAB 2: ทะเบียนสมาชิก -->
   <div class="tab-pane d-none" id="view-members">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
       <h5 class="fw-bold text-dark mb-0">ทะเบียนสมาชิก</h5>
     </div>
-    <div class="position-sticky pb-2" style="background-color: var(--bg-color); top: 64px; z-index: 10;">
-      <div class="row g-2 mb-2"><div class="col-12"><input type="text" id="searchMemberInput" class="form-control bg-white border-0 shadow-sm rounded-pill" placeholder="ค้นหาชื่อ, รหัส..." onkeyup="filterMembersLocally()"></div></div>
+    <div class="position-sticky pb-2" style="background-color: var(--bg-color); top: 68px; z-index: 10;">
+      <div class="modern-card p-2 m-0 border-0 d-flex align-items-center">
+          <i class="fa-solid fa-magnifying-glass text-muted ms-2 me-2"></i>
+          <input type="text" id="searchMemberInput" class="form-control border-0 shadow-none bg-transparent" placeholder="ค้นหาชื่อ, รหัส, เบอร์โทร..." onkeyup="filterMembersLocally()">
+      </div>
     </div>
     <div id="list-members" class="mt-3">กำลังโหลด...</div>
   </div>
 
-  <!-- 💳 3. สมุดบัญชีกลาง (Ledger & Transactions) -->
+  <!-- 💳 TAB 3: สมุดบัญชีกลาง (Ledger & Transactions) -->
   <div class="tab-pane d-none" id="view-ledger">
+    <div class="d-flex align-items-center mb-3 px-1"><h5 class="fw-bold text-dark mb-0">บันทึกธุรกรรม</h5></div>
     
-    <h5 class="fw-bold text-dark mb-3">สมุดบัญชีรับเงิน (รออนุมัติ)</h5>
-
-    
-    <div class="bg-white p-3 rounded-4 shadow-sm border mb-4">
-      <div class="bg-light p-1 rounded-4 mb-3 d-flex">
-          <button id="tab-ie" class="tab-btn-ledger active" onclick="switchLedgerTab('ie')">รับ-จ่ายเงินเอง</button>
-          <button id="tab-tf" class="tab-btn-ledger" onclick="switchLedgerTab('tf')">โอนย้ายบัญชี</button>
+    <div class="modern-card border-0 p-4 mb-4">
+      <!-- Toggle สลับโหมด -->
+      <div class="bg-light p-1 rounded-pill mb-4 d-flex">
+          <button id="tab-ie" class="tab-btn-ledger active rounded-pill" onclick="switchLedgerTab('ie')">รับ-จ่ายเงินเอง</button>
+          <button id="tab-tf" class="tab-btn-ledger rounded-pill" onclick="switchLedgerTab('tf')">โอนย้ายบัญชี</button>
       </div>
       
+      <!-- 🟢 ฟอร์มรับ-จ่าย -->
       <form id="form-ie" onsubmit="submitLedgerIE(event)">
-        <div class="row g-2">
-            <!-- หมวดหมู่รายการหลัก (ดึงจาก Dropdown) -->
+        <div class="row g-3">
             <div class="col-12">
-                <div class="input-group shadow-sm">
-                    <select id="ieNote" class="form-select border-primary fw-bold text-success" required>
-                        <option value="" selected disabled>-- เลือกหมวดหมู่รายการ --</option>
-                    </select>
-                    <button type="button" class="btn btn-primary px-3" onclick="addNewLedgerNote()" title="เพิ่มหมวดหมู่ใหม่">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger px-3" onclick="deleteLedgerNote()" title="ลบหมวดหมู่ที่เลือก">
-                        <i class="fa-solid fa-minus"></i>
-                    </button>
+                <div class="btn-group w-100 shadow-sm" role="group">
+                  <input type="radio" class="btn-check" name="ieType" id="ieTypeIn" value="income" autocomplete="off" checked onchange="renderNoteDropdown()">
+                  <label class="btn btn-outline-success fw-bold py-2 rounded-start-pill" for="ieTypeIn" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-turn-down"></i> รายรับ</label>
+                  <input type="radio" class="btn-check" name="ieType" id="ieTypeOut" value="expense" autocomplete="off" onchange="renderNoteDropdown()">
+                  <label class="btn btn-outline-danger fw-bold py-2 rounded-end-pill" for="ieTypeOut" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-turn-up"></i> รายจ่าย</label>
                 </div>
-            </div>
-            
-            <!-- 🔴 เพิ่มช่องเลือกวันที่ทำธุรกรรม และ คำอธิบายเพิ่มเติม -->
-            <div class="col-5 mt-1">
-                <input type="date" id="ieDate" class="form-control fw-bold text-dark" required title="วันที่ทำธุรกรรม">
-            </div>
-            <div class="col-7 mt-1">
-                <input type="text" id="ieAddNote" class="form-control" placeholder="คำอธิบายเพิ่มเติม (ถ้ามี)...">
             </div>
 
-            <div class="col-6"><input type="number" id="ieAmt" class="form-control fw-bold text-primary" placeholder="จำนวนเงิน" required></div>
-            <div class="col-6"><select id="ieWallet" class="form-select"><option value="bank">เข้าธนาคาร</option><option value="cash">เข้าเงินสด</option></select></div>
-            
-            <div class="col-12 mt-2">
-                <div class="d-flex gap-3 justify-content-center bg-light p-2 rounded-3">
-                    <label class="d-flex align-items-center"><input type="radio" name="ieType" value="income" class="form-check-input me-2" checked onchange="renderNoteDropdown()"><span class="fw-bold text-success small">รายรับ</span></label>
-                    <label class="d-flex align-items-center"><input type="radio" name="ieType" value="expense" class="form-check-input me-2" onchange="renderNoteDropdown()"><span class="fw-bold text-danger small">รายจ่าย</span></label>
+            <div class="col-12">
+                <label class="small text-muted fw-bold mb-1 ps-2">หมวดหมู่รายการ</label>
+                <div class="input-group">
+                    <select id="ieNote" class="form-select-modern flex-grow-1" required><option value="" selected disabled>-- เลือกหมวดหมู่รายการ --</option></select>
+                    <button type="button" class="btn btn-primary px-3 rounded-end-4 ms-1" onclick="addNewLedgerNote()"><i class="fa-solid fa-plus"></i></button>
+                    <button type="button" class="btn btn-danger px-3 rounded-start-4 ms-1" onclick="deleteLedgerNote()"><i class="fa-solid fa-minus"></i></button>
                 </div>
+            </div>
+            
+            <div class="col-5">
+                <label class="small text-muted fw-bold mb-1 ps-2">วันที่ทำรายการ</label>
+                <input type="date" id="ieDate" class="form-control-modern w-100" required>
+            </div>
+            <div class="col-7">
+                <label class="small text-muted fw-bold mb-1 ps-2">รายละเอียดเพิ่มเติม</label>
+                <input type="text" id="ieAddNote" class="form-control-modern w-100" placeholder="เช่น รับจากใคร...">
+            </div>
+
+            <div class="col-6">
+            <label class="small text-muted fw-bold mb-1 ps-2">จำนวนเงิน (บาท)</label>
+                <!-- 🔴 เพิ่ม step="0.01" -->
+            <input type="number" id="ieAmt" class="form-control-modern w-100 text-primary fs-5" placeholder="0.00" step="0.01" required>
+            </div>
+            <div class="col-6">
+                <label class="small text-muted fw-bold mb-1 ps-2">ช่องทางรับ/จ่าย</label>
+                <select id="ieWallet" class="form-select-modern w-100"><option value="bank">เข้าธนาคาร</option><option value="cash">เข้าเงินสด</option></select>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100 mt-3 rounded-pill py-2 fw-bold">บันทึกรายการ</button>
-    </form>
-
-      <form id="form-tf" class="d-none" onsubmit="submitLedgerTF(event)">
-          <div class="row g-2">
-              <!-- 🔴 เพิ่มช่องเลือกวันที่โอน -->
-              <div class="col-12 mb-1">
-                  <input type="date" id="tfDate" class="form-control fw-bold text-dark" required title="วันที่ทำธุรกรรม">
-              </div>
-              <div class="col-5"><select id="tfFrom" class="form-select small"><option value="bank">ธนาคาร</option><option value="cash">เงินสด</option></select></div>
-              <div class="col-2 d-flex align-items-center justify-content-center"><i class="fa-solid fa-arrow-right text-muted"></i></div>
-              <div class="col-5"><select id="tfTo" class="form-select small"><option value="cash">เงินสด</option><option value="bank">ธนาคาร</option></select></div>
-              <div class="col-12 mt-2"><input type="number" id="tfAmt" class="form-control fw-bold text-primary text-center" placeholder="จำนวนเงิน" required></div>
-          </div>
-          <button type="submit" class="btn btn-dark w-100 mt-3 rounded-pill py-2 fw-bold">โอนเงิน</button>
+        <button type="submit" class="btn btn-primary w-100 mt-4 rounded-pill py-3 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i> บันทึกรายการ</button>
       </form>
+
+      <!-- 🔵 ฟอร์มโอนย้าย -->
+      <form id="form-tf" class="d-none" onsubmit="submitLedgerTF(event)">
+          <div class="row g-3">
+              <div class="col-12">
+                  <label class="small text-muted fw-bold mb-1 ps-2">วันที่ทำรายการ</label>
+                  <input type="date" id="tfDate" class="form-control-modern w-100" required>
+              </div>
+              <div class="col-5">
+                  <label class="small text-muted fw-bold mb-1 ps-2">ต้นทาง</label>
+                  <select id="tfFrom" class="form-select-modern w-100 px-2 text-center"><option value="bank">ธนาคาร</option><option value="cash">เงินสด</option></select>
+              </div>
+              <div class="col-2 d-flex align-items-end justify-content-center pb-2">
+                  <div class="icon-box bg-secondary bg-opacity-10 text-muted" style="width: 35px; height: 35px;"><i class="fa-solid fa-arrow-right"></i></div>
+              </div>
+              <div class="col-5">
+                  <label class="small text-muted fw-bold mb-1 ps-2">ปลายทาง</label>
+                  <select id="tfTo" class="form-select-modern w-100 px-2 text-center"><option value="cash">เงินสด</option><option value="bank">ธนาคาร</option></select>
+              </div>
+              <div class="col-12">
+                <label class="small text-muted fw-bold mb-1 ps-2">จำนวนเงิน (บาท)</label>
+                    <!-- 🔴 เพิ่ม step="0.01" -->
+                <input type="number" id="tfAmt" class="form-control-modern w-100 text-primary text-center fs-5" placeholder="0.00" step="0.01" required>
+              </div>
+          </div>
+          <button type="submit" class="btn btn-dark w-100 mt-4 rounded-pill py-3 fw-bold shadow-sm"><i class="fa-solid fa-money-bill-transfer me-2"></i> ยืนยันการโอนย้าย</button>
+      </form>
+    </div>
     
-    <!-- 🔴 จุดยึดกราฟในแท็บ "การเงิน" (Ledger) กราฟจะถูกย้ายมาตรงนี้อัตโนมัติ -->
+    <!-- จุดยึดกราฟ -->
     <div id="ledgerChartArea"></div>
 
-    <h6 class="fw-bold text-dark mb-3 mt-4">รายการรอตรวจสอบ</h6>
+    <div class="d-flex align-items-center mb-3 mt-4 ps-1">
+        <span class="dot-yellow me-2"></span><h6 class="fw-bold text-dark mb-0">รายการรอตรวจสอบ</h6>
+    </div>
     <div id="list-pending-transactions">ไม่มีรายการค้าง</div>
     
-    <!-- 🔴 เพิ่มช่องค้นหาวันที่ และ ปุ่มแบ่งหน้า -->
-    <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
-      <h6 class="fw-bold text-dark mb-0">ประวัติ (อนุมัติแล้ว)</h6>
-      <div class="d-flex align-items-center gap-2">
-          <button class="btn btn-sm btn-light text-danger" onclick="clearTxFilter()" title="ล้างการค้นหา"><i class="fa-solid fa-xmark"></i></button>
-          <input type="date" id="searchTxDate" class="form-control form-control-sm w-auto text-primary fw-bold" onchange="filterTxByDate(this.value)" title="ค้นหาจากวันที่ทำรายการ">
+    <!-- ช่องค้นหาวันที่ และ ปุ่มแบ่งหน้า -->
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-4 pt-3 border-top px-1">
+      <div class="d-flex align-items-center"><span class="dot-green me-2"></span><h6 class="fw-bold text-dark mb-0">ประวัติ (อนุมัติแล้ว)</h6></div>
+      <div class="d-flex align-items-center gap-1 bg-white rounded-pill p-1 shadow-sm border" style="max-width: 170px;">
+          <input type="date" id="searchTxDate" class="form-control border-0 bg-transparent py-0 small text-primary fw-bold" style="font-size: 0.75rem;" onchange="filterTxByDate(this.value)">
+          <button class="btn btn-sm btn-light rounded-circle text-danger p-0 d-flex justify-content-center align-items-center" style="width: 24px; height: 24px; flex-shrink: 0;" onclick="clearTxFilter()"><i class="fa-solid fa-xmark"></i></button>
       </div>
     </div>
     <div id="list-approved-transactions"></div>
-    
-    <!-- 🔴 คอนเทนเนอร์สำหรับปุ่มเปลี่ยนหน้า (Pagination) -->
     <div id="tx-pagination" class="d-flex justify-content-center flex-wrap gap-2 mt-4 mb-3"></div>
-
   </div>
   
-  <!-- 🏥 4. อนุมัติสวัสดิการ (Claims) -->
+  <!-- 🏥 TAB 4: อนุมัติสวัสดิการ (Claims) -->
   <div class="tab-pane d-none" id="view-claims">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h5 class="fw-bold text-dark mb-0">รายการขอเบิกสวัสดิการ</h5>
-    </div>
+    <div class="d-flex align-items-center mb-4 px-1"><span class="dot-red me-2"></span><h5 class="fw-bold text-dark mb-0">คำขอเบิกสวัสดิการ</h5></div>
     <div id="list-pending-claims">กำลังโหลด...</div>
-    <h6 class="fw-bold mb-3 px-1 text-dark mt-4">ประวัติการจ่ายเงินล่าสุด</h6>
+    
+    <div class="d-flex align-items-center mb-3 mt-5 px-1"><span class="dot-green me-2"></span><h6 class="fw-bold text-dark mb-0">ประวัติการจ่ายเงินล่าสุด</h6></div>
     <div id="list-approved-claims"></div>
   </div>
 
-  <!-- ⚙️ 5. ตั้งค่าระบบ (ดึงข้อมูลไปใช้ที่ Index อัตโนมัติ) -->
+  <!-- ⚙️ TAB 5: ตั้งค่าระบบ (Global) -->
   <div class="tab-pane d-none" id="view-settings">
-    <h5 class="fw-bold text-dark mb-3">การตั้งค่าระบบ (Global)</h5>
-    <div class="data-card">
-      <label class="small fw-bold text-muted">เงินสมทบต่อปี (บาท)</label>
-      <input type="number" id="setAnnualFee" class="form-control mb-3" value="365">
-      <label class="small fw-bold text-muted">หมู่บ้านในเขตเทศบาล/ตำบล (คั่นด้วยลูกน้ำ ,)</label>
-      <textarea id="setInZone" class="form-control mb-3" rows="3" placeholder="หมู่ 1, หมู่ 2"></textarea>
-      <label class="small fw-bold text-muted">รายชื่อศูนย์ประสานงาน (คั่นด้วยลูกน้ำ ,)</label>
-      <textarea id="setCenters" class="form-control mb-3" rows="3"></textarea>
-      <button onclick="saveGlobalSettings()" class="btn btn-primary w-100 fw-bold rounded-pill">บันทึกการตั้งค่า</button>
+    <div class="d-flex align-items-center mb-4 px-1"><i class="fa-solid fa-gear text-secondary me-2"></i><h5 class="fw-bold text-dark mb-0">การตั้งค่าระบบ (Global)</h5></div>
+    <div class="modern-card border-0 p-4">
+      <label class="small fw-bold text-muted mb-1 ps-2">เงินสมทบต่อปี (บาท)</label>
+        <!-- 🔴 เพิ่ม step="0.01" -->
+      <input type="number" id="setAnnualFee" class="form-control-modern w-100 mb-4" value="365" step="0.01">
+      <label class="small fw-bold text-muted mb-1 ps-2">หมู่บ้านในเขตเทศบาล/ตำบล (คั่นด้วยลูกน้ำ ,)</label>
+      <textarea id="setInZone" class="form-control-modern w-100 mb-4" rows="3" placeholder="หมู่ 1, หมู่ 2"></textarea>
+      <label class="small fw-bold text-muted mb-1 ps-2">รายชื่อศูนย์ประสานงาน (คั่นด้วยลูกน้ำ ,)</label>
+      <textarea id="setCenters" class="form-control-modern w-100 mb-4" rows="3"></textarea>
+      <button onclick="saveGlobalSettings()" class="btn btn-primary w-100 fw-bold rounded-pill py-3 shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i> บันทึกการตั้งค่า</button>
     </div>
   </div>
 
-  <!-- 🗺️ 6. แผนที่ภูมิสารสนเทศ (GIS Mapping) -->
+  <!-- 🗺️ TAB 6: GIS แผนที่ -->
   <div class="tab-pane d-none" id="view-gis">
-    <div class="data-card p-3">
+    <div class="modern-card border-0 p-3">
       <div class="d-flex flex-column gap-3 mb-3">
         <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-map-location-dot text-primary me-2"></i>พิกัดสมาชิก (GIS)</h5>
         <div class="btn-group w-100 shadow-sm" role="group">
           <input type="radio" class="btn-check" name="btnMapMode" id="btnMapMacro" autocomplete="off" onchange="switchMapMode('macro')">
-          <label class="btn btn-outline-primary" for="btnMapMacro"><i class="fa-solid fa-fire me-1"></i> Macro</label>
+          <label class="btn btn-outline-primary py-2" for="btnMapMacro"><i class="fa-solid fa-fire me-1"></i> ภาพรวม (Macro)</label>
           <input type="radio" class="btn-check" name="btnMapMode" id="btnMapMicro" autocomplete="off" checked onchange="switchMapMode('micro')">
-          <label class="btn btn-outline-primary" for="btnMapMicro"><i class="fa-solid fa-location-dot me-1"></i> Micro</label>
+          <label class="btn btn-outline-primary py-2" for="btnMapMicro"><i class="fa-solid fa-location-dot me-1"></i> รายบุคคล (Micro)</label>
         </div>
       </div>
-      <div class="border rounded-4 overflow-hidden shadow-sm position-relative">
+      <div class="border-0 rounded-4 overflow-hidden shadow-sm position-relative">
         <div id="adminGISMap" style="width: 100%; height: 50vh; background-color: #E2E8F0; display: flex; align-items: center; justify-content: center;">
-          <div class="text-center text-muted"><div class="spinner-border mb-2 text-primary" role="status"></div><h6 class="fw-bold small">กำลังโหลดแผนที่...</h6></div>
+          <div class="text-center text-muted"><div class="spinner-border mb-2 text-primary"></div><h6 class="fw-bold small">กำลังโหลดแผนที่...</h6></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ⚖️ 7. ระเบียบกองทุน -->
+  <!-- ⚖️ TAB 7: ระเบียบกองทุน -->
   <div class="tab-pane d-none" id="view-rules">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="fw-bold text-dark mb-0">ระเบียบสวัสดิการ</h5>
-      <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="openAddRuleModal()">+ เพิ่ม</button>
+    <div class="d-flex justify-content-between align-items-center mb-4 px-1">
+      <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-scale-balanced text-warning me-2"></i> ระเบียบสวัสดิการ</h5>
+      <button class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="openAddRuleModal()">+ เพิ่มระเบียบ</button>
     </div>
     <div id="list-rules">กำลังโหลด...</div>
   </div>
 
-  <!-- 🛡️ 8. ผู้ดูแลระบบ -->
+  <!-- 🛡️ TAB 8: ผู้ดูแลระบบ (Admins) -->
   <div class="tab-pane d-none" id="view-admins">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="fw-bold text-dark mb-0">ผู้ดูแลระบบ</h5>
-      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btnAddAdmin" onclick="openAddAdminModal()" style="display:none;">+ เพิ่ม</button>
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+      <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-user-shield text-info me-2"></i> ผู้ดูแลระบบ</h5>
+      <button class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" id="btnAddAdmin" onclick="openAddAdminModal()" style="display:none;">+ เพิ่มแอดมิน</button>
     </div>
-    <div class="alert alert-info small rounded-4 border-0 mb-3"><i class="fa-solid fa-circle-info"></i> เฉพาะ <b>Admin-Master</b> เท่านั้นที่เพิ่มหรือระงับสิทธิ์ได้</div>
+    <div class="alert bg-info bg-opacity-10 text-info small rounded-4 border-0 mb-4 px-3 py-2"><i class="fa-solid fa-circle-info me-1"></i> เฉพาะ <b>Admin-Master</b> เท่านั้นที่เพิ่มหรือระงับสิทธิ์ได้</div>
     <div id="list-admins">กำลังโหลด...</div>
   </div>
 
 </div>
 
+<!-- ==========================================
+     JAVASCRIPT SCRIPTS
+     ========================================== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // 🔑 Firebase Config 
@@ -443,7 +563,7 @@
   });
 
   // ==========================================
-  // 🔐 ระบบการเข้าสู่ระบบ (Authentication)
+  // 🔐 Authentication System
   // ==========================================
   function switchLoginMode(mode) {
       document.getElementById('tabEmail').classList.remove('active'); document.getElementById('tabPin').classList.remove('active');
@@ -489,7 +609,7 @@
           const userEmail = result.user.email;
           const doc = await db.collection("admins").doc(userEmail).get();
           if (doc.exists && doc.data().status === 'ใช้งาน') { grantAccess(doc.data(), doc.id); } 
-          else { auth.signOut(); Swal.fire('ปฏิเสธ', `อีเมล ${userEmail} ไม่ได้รับสิทธิ์ผู้ดูแลระบบ`, 'error'); }
+          else { auth.signOut(); Swal.fire('ปฏิเสธ', `อีเมล ${userEmail} ไม่ได้รับสิทธิ์`, 'error'); }
       }).catch((error) => { Swal.fire('Error', error.message, 'error'); });
   }
 
@@ -500,7 +620,7 @@
       try {
           const snap = await db.collection("admins").where("lineUid", "==", lineUid).where("status", "==", "ใช้งาน").get();
           if(!snap.empty) { Swal.close(); grantAccess(snap.docs[0].data(), snap.docs[0].id); } 
-          else { Swal.fire('ปฏิเสธ', 'บัญชี LINE นี้ยังไม่ได้ผูกกับสิทธิ์ผู้ดูแลระบบ กรุณาใช้ Email/รหัสผ่าน', 'warning'); }
+          else { Swal.fire('ปฏิเสธ', 'บัญชี LINE นี้ยังไม่ได้ผูกกับสิทธิ์ผู้ดูแลระบบ', 'warning'); }
       } catch(e) { Swal.fire('Error', 'การเชื่อมต่อขัดข้อง', 'error'); }
   }
 
@@ -538,14 +658,13 @@
       }).then((r) => { if(r.isConfirmed) Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success'); });
   }
 
-// ==========================================
-  // 🧭 ฟังก์ชันสลับหน้าต่างแท็บเมนู
+  // ==========================================
+  // 🧭 Navigation System
   // ==========================================
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-pane').forEach(el => { el.classList.remove('d-block'); el.classList.add('d-none'); });
     document.getElementById(tabId).classList.replace('d-none', 'd-block');
     
-    // 🔴 ย้ายตำแหน่งกล่องกราฟสถิติกระแสเงินสดให้อยู่ถูกที่ และแสดงเฉพาะ 2 แท็บที่กำหนด
     const trendChartEl = document.getElementById('sharedTrendChart');
     if(trendChartEl) {
         if(tabId === 'view-overview') {
@@ -557,10 +676,9 @@
             trendChartEl.style.display = 'block';
             if(typeof renderTrendChart === 'function') renderTrendChart();
         } else {
-            trendChartEl.style.display = 'none'; // หน้าอื่นๆ ให้ซ่อนกราฟทิ้ง
+            trendChartEl.style.display = 'none';
         }
     }
-
     if(btn) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); btn.classList.add('active'); window.scrollTo(0,0); }
   }
 
@@ -568,10 +686,10 @@
   function showLoader(show, text="กำลังประมวลผล...") { document.getElementById('loader').style.display = show ? 'flex' : 'none'; if(show) document.getElementById('loaderText').innerText = text; }
 
   // ==========================================
-  // 📊 TAB 1: ภาพรวม (Dashboard) & แจ้งเตือน Badge
+  // 📊 TAB 1: ภาพรวม (Dashboard)
   // ==========================================
   function editPopulation() {
-    Swal.fire({ title: 'ตั้งค่าจำนวนประชากร', input: 'number', inputValue: townPopulation, showCancelButton: true, confirmButtonText: 'บันทึก' }).then((result) => {
+    Swal.fire({ title: 'ตั้งค่าจำนวนประชากร', input: 'number', inputValue: townPopulation, showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#2563EB' }).then((result) => {
       if(result.isConfirmed && result.value > 0) { townPopulation = parseInt(result.value); localStorage.setItem('cwf_town_pop', townPopulation); loadDashboardOverview(); }
     });
   }
@@ -580,10 +698,7 @@
     showLoader(true, "กำลังอัปเดตข้อมูลภาพรวม...");
     try {
       let mCount = 0, pCount = 0, mResigned = 0, mDead = 0, sumIn = 0, sumOut = 0, bankBal = 0, cashBal = 0;
-      
-      // 🔴 1. เตรียมตัวแปรเก็บยอดเงินทั้ง 8 หมวด
       let chartData = { member: 0, codi: 0, local: 0, privateStore: 0, donate: 0, interest: 0, profit: 0, other: 0 };
-      
       let pendingTxCount = 0; 
       let pendingClaimCount = 0; 
       
@@ -595,11 +710,10 @@
           const d = doc.data(); 
           if(d.status === 'รอตรวจสอบ') { pCount++; pendingTxCount++; }
           if(d.status === 'อนุมัติแล้ว') {
-              if(d.type === 'รายรับเบ็ดเตล็ด' || d.type === 'สมทบเงินกองทุน') {
+              if(d.type === 'รายรับเบ็ดเตล็ด' || d.type === 'สมทบเงินกองทุน' || d.type.includes('รับ')) {
                   sumIn += parseFloat(d.amount);
                   if(d.paymentMethod && d.paymentMethod.includes('ธนาคาร')) bankBal += parseFloat(d.amount); else cashBal += parseFloat(d.amount);
                   
-                  // 🔴 2. แยกหมวดหมู่ตาม Keyword ใน Note หรือ Type เพื่อวาดกราฟ
                   let noteStr = d.note ? d.note.toLowerCase() : "";
                   if(d.type === 'สมทบเงินกองทุน' || noteStr.includes('สมาชิก')) chartData.member += parseFloat(d.amount);
                   else if(noteStr.includes('พอช.')) chartData.codi += parseFloat(d.amount);
@@ -610,7 +724,7 @@
                   else if(noteStr.includes('กำไร')) chartData.profit += parseFloat(d.amount);
                   else chartData.other += parseFloat(d.amount);
 
-              } else if(d.type === 'รายจ่ายเบ็ดเตล็ด' || d.type === 'จ่ายสวัสดิการ') {
+              } else if(d.type === 'รายจ่ายเบ็ดเตล็ด' || d.type === 'จ่ายสวัสดิการ' || d.type.includes('จ่าย')) {
                   sumOut += parseFloat(d.amount);
                   if(d.paymentMethod && d.paymentMethod.includes('ธนาคาร')) bankBal -= parseFloat(d.amount); else cashBal -= parseFloat(d.amount);
               } else if(d.type === 'โอนย้ายสภาพคล่อง') {
@@ -627,82 +741,103 @@
           if(d.status === 'อนุมัติแล้ว') { sumOut += parseFloat(d.claimAmount); cashBal -= parseFloat(d.claimAmount); } 
       });
 
-      document.getElementById('statMembers') ? document.getElementById('statMembers').innerText = mCount.toLocaleString() : null; 
+      // 🔴 ตัวช่วยแปลงตัวเลขเป็น 2 ตำแหน่ง
+      const formatMoney = (val) => parseFloat(val || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+      if(document.getElementById('statMembers')) document.getElementById('statMembers').innerText = mCount.toLocaleString(); 
       document.getElementById('eq-population').innerText = (townPopulation/1000).toFixed(1) + "k";
-      document.getElementById('eq-active').innerText = mCount.toLocaleString(); document.getElementById('eq-percent-active').innerText = ((mCount / townPopulation) * 100).toFixed(1);
-      document.getElementById('eq-resigned').innerText = mResigned.toLocaleString(); document.getElementById('eq-dead').innerText = mDead.toLocaleString();
+      document.getElementById('eq-active').innerText = mCount.toLocaleString(); 
+      document.getElementById('eq-percent-active').innerText = ((mCount / townPopulation) * 100).toFixed(1);
+      document.getElementById('eq-resigned').innerText = mResigned.toLocaleString(); 
+      document.getElementById('eq-dead').innerText = mDead.toLocaleString();
       
-      document.getElementById('statContrib') ? document.getElementById('statContrib').innerText = "฿" + sumIn.toLocaleString() : null; 
-      document.getElementById('stat-total-in').innerText = "฿" + sumIn.toLocaleString();
-      document.getElementById('statWelfare') ? document.getElementById('statWelfare').innerText = "฿" + sumOut.toLocaleString() : null; 
-      document.getElementById('stat-total-out').innerText = "฿" + sumOut.toLocaleString();
-      document.getElementById('cap-total').innerText = (sumIn - sumOut).toLocaleString();
+      if(document.getElementById('statContrib')) document.getElementById('statContrib').innerText = "฿" + formatMoney(sumIn); 
+      document.getElementById('stat-total-in').innerText = "฿" + formatMoney(sumIn);
+      if(document.getElementById('statWelfare')) document.getElementById('statWelfare').innerText = "฿" + formatMoney(sumOut); 
+      document.getElementById('stat-total-out').innerText = "฿" + formatMoney(sumOut);
       
-      document.getElementById('liq-bank').innerText = "฿" + bankBal.toLocaleString(); document.getElementById('liq-cash').innerText = "฿" + cashBal.toLocaleString();
-      document.getElementById('statPendingBadge').innerText = pCount + " รายการ";
+      document.getElementById('cap-total').innerText = formatMoney(sumIn - sumOut);
+      document.getElementById('liq-bank').innerText = "฿" + formatMoney(bankBal); 
+      document.getElementById('liq-cash').innerText = "฿" + formatMoney(cashBal);
+      document.getElementById('statPendingBadge').innerText = pCount;
+
+      if(document.getElementById('chart-sum-total')) document.getElementById('chart-sum-total').innerText = '฿' + formatMoney(sumIn - sumOut);
+      if(document.getElementById('chart-sum-bank')) document.getElementById('chart-sum-bank').innerText = '฿' + formatMoney(bankBal);
+      if(document.getElementById('chart-sum-cash')) document.getElementById('chart-sum-cash').innerText = '฿' + formatMoney(cashBal);
 
       document.getElementById('nav-badge-ledger').style.display = pendingTxCount > 0 ? 'block' : 'none';
       document.getElementById('nav-badge-claims').style.display = pendingClaimCount > 0 ? 'block' : 'none';
 
-      // 🔴 3. อัปเดตกราฟ Doughnut ให้แสดงผล 8 หมวด
       if(charts.doughnut) charts.doughnut.destroy();
       charts.doughnut = new Chart(document.getElementById('doughnutChart').getContext('2d'), { 
           type: 'doughnut', 
           data: { 
               labels: ['สมาชิก', 'พอช.', 'ท้องถิ่น', 'เอกชน/ร้านค้า', 'บริจาค', 'ดอกเบี้ยธนาคาร', 'กำไร', 'อื่นๆ'], 
               datasets: [{ 
-                  data: [
-                      chartData.member, chartData.codi, chartData.local, chartData.privateStore, 
-                      chartData.donate, chartData.interest, chartData.profit, chartData.other
-                  ], 
+                  data: [ chartData.member, chartData.codi, chartData.local, chartData.privateStore, chartData.donate, chartData.interest, chartData.profit, chartData.other ], 
                   backgroundColor: ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#14B8A6', '#94A3B8'],
-                  borderWidth: 2,
-                  borderColor: '#ffffff'
+                  borderWidth: 2, borderColor: '#ffffff'
               }] 
           }, 
           options: { 
-              responsive: true, 
-              maintainAspectRatio: false,
-              plugins: { 
-                  legend: { 
-                      position: 'right', // ย้ายคำอธิบายไปด้านขวาให้เหมาะกับจอ Mobile
-                      labels: { boxWidth: 12, font: { size: 10, family: "'Prompt', sans-serif" } } 
-                  } 
-              }
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10, family: "'Prompt', sans-serif" } } } }
           } 
       });
-      // 👉 เรียกใช้กราฟเส้นตรงนี้
-      renderTrendChart();
       
+      renderTrendChart();
     } catch (e) { console.error(e); } showLoader(false);
   }
 
-
-// 🌟 ฟังก์ชันคำนวณและวาดกราฟเปรียบเทียบกระแสเงินสด (แยก 8 หมวดหมู่ทุนสะสม + รายจ่าย)
   async function renderTrendChart() {
       const filter = document.getElementById('trendFilter').value;
       const ctx = document.getElementById('trendChart');
       if (!ctx) return;
       
-      showLoader(true, "กำลังประมวลผลกราฟ...");
       try {
           const snap = await db.collection("transactions").where("status", "==", "อนุมัติแล้ว").get();
-          
           let rawData = [];
+          
+          let totalBank = 0, totalCash = 0;
+
+          const now = new Date();
+          let startFiscalYear = now.getFullYear();
+          if (now.getMonth() < 9) startFiscalYear -= 1;
+          const fiscalStartDate = new Date(startFiscalYear, 9, 1);
+
           snap.forEach(doc => {
               const d = doc.data();
-              if (d.type === 'โอนย้ายสภาพคล่อง') return; 
-              
               let txDate = new Date();
               if (d.transactionDate) txDate = new Date(d.transactionDate);
               else if (d.timestamp) txDate = d.timestamp.toDate();
               
-              rawData.push({ type: d.type, amount: parseFloat(d.amount), dateObj: txDate, note: d.note || "" });
+              let amt = parseFloat(d.amount) || 0;
+              let isIncome = d.type.includes('รับ') || d.type.includes('สมทบ');
+              let isExpense = d.type.includes('จ่าย') || d.type === 'จ่ายสวัสดิการ';
+              let isTransfer = d.type === 'โอนย้ายสภาพคล่อง';
+
+              if (isIncome) {
+                  if (d.paymentMethod && d.paymentMethod.includes('ธนาคาร')) totalBank += amt; else totalCash += amt;
+              } else if (isExpense) {
+                  if (d.paymentMethod && d.paymentMethod.includes('ธนาคาร')) totalBank -= amt; else totalCash -= amt;
+              } else if (isTransfer) {
+                  if (d.note && d.note.includes('โอนจาก bank ไป cash')) { totalBank -= amt; totalCash += amt; }
+                  if (d.note && d.note.includes('โอนจาก cash ไป bank')) { totalCash -= amt; totalBank += amt; }
+              }
+
+              if (!isTransfer) {
+                  rawData.push({ type: d.type, amount: amt, dateObj: txDate, note: d.note || "" });
+              }
           });
 
-          const now = new Date();
+          // 🔴 ตัวช่วยแปลงตัวเลขเป็น 2 ตำแหน่ง
+          const formatMoney = (val) => parseFloat(val || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+          if(document.getElementById('chart-sum-total')) document.getElementById('chart-sum-total').innerText = '฿' + formatMoney(totalBank + totalCash);
+          if(document.getElementById('chart-sum-bank')) document.getElementById('chart-sum-bank').innerText = '฿' + formatMoney(totalBank);
+          if(document.getElementById('chart-sum-cash')) document.getElementById('chart-sum-cash').innerText = '฿' + formatMoney(totalCash);
+
           let startDate = new Date('2000-01-01');
-          
           if (filter === '1month') {
               startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           } else if (filter === '3months') {
@@ -712,9 +847,7 @@
           } else if (filter === 'thisYear' || filter === 'quarter') {
               startDate = new Date(now.getFullYear(), 0, 1);
           } else if (filter === 'fiscal') {
-              let startYear = now.getFullYear();
-              if (now.getMonth() < 9) startYear -= 1; 
-              startDate = new Date(startYear, 9, 1);
+              startDate = fiscalStartDate;
           }
           
           let filteredData = rawData.filter(d => d.dateObj >= startDate);
@@ -725,9 +858,7 @@
               let dObj = d.dateObj;
               let thYear = dObj.getFullYear() + 543;
               let thMonth = dObj.getMonth();
-              
-              let sortKey = "";
-              let displayKey = "";
+              let sortKey = ""; let displayKey = "";
               
               if (filter === '1month') {
                   sortKey = `${dObj.getFullYear()}-${String(thMonth+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
@@ -748,13 +879,8 @@
                   displayKey = `${monthNames[thMonth]} ${thYear.toString().slice(-2)}`;
               }
 
-              // เตรียมโครงสร้าง 8 หมวดหมู่ + 1 รายจ่าย
               if (!grouped[sortKey]) {
-                  grouped[sortKey] = { 
-                      label: displayKey, 
-                      member: 0, codi: 0, local: 0, privateStore: 0, 
-                      donate: 0, interest: 0, profit: 0, other: 0, expense: 0 
-                  };
+                  grouped[sortKey] = { label: displayKey, member: 0, codi: 0, local: 0, privateStore: 0, donate: 0, interest: 0, profit: 0, other: 0, expense: 0 };
               }
               
               let isIncome = d.type.includes('รับ') || d.type.includes('สมทบ');
@@ -775,8 +901,6 @@
 
           const sortedKeys = Object.keys(grouped).sort();
           const labels = sortedKeys.map(k => grouped[k].label);
-          
-          // ดึงข้อมูลแต่ละเส้น
           const dMember = sortedKeys.map(k => grouped[k].member);
           const dCodi = sortedKeys.map(k => grouped[k].codi);
           const dLocal = sortedKeys.map(k => grouped[k].local);
@@ -790,8 +914,6 @@
           if (!window.charts) window.charts = {}; 
           if (charts.trendChartObj) charts.trendChartObj.destroy();
           
-          // วาดกราฟ 9 เส้นแยกสี (8 รับ + 1 จ่าย)
-          // ตั้งค่า fill: false เพื่อไม่ให้สีทับกันจนดูไม่รู้เรื่อง
           charts.trendChartObj = new Chart(ctx.getContext('2d'), {
               type: 'line',
               data: {
@@ -809,31 +931,20 @@
                   ]
               },
               options: { 
-                  responsive: true, 
-                  maintainAspectRatio: false, 
-                  interaction: { mode: 'index', intersect: false },
-                  plugins: { 
-                      legend: { 
-                          position: 'top', 
-                          labels: { boxWidth: 10, font: { family: "'Prompt', sans-serif", size: 10 } } 
-                      },
-                      tooltip: { titleFont: { family: "'Prompt'" }, bodyFont: { family: "'Prompt'" } }
-                  },
-                  scales: { 
-                      y: { beginAtZero: true, ticks: { font: { family: "'Prompt'" } } }, 
-                      x: { ticks: { font: { family: "'Prompt'" } } } 
-                  }
+                  responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                  plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { family: "'Prompt', sans-serif", size: 10 } } }, tooltip: { titleFont: { family: "'Prompt'" }, bodyFont: { family: "'Prompt'" } } },
+                  scales: { y: { beginAtZero: true, ticks: { font: { family: "'Prompt'" } } }, x: { ticks: { font: { family: "'Prompt'" } } } }
               }
           });
 
       } catch (e) { console.error("Trend Chart Error:", e); }
-      showLoader(false);
   }
+
   // ==========================================
   // 👥 TAB 2: ทะเบียนสมาชิก
   // ==========================================
   async function loadMembersData() {
-    document.getElementById('list-members').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-primary spinner-border-sm"></div></div>';
+    document.getElementById('list-members').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-primary"></div></div>';
     try {
       const snap = await db.collection("members").orderBy("timestamp", "desc").get();
       allMembersCache = []; snap.forEach(doc => allMembersCache.push({ id: doc.id, ...doc.data() }));
@@ -844,12 +955,15 @@
       let html = "";
       dataArr.forEach(d => {
         let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
-        html += `<div class="data-card p-3"><div class="d-flex justify-content-between align-items-center">
-          <div><h6 class="fw-bold mb-0 text-dark">${d.fullName}</h6><small class="text-primary d-block">${d.memberId}</small></div>
-          <div class="text-end"><span class="badge ${statusColor} rounded-pill mb-2 cursor-pointer" onclick="changeMemberStatus('${d.id}', '${d.status}')">${d.status} <i class="fa-solid fa-pen ms-1"></i></span></div>
+        html += `<div class="modern-card p-3 mb-3"><div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-3">
+             <div class="icon-box bg-primary bg-opacity-10 text-primary"><i class="fa-solid fa-user"></i></div>
+             <div><h6 class="fw-bold mb-0 text-dark">${d.fullName}</h6><small class="text-primary fw-bold d-block" style="font-size:0.75rem;">${d.memberId}</small></div>
+          </div>
+          <div class="text-end"><span class="badge ${statusColor} rounded-pill px-3 py-2 cursor-pointer shadow-sm" onclick="changeMemberStatus('${d.id}', '${d.status}')">${d.status} <i class="fa-solid fa-pen ms-1"></i></span></div>
         </div></div>`;
       });
-      document.getElementById('list-members').innerHTML = html || "<p class='text-center text-muted'>ไม่มีข้อมูล</p>";
+      document.getElementById('list-members').innerHTML = html || "<div class='text-center text-muted small p-3 bg-light rounded-4'>ไม่มีข้อมูล</div>";
   }
   function filterMembersLocally() {
       const txt = document.getElementById('searchMemberInput').value.toLowerCase();
@@ -861,18 +975,11 @@
   }
 
   // ==========================================
-  // 💳 TAB 3: สมุดบัญชี & รับเงิน (มี Pagination, ค้นหา, และ TX-ID)
+  // 💳 TAB 3: สมุดบัญชี & รับเงิน (Ledger)
   // ==========================================
-  let incomeNotes = [];
-  let expenseNotes = [];
-  
-  // 🔴 ตัวแปรสำหรับระบบแบ่งหน้าและค้นหา
-  let allTransactionsCache = []; 
-  let currentTxPage = 1;         
-  const itemsPerTxPage = 10;     
-  let txSearchDate = "";         
+  let incomeNotes = []; let expenseNotes = []; let allTransactionsCache = []; 
+  let currentTxPage = 1; const itemsPerTxPage = 10; let txSearchDate = "";         
 
-  // 🌟 ฟังก์ชันสร้างเลขที่รายการอัตโนมัติ (Transaction ID)
   function generateTxId() {
       const now = new Date();
       const yy = (now.getFullYear() + 543).toString().slice(-2);
@@ -902,8 +1009,7 @@
       const select = document.getElementById('ieNote');
       const notes = isIncome ? incomeNotes : expenseNotes;
       const colorClass = isIncome ? 'text-success' : 'text-danger';
-      
-      select.className = `form-select border-primary fw-bold ${colorClass}`;
+      select.className = `form-select-modern flex-grow-1 fw-bold ${colorClass}`;
       select.innerHTML = '<option value="" selected disabled>-- เลือกหมวดหมู่รายการ --</option>';
       notes.forEach(note => { select.innerHTML += `<option value="${note}" class="${colorClass}">${note}</option>`; });
   }
@@ -960,11 +1066,9 @@
 
       showLoader(true);
       await db.collection("transactions").add({ 
-          txId: generateTxId(), // 🔴 เพิ่มเลขที่รายการ
-          type: selectedType, note: additionalNote, amount: parseFloat(amt), 
+          txId: generateTxId(), type: selectedType, note: additionalNote, amount: parseFloat(amt), 
           paymentMethod: wallet === 'bank' ? 'ธนาคาร' : 'เงินสด', transactionDate: txDate, 
-          fullName: 'แอดมิน: ' + currentAdminData.name, status: 'อนุมัติแล้ว', 
-          timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+          fullName: 'แอดมิน: ' + currentAdminData.name, status: 'อนุมัติแล้ว', timestamp: firebase.firestore.FieldValue.serverTimestamp() 
       });
       Swal.fire({icon:'success', title:'บันทึกสำเร็จ', timer:1500, showConfirmButton:false}); 
       e.target.reset(); setTodayDate(); loadLedgerData(); loadDashboardOverview();
@@ -979,11 +1083,9 @@
       showLoader(true, "กำลังโอนเงิน...");
       try {
           await db.collection("transactions").add({ 
-              txId: generateTxId(), // 🔴 เพิ่มเลขที่รายการ
-              type: 'โอนย้ายสภาพคล่อง', amount: parseFloat(amt), paymentMethod: 'ภายใน', 
-              note: `โอนจาก ${from} ไป ${to}`, transactionDate: txDate, 
-              fullName: 'แอดมิน: ' + currentAdminData.name, status: 'อนุมัติแล้ว', 
-              timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+              txId: generateTxId(), type: 'โอนย้ายสภาพคล่อง', amount: parseFloat(amt), paymentMethod: 'ภายใน', 
+              note: `โอนจาก ${from} ไป ${to}`, transactionDate: txDate, fullName: 'แอดมิน: ' + currentAdminData.name, 
+              status: 'อนุมัติแล้ว', timestamp: firebase.firestore.FieldValue.serverTimestamp() 
           });
           Swal.fire({icon:'success', title:'โอนเงินสำเร็จ', timer:1500, showConfirmButton:false}); 
           e.target.reset(); setTodayDate(); loadLedgerData(); loadDashboardOverview();
@@ -992,35 +1094,21 @@
 
   async function loadLedgerData() { setTodayDate(); loadLedgerNotes(); loadTransactions(); }
 
-  // 🌟 โหลดข้อมูลทั้งหมดลง Cache
-  // 🌟 โหลดข้อมูลทั้งหมดลง Cache (เพิ่มระบบจัดเรียงตามวันเกิดรายการ)
   async function loadTransactions() {
-    document.getElementById('list-pending-transactions').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-success spinner-border-sm"></div></div>'; 
-    document.getElementById('list-approved-transactions').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-success spinner-border-sm"></div></div>';
+    document.getElementById('list-pending-transactions').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-success"></div></div>'; 
+    document.getElementById('list-approved-transactions').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-success"></div></div>';
     
     try {
-      // ดึงข้อมูลพื้นฐานจากฐานข้อมูล
       const snap = await db.collection("transactions").orderBy("timestamp", "desc").get(); 
       allTransactionsCache = [];
-      
       snap.forEach(doc => { 
           const d = doc.data();
-          
-          // 🔴 1. สร้างค่าเวลา (Timestamp) ของ "วันเกิดรายการ" เพื่อใช้จัดเรียง
-          let sDate = 0;
-          if (d.transactionDate) {
-              sDate = new Date(d.transactionDate).getTime(); // วันที่แอดมินเลือก
-          } else if (d.timestamp) {
-              sDate = d.timestamp.toDate().getTime(); // ถ้าไม่มีให้ใช้วันที่ระบบ
-          }
-          
+          let sDate = d.transactionDate ? new Date(d.transactionDate).getTime() : (d.timestamp ? d.timestamp.toDate().getTime() : 0);
           allTransactionsCache.push({ id: doc.id, sortDate: sDate, ...d }); 
       });
 
-      // 🔴 2. จัดเรียงข้อมูลใน Cache ใหม่ทั้งหมด (ใหม่สุด -> เก่าสุด)
       allTransactionsCache.sort((a, b) => {
           if (b.sortDate === a.sortDate) {
-              // ถ้าวันเกิดรายการเป็น "วันเดียวกัน" ให้เรียงจากเวลาที่แอดมินกดบันทึกล่าสุด
               const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
               const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
               return timeB - timeA; 
@@ -1028,24 +1116,22 @@
           return b.sortDate - a.sortDate;
       });
 
-      currentTxPage = 1; 
-      renderTransactions();
+      currentTxPage = 1; renderTransactions();
     } catch(e) { console.error("Load Transaction Error:", e); }
   }
 
-  // 🌟 ฟังก์ชันจัดการการค้นหาและเปลี่ยนหน้า
   function filterTxByDate(dateVal) { txSearchDate = dateVal; currentTxPage = 1; renderTransactions(); }
   function clearTxFilter() { document.getElementById('searchTxDate').value = ""; txSearchDate = ""; currentTxPage = 1; renderTransactions(); }
   function changeTxPage(page) { currentTxPage = page; renderTransactions(); document.getElementById('list-approved-transactions').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
-  // 🌟 ฟังก์ชันวาด HTML ประวัติแบบแบ่งหน้า (Pagination)
   function renderTransactions() {
-      let filteredData = allTransactionsCache;
-      // กรองด้วยวันที่ทำธุรกรรม
+      const pendingTxs = allTransactionsCache.filter(d => d.status === 'รอตรวจสอบ');
+      let approvedTxs = allTransactionsCache.filter(d => d.status === 'อนุมัติแล้ว');
+      
       if (txSearchDate) {
-          filteredData = filteredData.filter(d => {
+          approvedTxs = approvedTxs.filter(d => {
               if (d.transactionDate && d.transactionDate === txSearchDate) return true;
-              if (!d.transactionDate && d.timestamp) { // กรณีข้อมูลเก่าไม่มี transactionDate
+              if (!d.transactionDate && d.timestamp) {
                   const tzOffset = new Date().getTimezoneOffset() * 60000;
                   const localISOTime = (new Date(d.timestamp.toDate() - tzOffset)).toISOString().slice(0, -1);
                   return localISOTime.split('T')[0] === txSearchDate;
@@ -1054,103 +1140,104 @@
           });
       }
 
-      const pendingTxs = filteredData.filter(d => d.status === 'รอตรวจสอบ');
-      const approvedTxs = filteredData.filter(d => d.status === 'อนุมัติแล้ว');
-
-      // คำนวณหน้า Pagination
       const totalPages = Math.ceil(approvedTxs.length / itemsPerTxPage);
       if (currentTxPage > totalPages && totalPages > 0) currentTxPage = totalPages;
+      if (currentTxPage < 1) currentTxPage = 1;
       const startIdx = (currentTxPage - 1) * itemsPerTxPage;
       const paginatedApproved = approvedTxs.slice(startIdx, startIdx + itemsPerTxPage);
 
-      document.getElementById('list-pending-transactions').innerHTML = buildTxHtmlString(pendingTxs) || "<p class='text-muted small'>ไม่มีรายการค้าง</p>";
-      document.getElementById('list-approved-transactions').innerHTML = buildTxHtmlString(paginatedApproved) || "<p class='text-muted small'>ไม่พบประวัติในระบบ/วันที่ระบุ</p>";
+      document.getElementById('list-pending-transactions').innerHTML = buildTxHtmlString(pendingTxs) || "<div class='text-center text-muted small p-3 bg-white rounded-4 border border-light'>ไม่มีรายการค้างตรวจสอบ</div>";
+      document.getElementById('list-approved-transactions').innerHTML = buildTxHtmlString(paginatedApproved) || "<div class='text-center text-muted small p-3 bg-white rounded-4 border border-light'>ไม่พบประวัติในระบบหรือวันที่ระบุ</div>";
 
-      // วาดปุ่ม Pagination
       let paginationHtml = "";
       if (totalPages > 1) {
-          paginationHtml += `<button class="btn btn-sm ${currentTxPage === 1 ? 'btn-light disabled' : 'btn-outline-primary'}" onclick="changeTxPage(${currentTxPage - 1})"><i class="fa-solid fa-chevron-left"></i> ก่อนหน้า</button>`;
+          paginationHtml += `<button class="btn btn-sm ${currentTxPage === 1 ? 'btn-light disabled' : 'btn-outline-primary rounded-pill px-3'}" onclick="changeTxPage(${currentTxPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
           for (let i = 1; i <= totalPages; i++) {
               if (i === 1 || i === totalPages || (i >= currentTxPage - 1 && i <= currentTxPage + 1)) {
-                  paginationHtml += `<button class="btn btn-sm ${currentTxPage === i ? 'btn-primary' : 'btn-outline-primary'} fw-bold" onclick="changeTxPage(${i})">${i}</button>`;
+                  paginationHtml += `<button class="btn btn-sm ${currentTxPage === i ? 'btn-primary shadow-sm' : 'btn-outline-primary'} rounded-circle fw-bold mx-1" style="width:32px; height:32px;" onclick="changeTxPage(${i})">${i}</button>`;
               } else if (i === currentTxPage - 2 || i === currentTxPage + 2) {
                   paginationHtml += `<span class="px-1 text-muted">...</span>`;
               }
           }
-          paginationHtml += `<button class="btn btn-sm ${currentTxPage === totalPages ? 'btn-light disabled' : 'btn-outline-primary'}" onclick="changeTxPage(${currentTxPage + 1})">ถัดไป <i class="fa-solid fa-chevron-right"></i></button>`;
+          paginationHtml += `<button class="btn btn-sm ${currentTxPage === totalPages ? 'btn-light disabled' : 'btn-outline-primary rounded-pill px-3'}" onclick="changeTxPage(${currentTxPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
       }
       document.getElementById('tx-pagination').innerHTML = paginationHtml;
   }
 
-  // 🌟 ฟังก์ชันประกอบ HTML Accordion
+  // 🌟 สร้าง HTML รูปแบบย่อ-ขยาย พร้อมแสดงทศนิยม 2 ตำแหน่ง
   function buildTxHtmlString(txArray) {
       let html = "";
       txArray.forEach(d => {
         let isTransfer = d.type === 'โอนย้ายสภาพคล่อง';
         let isIncome = d.type.includes('รับ') || d.type.includes('สมทบ');
         
-        let iconClass = isTransfer ? 'tx-transfer' : (isIncome ? 'tx-income' : 'tx-expense');
+        let iconClass = isTransfer ? 'text-secondary bg-secondary bg-opacity-10' : (isIncome ? 'text-success bg-success bg-opacity-10' : 'text-danger bg-danger bg-opacity-10');
         let icon = isTransfer ? 'fa-arrow-right-arrow-left' : (isIncome ? 'fa-arrow-up' : 'fa-arrow-down');
         let sign = isTransfer ? '' : (isIncome ? '+' : '-');
+        let cardAccent = isTransfer ? '#64748B' : (isIncome ? '#10B981' : '#EF4444');
+        let accentStyle = `border-left: 5px solid ${cardAccent}; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);`;
         
         let recordDateStr = "ไม่มีระบุเวลา";
         if (d.timestamp) {
             const rDate = d.timestamp.toDate();
             recordDateStr = `${rDate.getDate().toString().padStart(2,'0')}/${(rDate.getMonth()+1).toString().padStart(2,'0')}/${rDate.getFullYear()+543} [${rDate.getHours().toString().padStart(2,'0')}:${rDate.getMinutes().toString().padStart(2,'0')} น.]`;
         }
-
         let txDateDisplay = "ไม่ระบุ";
         if (d.transactionDate) {
-            const [y, m, dNum] = d.transactionDate.split('-');
-            txDateDisplay = `${dNum}/${m}/${parseInt(y) + 543}`;
+            const [y, m, dNum] = d.transactionDate.split('-'); txDateDisplay = `${dNum}/${m}/${parseInt(y) + 543}`;
         } else { txDateDisplay = recordDateStr.split(' ')[0]; }
 
-        let safeType = d.type ? d.type.replace(/'/g, "\\'") : "";
-        let safeNote = d.note ? d.note.replace(/'/g, "\\'") : "";
-        let safeUid = d.uid ? d.uid : "";
-        let displayTxId = d.txId ? d.txId : "-"; // 🔴 ดึงเลขที่รายการ
+        let safeType = d.type ? d.type.replace(/'/g, "\\'") : ""; let safeNote = d.note ? d.note.replace(/'/g, "\\'") : "";
+        let safeUid = d.uid ? d.uid : ""; let displayTxId = d.txId ? d.txId : "-";
 
         let actionBtns = `
-            <button onclick="editTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeNote}', '${d.paymentMethod}', '${safeUid}')" class="btn btn-sm btn-outline-warning py-1 px-2" title="แก้ไขรายการ"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeUid}')" class="btn btn-sm btn-outline-danger py-1 px-2 ms-1" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+            <button onclick="editTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeNote}', '${d.paymentMethod}', '${safeUid}')" class="btn btn-sm btn-outline-warning py-1 px-3 rounded-pill" title="แก้ไขรายการ"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeUid}')" class="btn btn-sm btn-outline-danger py-1 px-3 ms-2 rounded-pill" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
         `;
         
         let historyHtml = "";
         if(d.editHistory && d.editHistory.length > 0 && currentAdminData.role === 'Admin-Master') {
-            historyHtml = `<div class="mt-2 p-2 bg-light rounded border border-warning" style="font-size:0.75rem;"><span class="text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติเดิม (Master):</span><ul class="mb-0 ps-3 text-muted">`;
-            d.editHistory.forEach(h => { historyHtml += `<li>จากเดิม: ${h.oldType} ${h.oldNote ? `(${h.oldNote})` : ''} <strong class="text-dark">(${h.oldMethod} ฿${h.oldAmount})</strong> แกัโดย ${h.editedBy}</li>`; });
+            historyHtml = `<div class="mt-3 p-3 bg-light rounded-4 border border-warning" style="font-size:0.75rem;"><span class="text-warning fw-bold"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติเดิม (Master):</span><ul class="mb-0 ps-3 mt-1 text-muted">`;
+            d.editHistory.forEach(h => { 
+                // 🔴 อัปเดตทศนิยม 2 ตำแหน่งสำหรับประวัติการแก้ไข
+                let formattedOldAmount = parseFloat(h.oldAmount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                historyHtml += `<li>จากเดิม: ${h.oldType} ${h.oldNote ? `(${h.oldNote})` : ''} <strong class="text-dark">(${h.oldMethod} ฿${formattedOldAmount})</strong> แก้โดย ${h.editedBy}</li>`; 
+            });
             historyHtml += `</ul></div>`;
         }
 
-        // โครงสร้าง HTML แบบย่อ/ขยาย (Accordion)
-        html += `<div class="data-card p-3">
-          <!-- 🟢 ส่วนหัว (แสดงตลอดเวลา) -->
+        // 🔴 อัปเดตทศนิยม 2 ตำแหน่งสำหรับยอดเงินหลักที่แสดงผล
+        let formattedAmount = parseFloat(d.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        html += `<div class="bg-white p-3 mb-3" style="${accentStyle}">
           <div class="d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapse-${d.id}" aria-expanded="false" onclick="document.getElementById('arrow-${d.id}').classList.toggle('fa-rotate-180')">
             <div class="d-flex align-items-center gap-3 w-100" style="overflow: hidden;">
-                <div class="tx-icon ${iconClass} m-0 flex-shrink-0"><i class="fa-solid ${icon}"></i></div>
+                <div class="icon-box ${iconClass} m-0 flex-shrink-0"><i class="fa-solid ${icon}"></i></div>
                 <div style="min-width: 0;">
-                    <h6 class="mb-0 fw-bold text-dark text-truncate" style="font-size:0.85rem;">${d.type}</h6>
+                    <h6 class="mb-1 fw-bold text-dark text-truncate" style="font-size:0.9rem;">${d.type}</h6>
+                    <small class="text-muted d-block" style="font-size: 0.7rem;"><i class="fa-regular fa-calendar me-1"></i>${txDateDisplay}</small>
                 </div>
             </div>
-            <div class="text-end flex-shrink-0 ms-2 d-flex align-items-center gap-2">
-                <h6 class="fw-bold mb-0">${sign}฿${parseFloat(d.amount).toLocaleString()}</h6>
-                <i class="fa-solid fa-chevron-down text-muted" id="arrow-${d.id}" style="transition: transform 0.3s; font-size: 0.8rem;"></i>
+            <div class="text-end flex-shrink-0 ms-2 d-flex flex-column align-items-end">
+                <h6 class="fw-bold mb-1" style="color: ${cardAccent};">${sign}฿${formattedAmount}</h6>
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted mt-1" style="width: 22px; height: 22px; transition: transform 0.3s;" id="arrow-${d.id}">
+                    <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
+                </div>
             </div>
           </div>
           
-          <!-- 🔴 ส่วนเนื้อหาที่ถูกซ่อน (ขยายเมื่อกดลูกศร) -->
-          <div class="collapse mt-3 pt-3 border-top" id="collapse-${d.id}">
-            <div class="mb-2">
-                <!-- 🔴 แสดงเลขที่รายการธุรกรรมใต้ชื่อแอดมิน -->
-                <small class="text-muted d-block text-truncate mt-1" style="font-size:0.65rem;"><i class="fa-solid fa-user-pen"></i> ${d.fullName}</small>
-                <small class="text-primary fw-bold d-block text-truncate mb-2" style="font-size:0.65rem;"><i class="fa-solid fa-receipt"></i> เลขที่อ้างอิง: ${displayTxId}</small>
-
-                ${d.note ? `<small class="text-dark d-block text-truncate mb-1" style="font-size:0.75rem;"><i class="fa-regular fa-comment-dots"></i> ${d.note}</small>` : ''}
-                <small class="text-dark fw-bold d-block text-truncate" style="font-size:0.65rem;"><i class="fa-regular fa-calendar-check text-success"></i> วันเกิดรายการ: ${txDateDisplay}</small>
-                <small class="text-muted d-block text-truncate" style="font-size:0.65rem;"><i class="fa-solid fa-clock-rotate-left"></i> ลงระบบเมื่อ: ${recordDateStr}</small>
+          <div class="collapse mt-3 pt-3" id="collapse-${d.id}" style="border-top: 1px dashed #E2E8F0;">
+            <div class="mb-3 px-2">
+                <small class="text-muted d-block text-truncate mt-1" style="font-size:0.75rem;"><i class="fa-solid fa-user-pen text-primary me-2"></i> แอดมิน: <strong class="text-dark">${d.fullName}</strong></small>
+                <small class="text-primary d-block text-truncate mt-2" style="font-size:0.75rem;"><i class="fa-solid fa-receipt me-2"></i> อ้างอิง: <strong class="fw-bold">${displayTxId}</strong></small>
+                ${d.note ? `<small class="text-dark d-block text-truncate mt-2" style="font-size:0.75rem;"><i class="fa-regular fa-comment-dots text-secondary me-2"></i> หมายเหตุ: ${d.note}</small>` : ''}
+                <small class="text-dark fw-bold d-block text-truncate mt-2" style="font-size:0.65rem;"><i class="fa-regular fa-calendar-check text-success me-2"></i> วันเกิดรายการ: ${txDateDisplay}</small>
+                <small class="text-muted d-block text-truncate mt-1" style="font-size:0.65rem;"><i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i> บันทึกเข้าระบบ: ${recordDateStr}</small>
             </div>
-            <div class="d-flex justify-content-end align-items-center mt-2">
-                ${d.status === 'รอตรวจสอบ' ? `<button onclick="approveTx('${d.id}', '${safeUid}', ${d.amount})" class="btn btn-sm btn-success rounded-pill py-1 px-3">อนุมัติ</button>` : `<small class="text-success me-2" style="font-size:0.7rem;">อนุมัติแล้ว</small> ${actionBtns}`}
+            <div class="d-flex justify-content-end align-items-center bg-light p-2 rounded-pill">
+                ${d.status === 'รอตรวจสอบ' 
+                  ? `<button onclick="approveTx('${d.id}', '${safeUid}', ${d.amount}, '${d.txId || ''}')" class="btn btn-sm btn-success rounded-pill py-2 px-4 fw-bold shadow-sm w-100">อนุมัติรายการนี้</button>` 
+                  : `${actionBtns}`}
             </div>
             ${historyHtml}
           </div>
@@ -1162,10 +1249,12 @@
   async function editTransaction(txId, oldAmt, oldType, oldNote, oldMethod, uid) {
       const { value: formValues } = await Swal.fire({
           title: 'แก้ไขประวัติ',
-          html: `<label class="small fw-bold text-start w-100">หมวดหมู่รายการ:</label><input id="edit-type" type="text" class="form-control mb-2 text-primary fw-bold" value="${oldType}"><label class="small fw-bold text-start w-100">คำอธิบายเพิ่มเติม:</label><input id="edit-note" type="text" class="form-control mb-2" value="${oldNote}"><label class="small fw-bold text-start w-100">จำนวนเงิน:</label><input id="edit-amt" type="number" class="form-control mb-2 fw-bold text-primary" value="${oldAmt}"><label class="small fw-bold text-start w-100">ช่องทางเงิน:</label><select id="edit-wallet" class="form-select"><option value="ธนาคาร" ${oldMethod.includes('ธนาคาร') ? 'selected' : ''}>ธนาคาร</option><option value="เงินสด" ${oldMethod.includes('เงินสด') ? 'selected' : ''}>เงินสด</option></select>`,
+          // 🔴 เพิ่ม step="0.01" ตรง input id="edit-amt"
+          html: `<label class="small fw-bold text-start w-100">หมวดหมู่รายการ:</label><input id="edit-type" type="text" class="form-control mb-2 text-primary fw-bold" value="${oldType}"><label class="small fw-bold text-start w-100">คำอธิบายเพิ่มเติม:</label><input id="edit-note" type="text" class="form-control mb-2" value="${oldNote}"><label class="small fw-bold text-start w-100">จำนวนเงิน:</label><input id="edit-amt" type="number" class="form-control mb-2 fw-bold text-primary" value="${oldAmt}" step="0.01"><label class="small fw-bold text-start w-100">ช่องทางเงิน:</label><select id="edit-wallet" class="form-select"><option value="ธนาคาร" ${oldMethod.includes('ธนาคาร') ? 'selected' : ''}>ธนาคาร</option><option value="เงินสด" ${oldMethod.includes('เงินสด') ? 'selected' : ''}>เงินสด</option></select>`,
           showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข',
           preConfirm: () => { return { type: document.getElementById('edit-type').value, note: document.getElementById('edit-note').value, amt: parseFloat(document.getElementById('edit-amt').value), method: document.getElementById('edit-wallet').value } }
       });
+      // ... (โค้ดส่วนอื่นด้านล่างคงเดิม) ...
       if (formValues) {
           showLoader(true, "กำลังอัปเดต...");
           try {
@@ -1203,43 +1292,62 @@
       });
   }
 
-  async function approveTx(txId, memberUid, amount) {
-    if(confirm("ยืนยันรับยอดเงินนี้?")) {
+  async function approveTx(txId, memberUid, amount, currentTxId) {
+    if(confirm("ยืนยันรับยอดเงินนี้เข้าสู่ระบบ?")) {
       showLoader(true, "กำลังอนุมัติ...");
       try {
-          await db.collection("transactions").doc(txId).update({status: "อนุมัติแล้ว"});
-          if(memberUid && memberUid !== "undefined") { await db.collection("members").doc(memberUid).update({ totalContribution: firebase.firestore.FieldValue.increment(amount) }); }
-          Swal.fire({icon: 'success', title: 'อนุมัติเรียบร้อย', showConfirmButton: false, timer: 1500}); loadTransactions(); loadDashboardOverview();
+          let updateData = { status: "อนุมัติแล้ว" };
+          if (!currentTxId || currentTxId === 'undefined' || currentTxId === '') { updateData.txId = generateTxId(); }
+          await db.collection("transactions").doc(txId).update(updateData);
+          if(memberUid && memberUid !== "undefined") { 
+             const txDoc = await db.collection("transactions").doc(txId).get();
+             const txData = txDoc.data();
+             if (txData) {
+                 if (txData.type.includes('รับ') || txData.type.includes('สมทบ')) await db.collection("members").doc(memberUid).update({ totalContribution: firebase.firestore.FieldValue.increment(amount) }); 
+                 else if (txData.type.includes('จ่าย') || txData.type === 'จ่ายสวัสดิการ') await db.collection("members").doc(memberUid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(amount) }); 
+             }
+          }
+          Swal.fire({icon: 'success', title: 'อนุมัติเรียบร้อย', showConfirmButton: false, timer: 1500}); 
+          loadTransactions(); loadDashboardOverview();
       } catch (error) { showLoader(false); Swal.fire('Error', 'ผิดพลาด', 'error'); }
     }
   }
+
   // ==========================================
-  // 🏥 TAB 4: เบิกจ่ายสวัสดิการ
+  // 🏥 TAB 4: เบิกจ่ายสวัสดิการ (Claims)
   // ==========================================
   async function loadClaims() {
-    document.getElementById('list-pending-claims').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-danger spinner-border-sm"></div></div>'; document.getElementById('list-approved-claims').innerHTML = '';
+    document.getElementById('list-pending-claims').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-danger"></div></div>'; 
+    document.getElementById('list-approved-claims').innerHTML = '';
     try {
       const snap = await db.collection("claims").orderBy("timestamp", "desc").get(); let p_html = "", a_html = "";
       snap.forEach(doc => {
         const d = doc.data();
-        let card = `<div class="data-card p-3"><div class="d-flex justify-content-between align-items-center">
-          <div><h6 class="fw-bold mb-0 text-dark">${d.fullName}</h6><small class="text-primary fw-bold" style="font-size:0.75rem;">${d.welfareType}</small></div>
-          <div class="text-end"><h6 class="fw-bold text-danger mb-0">-฿${d.claimAmount}</h6>${d.status === 'รอตรวจสอบ' ? `<button onclick="approveClaim('${doc.id}', '${d.uid}', ${d.claimAmount})" class="btn btn-sm btn-primary rounded-pill mt-1 py-0">จ่ายเงิน</button>` : `<small class="text-success" style="font-size:0.7rem;">จ่ายแล้ว</small>`}</div>
+        
+        // 🔴 แปลงเป็น 2 ตำแหน่ง
+        let formatAmt = parseFloat(d.claimAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        let card = `<div class="modern-card p-3 mb-3"><div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-3">
+             <div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="fa-solid fa-hand-holding-medical"></i></div>
+             <div><h6 class="fw-bold mb-0 text-dark">${d.fullName}</h6><small class="text-danger fw-bold d-block" style="font-size:0.75rem;">${d.welfareType}</small></div>
+          </div>
+          <div class="text-end"><h5 class="fw-bold text-danger mb-1">-฿${formatAmt}</h5>${d.status === 'รอตรวจสอบ' ? `<button onclick="approveClaim('${doc.id}', '${d.uid}', ${d.claimAmount})" class="btn btn-sm btn-success rounded-pill px-3 py-1 shadow-sm fw-bold">จ่ายเงิน</button>` : `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">จ่ายแล้ว</span>`}</div>
         </div></div>`;
         if(d.status === 'รอตรวจสอบ') p_html += card; else a_html += card;
       });
-      document.getElementById('list-pending-claims').innerHTML = p_html || "<p class='text-muted small'>ไม่มีคำขอค้างตรวจสอบ</p>";
-      document.getElementById('list-approved-claims').innerHTML = a_html || "<p class='text-muted small'>ไม่มีประวัติ</p>";
+      document.getElementById('list-pending-claims').innerHTML = p_html || "<div class='text-center text-muted small p-3 bg-light rounded-4'>ไม่มีคำขอค้างตรวจสอบ</div>";
+      document.getElementById('list-approved-claims').innerHTML = a_html || "<div class='text-center text-muted small p-3 bg-light rounded-4'>ไม่มีประวัติ</div>";
     } catch(e) {}
   }
+
   async function approveClaim(claimId, memberUid, amount) {
     if(confirm("ยืนยันจ่ายเงินสวัสดิการก้อนนี้?")) {
       showLoader(true, "กำลังอนุมัติ...");
       try {
           await db.collection("claims").doc(claimId).update({status: "อนุมัติแล้ว"});
           await db.collection("transactions").add({ 
-              txId: generateTxId(), // 🔴 เพิ่มเลขที่รายการ
-              type: 'จ่ายสวัสดิการ', amount: parseFloat(amount), paymentMethod: 'เงินสด', 
+              txId: generateTxId(), type: 'จ่ายสวัสดิการ', amount: parseFloat(amount), paymentMethod: 'เงินสด', 
               note: `จ่ายเคลม ${claimId}`, fullName: 'แอดมิน: ' + currentAdminData.name, 
               status: 'อนุมัติแล้ว', timestamp: firebase.firestore.FieldValue.serverTimestamp() 
           });
@@ -1250,7 +1358,7 @@
   }
 
   // ==========================================
-  // ⚙️ TAB 5: ตั้งค่าระบบ
+  // ⚙️ TAB 5: ตั้งค่าระบบ (Settings)
   // ==========================================
   async function loadGlobalSettings() {
       const snap = await db.collection("settings").doc("master").get();
@@ -1261,12 +1369,13 @@
           if(d.centers) document.getElementById('setCenters').value = d.centers.join(", ");
       }
   }
+
   async function saveGlobalSettings() {
       if(currentAdminData.role !== 'Admin-Master') return Swal.fire('Error', 'สิทธิ์ไม่เพียงพอ (เฉพาะ Master)', 'error');
       const inZone = document.getElementById('setInZone').value.split(',').map(s=>s.trim()).filter(s=>s);
       const centers = document.getElementById('setCenters').value.split(',').map(s=>s.trim()).filter(s=>s);
       await db.collection("settings").doc("master").set({ annualFee: parseFloat(document.getElementById('setAnnualFee').value) || 365, inZoneVillages: inZone, centers: centers }, {merge: true});
-      Swal.fire('สำเร็จ', 'บันทึกการตั้งค่าระบบเรียบร้อย', 'success');
+      Swal.fire({icon:'success', title:'บันทึกการตั้งค่าระบบเรียบร้อย', showConfirmButton:false, timer: 1500});
   }
 
   // ==========================================
@@ -1280,6 +1389,7 @@
     }
     switchMapMode('micro');
   }
+
   async function switchMapMode(mode) {
     if (heatmapLayer) { heatmapLayer.setMap(null); heatmapLayer = null; }
     if (mapMarkers.length > 0) { mapMarkers.forEach(m => m.setMap(null)); } mapMarkers = [];
@@ -1299,40 +1409,56 @@
   }
 
   // ==========================================
-  // ⚖️ TAB 7: ระเบียบกองทุน
+  // ⚖️ TAB 7: ระเบียบกองทุน (Rules)
   // ==========================================
   async function loadRulesData() {
-      document.getElementById('list-rules').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-warning spinner-border-sm"></div></div>';
+      document.getElementById('list-rules').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-warning"></div></div>';
       try {
           const snap = await db.collection("rules").get(); let html = "";
-          snap.forEach(doc => { const d = doc.data(); html += `<div class="data-card p-3"><div class="d-flex justify-content-between align-items-center"><h6 class="fw-bold text-dark mb-0">${d.name}</h6><button class="action-btn text-danger py-0" onclick="deleteRecord('rules', '${doc.id}')"><i class="fa-solid fa-trash" style="font-size:0.8rem;"></i></button></div><div class="row g-2 mt-2 pt-2 border-top"><div class="col-6"><small class="text-muted d-block" style="font-size:0.7rem;">สูงสุด/ครั้ง</small><strong class="small text-primary">${d.maxPerClaim} ฿</strong></div><div class="col-6"><small class="text-muted d-block" style="font-size:0.7rem;">วงเงินสูงสุด/ปี</small><strong class="small text-danger">${d.maxPerYear} ฿</strong></div></div></div>`; });
-          document.getElementById('list-rules').innerHTML = html || "<p class='text-center text-muted'>ยังไม่มีระเบียบ</p>";
+          snap.forEach(doc => { 
+              const d = doc.data(); 
+              
+              // 🔴 แปลงตัวเลขระเบียบจ่าย 2 ตำแหน่ง
+              let formatMaxClaim = parseFloat(d.maxPerClaim || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+              let formatMaxYear = parseFloat(d.maxPerYear || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+              html += `<div class="modern-card p-3 mb-3"><div class="d-flex justify-content-between align-items-center"><h6 class="fw-bold text-dark mb-0">${d.name}</h6><button class="btn btn-sm btn-light text-danger rounded-circle p-2" style="width:32px; height:32px;" onclick="deleteRecord('rules', '${doc.id}')"><i class="fa-solid fa-trash"></i></button></div><div class="row g-2 mt-2 pt-2 border-top"><div class="col-6"><small class="text-muted d-block" style="font-size:0.7rem;">สูงสุด/ครั้ง</small><strong class="small text-primary">${formatMaxClaim} ฿</strong></div><div class="col-6"><small class="text-muted d-block" style="font-size:0.7rem;">วงเงินสูงสุด/ปี</small><strong class="small text-danger">${formatMaxYear} ฿</strong></div></div></div>`; 
+          });
+          document.getElementById('list-rules').innerHTML = html || "<div class='text-center text-muted small p-3 bg-light rounded-4'>ยังไม่มีระเบียบ</div>";
       } catch(e) {}
   }
+
   function openAddRuleModal() {
       if(currentAdminData.role !== 'Admin-Master') return Swal.fire('Error', 'สิทธิ์ไม่เพียงพอ', 'error');
-      Swal.fire({ title: 'เพิ่มสวัสดิการใหม่', html: `<input id="rName" class="form-control mb-2" placeholder="ชื่อสวัสดิการ"><input id="rMax" type="number" class="form-control mb-2" placeholder="จ่ายสูงสุดต่อครั้ง (บาท)"><input id="rMaxYear" type="number" class="form-control" placeholder="วงเงินสูงสุดต่อปี (บาท)">`, showCancelButton: true, confirmButtonText: 'บันทึก', preConfirm: async () => {
-          const name = document.getElementById('rName').value; const maxC = document.getElementById('rMax').value; if(!name || !maxC) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ'); return false; }
-          showLoader(true); await db.collection("rules").add({ name: name, maxPerClaim: parseFloat(maxC), maxPerYear: parseFloat(document.getElementById('rMaxYear').value || maxC) }); return true;
-      }}).then((res) => { showLoader(false); if(res.isConfirmed) { loadRulesData(); } });
+      Swal.fire({ 
+          title: 'เพิ่มสวัสดิการใหม่', 
+          // 🔴 เพิ่ม step="0.01" ในช่องกรอกเงิน
+          html: `<input id="rName" class="form-control mb-2" placeholder="ชื่อสวัสดิการ"><input id="rMax" type="number" class="form-control mb-2" placeholder="จ่ายสูงสุดต่อครั้ง (บาท)" step="0.01"><input id="rMaxYear" type="number" class="form-control" placeholder="วงเงินสูงสุดต่อปี (บาท)" step="0.01">`, 
+          showCancelButton: true, confirmButtonText: 'บันทึก', 
+          preConfirm: async () => {
+              const name = document.getElementById('rName').value; const maxC = document.getElementById('rMax').value; if(!name || !maxC) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ'); return false; }
+              showLoader(true); await db.collection("rules").add({ name: name, maxPerClaim: parseFloat(maxC), maxPerYear: parseFloat(document.getElementById('rMaxYear').value || maxC) }); return true;
+          }
+      }).then((res) => { showLoader(false); if(res.isConfirmed) { loadRulesData(); } });
   }
 
   // ==========================================
   // 🛡️ TAB 8: ผู้ดูแลระบบ (Admins)
   // ==========================================
   async function loadAdminsData() {
-    document.getElementById('list-admins').innerHTML = '<div class="text-center mt-3"><div class="spinner-border text-info spinner-border-sm"></div></div>';
+    document.getElementById('list-admins').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-info"></div></div>';
     try {
       const snap = await db.collection("admins").get(); let html = "";
       snap.forEach(doc => { const d = doc.data(); const badgeColor = d.status === 'ใช้งาน' ? 'bg-success' : 'bg-danger'; let toggleStatusBtn = "";
-        if (currentAdminData.role === 'Admin-Master' && doc.id !== currentAdminData.email) { toggleStatusBtn = `<button onclick="toggleAdminStatus('${doc.id}', '${d.status}')" class="btn btn-sm btn-outline-secondary mt-1 py-0 px-2" style="font-size:0.7rem;">ระงับ/เปิดใช้</button>`; }
-        html += `<div class="data-card p-3"><div class="d-flex justify-content-between align-items-start"><div class="d-flex align-items-center gap-3"><div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center" style="width:40px;height:40px;"><i class="fa-solid fa-user-shield"></i></div><div><h6 class="fw-bold text-dark mb-0" style="font-size:0.9rem;">${d.name}</h6><small class="text-muted d-block" style="font-size:0.75rem;">${d.email}</small><small class="text-primary fw-bold d-block" style="font-size:0.75rem;">${d.role}</small></div></div><div class="text-end"><span class="badge ${badgeColor} rounded-pill mb-1">${d.status}</span><br>${toggleStatusBtn}</div></div></div>`;
+        if (currentAdminData.role === 'Admin-Master' && doc.id !== currentAdminData.email) { toggleStatusBtn = `<button onclick="toggleAdminStatus('${doc.id}', '${d.status}')" class="btn btn-sm btn-outline-secondary mt-2 py-0 px-3 rounded-pill" style="font-size:0.7rem;">สลับสถานะ</button>`; }
+        html += `<div class="modern-card p-3 mb-3"><div class="d-flex justify-content-between align-items-start"><div class="d-flex align-items-center gap-3"><div class="icon-box bg-info bg-opacity-10 text-info"><i class="fa-solid fa-user-shield"></i></div><div><h6 class="fw-bold text-dark mb-0" style="font-size:0.9rem;">${d.name}</h6><small class="text-muted d-block" style="font-size:0.75rem;">${d.email}</small><small class="text-primary fw-bold d-block" style="font-size:0.75rem;">${d.role}</small></div></div><div class="text-end"><span class="badge ${badgeColor} bg-opacity-10 text-${d.status==='ใช้งาน'?'success':'danger'} rounded-pill px-3 py-1 shadow-sm">${d.status}</span><br>${toggleStatusBtn}</div></div></div>`;
       }); document.getElementById('list-admins').innerHTML = html;
     } catch(e) {}
   }
+
   function openAddAdminModal() {
       if(currentAdminData.role !== 'Admin-Master') return Swal.fire('Error', 'สิทธิ์ไม่เพียงพอ', 'error');
-      Swal.fire({ title: 'เพิ่มผู้ดูแลระบบ (Admin)', html: `<input type="text" id="newAdminName" class="form-control mb-2" placeholder="ชื่อ-นามสกุล"><input type="email" id="newAdminEmail" class="form-control mb-2" placeholder="อีเมลสำหรับล็อกอิน"><input type="text" id="newAdminPass" class="form-control mb-2" placeholder="ตั้งรหัสผ่าน"><input type="number" id="newAdminPin" class="form-control mb-2" placeholder="PIN 6 หลัก" maxlength="6"><select id="newAdminRole" class="form-select mb-2"><option value="Admin-ศูนย์ประสานงาน">แอดมินทั่วไป</option><option value="Admin-Master">แอดมินสูงสุด (Master)</option></select>`, showCancelButton: true, confirmButtonText: 'บันทึก', preConfirm: async () => {
+      Swal.fire({ title: 'เพิ่มผู้ดูแลระบบ', html: `<input type="text" id="newAdminName" class="form-control mb-2" placeholder="ชื่อ-นามสกุล"><input type="email" id="newAdminEmail" class="form-control mb-2" placeholder="อีเมลสำหรับล็อกอิน"><input type="text" id="newAdminPass" class="form-control mb-2" placeholder="ตั้งรหัสผ่าน"><input type="number" id="newAdminPin" class="form-control mb-2" placeholder="PIN 6 หลัก" maxlength="6"><select id="newAdminRole" class="form-select mb-2"><option value="Admin-ศูนย์ประสานงาน">แอดมินทั่วไป</option><option value="Admin-Master">แอดมินสูงสุด (Master)</option></select>`, showCancelButton: true, confirmButtonText: 'บันทึก', preConfirm: async () => {
           const email = document.getElementById('newAdminEmail').value.trim(); const pass = document.getElementById('newAdminPass').value.trim(); const name = document.getElementById('newAdminName').value.trim(); const pin = document.getElementById('newAdminPin').value.trim();
           if(!email || !pass || !name) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ'); return false; }
           showLoader(true);
@@ -1341,11 +1467,14 @@
           } catch(err) { Swal.showValidationMessage(err.message); showLoader(false); return false; }
       }}).then((res) => { showLoader(false); if(res.isConfirmed) { loadAdminsData(); } });
   }
+
   async function toggleAdminStatus(email, currentStatus) {
       if(confirm(`ต้องการเปลี่ยนสถานะของ ${email} ใช่หรือไม่?`)) { const newStatus = (currentStatus === 'ใช้งาน') ? 'ระงับ' : 'ใช้งาน'; showLoader(true); await db.collection("admins").doc(email).update({ status: newStatus }); showLoader(false); loadAdminsData(); }
   }
 
-  // 🗑️ ลบข้อมูลทั่วไป
+  // ==========================================
+  // 🗑️ Global Delete Function
+  // ==========================================
   async function deleteRecord(collectionName, docId) {
       if(confirm("ยืนยันการลบข้อมูลถาวร?")) { showLoader(true); await db.collection(collectionName).doc(docId).delete(); showLoader(false); if(collectionName === 'rules') loadRulesData(); }
   }
