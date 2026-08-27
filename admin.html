@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0F172A">
-  <title>SmartWelf 5.0 | ระบบบริหารกองทุนสวัสดิการชุมชน (ผู้ดูแลระบบ)</title>
+  <title>SmartWelf 5.0 | ศูนย์จัดการกองทุนส่วนกลาง (แอดมิน)</title>
   
   <!-- ==========================================
-       [1] FONTS & LIBRARIES
+       [1] โหลด FONTS & LIBRARIES
   =========================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3QY1t2cY8gB_w_ZtSGqidVi65JBEVZIUs&libraries=visualization"></script>
 
-  <!-- Firebase -->
+  <!-- โหลด Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -73,6 +73,9 @@
     .main-balance-card::after { content: ''; position: absolute; top: -50px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; }
     .tab-btn-ledger { width: 50%; padding: 0.7rem; text-align: center; border-radius: 1rem; border: none; background: transparent; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.85rem; }
     .tab-btn-ledger.active { background: white; color: var(--primary-main); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    
+    /* สไตล์ Checkbox พิเศษ */
+    .member-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary-main); }
   </style>
 </head>
 <body>
@@ -92,7 +95,7 @@
   <div class="login-box">
     <div class="bg-white bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3"><i class="fa-solid fa-shield-halved fa-3x text-success"></i></div>
     <h5 class="fw-bold">SmartWelf 5.0</h5>
-    <p class="text-white-50 small mb-4">เข้าสู่ระบบผู้ดูแลส่วนกลาง</p>
+    <p class="text-white-50 small mb-4">เข้าสู่ระบบการจัดการองค์กร</p>
 
     <div class="login-tabs">
       <div class="login-tab active" id="tabEmail" onclick="switchLoginMode('email')">อีเมล / รหัสผ่าน</div>
@@ -100,12 +103,17 @@
     </div>
     
     <div id="emailLoginSection">
-      <input type="email" id="adminEmail" class="form-control bg-white bg-opacity-10 border-0 text-white rounded-4 py-3 mb-3 text-center" placeholder="อีเมลผู้ดูแลระบบ">
-      <input type="password" id="adminPass" class="form-control bg-white bg-opacity-10 border-0 text-white rounded-4 py-3 mb-3 text-center" placeholder="รหัสผ่าน">
+      <input type="email" id="adminEmail" class="form-control bg-white bg-opacity-10 border-0 text-white rounded-4 py-3 mb-2 text-center" placeholder="อีเมลผู้ดูแลระบบ">
+      <input type="password" id="adminPass" class="form-control bg-white bg-opacity-10 border-0 text-white rounded-4 py-3 mb-1 text-center" placeholder="รหัสผ่าน">
+      
+      <!-- 🌟 เพิ่มปุ่มลืมรหัสผ่านตรงนี้ -->
+      <div class="text-end mb-3 px-2">
+          <a href="#" onclick="forgotAdminPassword()" class="small text-white-50 text-decoration-none"><i class="fa-solid fa-key me-1"></i>ลืมรหัสผ่าน/PIN?</a>
+      </div>
+
       <button onclick="handleAdminLogin()" class="btn btn-primary w-100 rounded-pill fw-bold py-3 mb-4 shadow">เข้าสู่ระบบ</button>
       <div class="position-relative mb-4"><hr class="border-secondary"><span class="position-absolute top-50 start-50 translate-middle px-3 small text-white-50" style="background: #111a2f;">หรือเข้าใช้งานด้วย</span></div>
-      <button onclick="googleLogin()" class="btn btn-light w-100 rounded-pill fw-bold py-2 mb-2"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="18" class="me-2"> เข้าด้วย Google</button>
-      <button onclick="forceLiffLogin()" class="btn btn-success w-100 rounded-pill fw-bold py-2" style="background: #00C300; border: none;"><i class="fa-brands fa-line fs-5 me-2"></i> เข้าด้วย LINE</button>
+      <button onclick="forceLiffLogin()" class="btn btn-success w-100 rounded-pill fw-bold py-3" style="background: #00C300; border: none;"><i class="fa-brands fa-line fs-5 me-2"></i> เข้าสู่ระบบด้วย LINE ทันที</button>
     </div>
 
     <div id="pinLoginSection" style="display: none;">
@@ -125,10 +133,11 @@
 </div>
 
 <!-- ==========================================
-     [5] ADMIN APPLICATION WORKSPACE
+     [5] ADMIN APPLICATION WORKSPACE (โครงสร้างระบบแอดมิน)
 =========================================== -->
 <div id="adminApp" style="display: none;">
   
+  <!-- Header -->
   <div class="app-header-admin">
     <div class="d-flex align-items-center gap-2">
       <div class="bg-primary bg-opacity-25 text-primary rounded-circle d-flex justify-content-center align-items-center" style="width: 38px; height: 38px;"><i class="fa-solid fa-shield-halved"></i></div>
@@ -140,36 +149,37 @@
     <button onclick="logoutApp()" class="btn btn-sm btn-danger rounded-pill px-3 py-1 text-white" style="font-size: 0.7rem;"><i class="fa-solid fa-power-off me-1"></i> ออก</button>
   </div>
 
+  <!-- แถบเมนูด้านล่าง (มี ID เพื่อให้ RBAC ควบคุมการซ่อน/แสดง) -->
   <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" onclick="switchAdminTab('admin-view-overview', this); loadDashboardOverview();"><i class="fa-solid fa-chart-pie"></i> ภาพรวม</button>
-    <button class="nav-item" onclick="switchAdminTab('admin-view-members', this); loadMembersData();"><i class="fa-solid fa-users"></i> สมาชิก</button>
-    <button class="nav-item" onclick="switchAdminTab('admin-view-ledger', this); loadLedgerData();">
+    <button class="nav-item active" id="nav-overview" onclick="switchAdminTab('admin-view-overview', this); loadDashboardOverview();"><i class="fa-solid fa-chart-pie"></i> ภาพรวม</button>
+    <button class="nav-item" id="nav-members" onclick="switchAdminTab('admin-view-members', this); loadMembersData();"><i class="fa-solid fa-users"></i> สมาชิก</button>
+    <button class="nav-item" id="nav-ledger" onclick="switchAdminTab('admin-view-ledger', this); loadLedgerData();">
       <i class="fa-solid fa-wallet"></i><span class="nav-badge" id="nav-badge-ledger"></span> การเงิน
     </button>
-    <button class="nav-item" onclick="switchAdminTab('admin-view-claims', this); loadClaims();">
+    <button class="nav-item" id="nav-claims" onclick="switchAdminTab('admin-view-claims', this); loadClaims();">
       <i class="fa-solid fa-hand-holding-medical"></i><span class="nav-badge" id="nav-badge-claims"></span> สวัสดิการ
     </button>
-    <button class="nav-item" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas"><i class="fa-solid fa-bars"></i> เมนู</button>
+    <button class="nav-item" id="nav-menu" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas"><i class="fa-solid fa-bars"></i> เมนู</button>
   </nav>
 
-  <!-- Admin Offcanvas Menu -->
+  <!-- แถบเมนูซ่อน (Offcanvas) (มี ID เพื่อให้ RBAC ควบคุมการซ่อน/แสดง) -->
   <div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="menuOffcanvas">
     <div class="offcanvas-header pb-2 border-bottom border-light">
-      <h6 class="fw-bold mb-0">จัดการระบบ</h6>
+      <h6 class="fw-bold mb-0">จัดการระบบส่วนกลาง</h6>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body px-3 pt-3">
       <div class="d-flex flex-column gap-2">
-        <button class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-settings'); loadGlobalSettings();">
+        <button id="btn-menu-settings" class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-settings'); loadGlobalSettings();">
           <div class="icon-box bg-secondary bg-opacity-10 text-secondary me-3"><i class="fa-solid fa-gear"></i></div> <span class="fw-bold text-dark">ตั้งค่าระบบ (Global)</span>
         </button>
-        <button class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-gis'); loadGISMap();">
+        <button id="btn-menu-gis" class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-gis'); loadGISMap();">
           <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="fa-solid fa-map-location-dot"></i></div> <span class="fw-bold text-dark">แผนที่พิกัดสมาชิก (GIS)</span>
         </button>
-        <button class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-rules'); loadRulesData();">
+        <button id="btn-menu-rules" class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-rules'); loadRulesData();">
           <div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="fa-solid fa-scale-balanced"></i></div> <span class="fw-bold text-dark">ระเบียบจ่ายสวัสดิการ</span>
         </button>
-        <button class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-admins'); loadAdminsData();">
+        <button id="btn-menu-admins" class="admin-card admin-card-hover border-0 text-start w-100 d-flex align-items-center mb-0 p-3" onclick="closeMenuAndSwitchTab('admin-view-admins'); loadAdminsData();">
           <div class="icon-box bg-info bg-opacity-10 text-info me-3"><i class="fa-solid fa-user-shield"></i></div> <span class="fw-bold text-dark">ผู้ดูแลระบบ (Admins)</span>
         </button>
       </div>
@@ -178,8 +188,8 @@
 
   <div class="container-fluid pt-2" style="max-width: 800px; margin: 0 auto;">
     
-    <!-- 📊 ADMIN TAB: ภาพรวม -->
-    <div class="admin-tab-pane d-block" id="admin-view-overview">
+    <!-- 📊 ADMIN TAB: ภาพรวมการเงิน -->
+    <div class="admin-tab-pane d-none" id="admin-view-overview">
       <div class="main-balance-card mb-4">
         <div class="d-flex justify-content-between mb-2 align-items-center position-relative" style="z-index: 2;">
           <span class="small text-white-50 fw-bold">ยอดเงินกองทุนสวัสดิการชุมชน</span><i class="fa-solid fa-building-columns text-white-50 fs-5"></i>
@@ -206,14 +216,6 @@
       <div class="row g-3 mb-4">
         <div class="col-6"><div class="admin-card text-center m-0 border-0 border-top border-4 border-primary"><small class="text-muted fw-bold d-block mb-1" style="font-size:0.75rem;">เป้าหมาย</small><h4 class="text-dark mb-0 fw-bold" id="eq-population">20k</h4></div></div>
         <div class="col-6"><div class="admin-card text-center m-0 border-0 border-top border-4 border-success"><small class="text-muted fw-bold d-block mb-1" style="font-size:0.75rem;">ปัจจุบัน</small><h4 class="text-success mb-0 fw-bold" id="eq-active">0</h4><div class="badge bg-success bg-opacity-10 text-success mt-2 rounded-pill fw-bold" style="font-size:0.65rem;">สัดส่วน <span id="eq-percent-active">0</span>%</div></div></div>
-      </div>
-
-      <div class="admin-card admin-card-hover border-0 bg-warning bg-opacity-10 d-flex align-items-center justify-content-between p-3 mb-4" style="cursor: pointer;" onclick="switchAdminTab('admin-view-ledger', document.querySelectorAll('.nav-item')[2])">
-          <div class="d-flex align-items-center gap-3">
-              <div class="icon-box bg-warning bg-opacity-25 text-warning"><i class="fa-solid fa-bell fs-5"></i></div>
-              <div><h6 class="text-dark fw-bold mb-0" style="font-size:0.9rem;">รายการรอตรวจสอบ</h6><small class="text-muted" style="font-size:0.75rem;">กดเพื่อไปยังหน้าบัญชี</small></div>
-          </div>
-          <h4 class="text-danger fw-bold mb-0" id="statPendingBadge">0</h4>
       </div>
 
       <div class="admin-card border-0 p-4 mb-4">
@@ -243,7 +245,11 @@
     <div class="admin-tab-pane d-none" id="admin-view-members">
       <div class="d-flex justify-content-between align-items-center mb-3 px-1">
         <h5 class="fw-bold text-dark mb-0">ทะเบียนสมาชิก</h5>
-        <button class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm" onclick="openAdminRegisterModal()">+ เพิ่มสมาชิก</button>
+        <div class="d-flex gap-2">
+            <!-- ปุ่มเก็บเงินกลุ่ม (Bulk Collect) -->
+            <button class="btn btn-sm btn-success rounded-pill px-3 py-2 fw-bold shadow-sm" onclick="bulkCollectContribution()"><i class="fa-solid fa-coins"></i> เก็บเงินกลุ่ม</button>
+            <button id="btn-add-member" class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm" onclick="openAdminRegisterModal()"><i class="fa-solid fa-plus"></i> เพิ่มสมาชิก</button>
+        </div>
       </div>
       
       <div id="pendingLinkAlert" class="admin-card border-0 bg-primary bg-opacity-10 mb-3" style="display:none;">
@@ -262,6 +268,8 @@
             <input type="text" id="searchMemberInput" class="form-control border-0 shadow-none bg-transparent" placeholder="ค้นหาชื่อ, รหัส, เลข ปชช..." onkeyup="filterMembersLocally()">
         </div>
       </div>
+      
+      <!-- รายชื่อสมาชิกแสดงตรงนี้ -->
       <div id="list-members" class="mt-3">กำลังโหลด...</div>
     </div>
 
@@ -275,7 +283,6 @@
             <button id="tab-tf" class="tab-btn-ledger rounded-pill" onclick="switchLedgerTab('tf')">โอนย้ายบัญชี</button>
         </div>
         
-        <!-- ฟอร์มรับจ่าย -->
         <form id="form-ie" onsubmit="submitLedgerIE(event)">
           <div class="row g-3">
               <div class="col-12">
@@ -286,7 +293,6 @@
                     <label class="btn btn-outline-danger fw-bold py-2 rounded-end-pill" for="ieTypeOut" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-turn-up"></i> รายจ่าย</label>
                   </div>
               </div>
-
               <div class="col-12">
                   <label class="small text-muted fw-bold mb-1 ps-2">หมวดหมู่รายการ</label>
                   <div class="input-group">
@@ -295,7 +301,6 @@
                       <button type="button" class="btn btn-danger px-3 rounded-start-4 ms-1" onclick="deleteLedgerNote()"><i class="fa-solid fa-minus"></i></button>
                   </div>
               </div>
-              
               <div class="col-5">
                   <label class="small text-muted fw-bold mb-1 ps-2">วันที่ทำรายการ</label>
                   <input type="date" id="ieDate" class="form-control-modern w-100" required>
@@ -304,10 +309,9 @@
                   <label class="small text-muted fw-bold mb-1 ps-2">รายละเอียดเพิ่มเติม</label>
                   <input type="text" id="ieAddNote" class="form-control-modern w-100" placeholder="เช่น รับจากใคร...">
               </div>
-
               <div class="col-6">
-              <label class="small text-muted fw-bold mb-1 ps-2">จำนวนเงิน (บาท)</label>
-              <input type="number" id="ieAmt" class="form-control-modern w-100 text-primary fs-5" placeholder="0.00" step="0.01" required>
+                <label class="small text-muted fw-bold mb-1 ps-2">จำนวนเงิน (บาท)</label>
+                <input type="number" id="ieAmt" class="form-control-modern w-100 text-primary fs-5" placeholder="0.00" step="0.01" required>
               </div>
               <div class="col-6">
                   <label class="small text-muted fw-bold mb-1 ps-2">ช่องทางรับ/จ่าย</label>
@@ -317,7 +321,6 @@
           <button type="submit" class="btn btn-primary w-100 mt-4 rounded-pill py-3 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i> บันทึกรายการ</button>
         </form>
 
-        <!-- ฟอร์มโอนย้าย -->
         <form id="form-tf" class="d-none" onsubmit="submitLedgerTF(event)">
             <div class="row g-3">
                 <div class="col-12">
@@ -486,7 +489,7 @@
         <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-user-shield text-info me-2"></i> ผู้ดูแลระบบ</h5>
         <button class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" id="btnAddAdmin" onclick="openAddAdminModal()" style="display:none;">+ เพิ่มแอดมิน</button>
       </div>
-      <div class="alert bg-info bg-opacity-10 text-info small rounded-4 border-0 mb-4 px-3 py-2"><i class="fa-solid fa-circle-info me-1"></i> เฉพาะ <b>Admin-Master</b> เท่านั้นที่เพิ่มได้</div>
+      <div class="alert bg-info bg-opacity-10 text-info small rounded-4 border-0 mb-4 px-3 py-2"><i class="fa-solid fa-circle-info me-1"></i> เฉพาะ <b>Admin-Master</b> เท่านั้นที่เพิ่มผู้ดูแลได้</div>
       <div id="list-admins">กำลังโหลด...</div>
     </div>
 
@@ -494,13 +497,13 @@
 </div> <!-- End adminApp -->
 
 <!-- ==========================================
-     [8] JAVASCRIPT LOGIC
+     [6] JAVASCRIPT LOGIC
 =========================================== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // ==========================================
+  // =========================================================
   // หมวดที่ 1: ตั้งค่าระบบและตัวแปรเริ่มต้น (Config & Globals)
-  // ==========================================
+  // =========================================================
   const firebaseConfig = { 
       apiKey: "AIzaSyBs1G5k31100g6PeVvU5nUyz0QDB21jHpI", 
       authDomain: "smartwelf-f7d81.firebaseapp.com", 
@@ -532,21 +535,32 @@
       else { loader.style.display = 'none'; }
   }
 
-  // ==========================================
-  // หมวดที่ 2: เริ่มต้นระบบและตรวจสอบสิทธิ์ (Initialization & Auth)
-  // ==========================================
+  // =========================================================
+  // หมวดที่ 2: ตรวจสอบสิทธิ์ และดักจับลิงก์ตั้งค่า (Initialization & Auth)
+  // =========================================================
   document.addEventListener("DOMContentLoaded", async () => { 
     try {
       const sysSnap = await db.collection("settings").doc("master").get();
-      if(sysSnap.exists) { 
-          fundSettings = sysSnap.data(); 
-      }
+      if(sysSnap.exists) { fundSettings = sysSnap.data(); }
       
       const adminRef = db.collection("admins").doc(MASTER_EMAIL);
       if (!(await adminRef.get()).exists) await adminRef.set({ email: MASTER_EMAIL, password: "8ZOYrtqO", pin: "123456", name: "มุนี ยูโซ๊ะ", role: "Admin-Master", center: "ALL", status: "ใช้งาน" });
 
       await liff.init({ liffId: LIFF_ID });
       
+      const urlParams = new URLSearchParams(window.location.search);
+      const actionParam = urlParams.get('action');
+      const emailParam = urlParams.get('email');
+
+      // 🌟 ดักจับลิงก์: หากเข้ามาเพื่อ "ตั้งค่ารหัสผ่าน/PIN"
+      if (actionParam === 'setupAdmin' && emailParam) {
+          document.getElementById('loginGate').style.display = 'none';
+          document.getElementById('systemLoading').style.display = 'none';
+          setupAdminCredentials(emailParam); // เรียกฟังก์ชันตั้งรหัสผ่าน
+          return;
+      }
+
+      // ระบบเข้าสู่ระบบด้วย LINE อัตโนมัติ (ถ้าผูก UID ไว้)
       if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
           const lineUid = profile.userId;
@@ -566,6 +580,8 @@
         document.getElementById('systemLoading').innerHTML = `<div class="text-danger text-center px-4"><h6>System Error</h6><p class="small">${e.message}</p></div>`; 
     }
   });
+
+  function forceLiffLogin() { liff.login({ redirectUri: window.location.href }); }
 
   function switchLoginMode(mode) {
       document.getElementById('tabEmail').classList.remove('active'); document.getElementById('tabPin').classList.remove('active');
@@ -610,32 +626,78 @@
       }).catch((e) => Swal.fire('Error', e.message, 'error'));
   }
 
-  // 🔴 ป้องกันการเด้งกลับไปหน้า index เมื่อล็อกอิน LIFF
-  function forceLiffLogin() { 
-      liff.login({ redirectUri: window.location.href }); 
-  }
-
-  function grantAccess(adminData, docId) {
-      currentAdminData = { id: docId, ...adminData };
-      document.getElementById('adminNameDisplay').innerText = `${adminData.name} [${adminData.role}]`;
-      if(currentAdminData.role === 'Admin-Master') document.getElementById('btnAddAdmin').style.display = 'block';
-      
-      document.getElementById('loginGate').style.display = 'none';
-      showLoader(false);
-
-      document.getElementById('adminApp').style.display = 'block';
-      loadDashboardOverview();
-  }
-
   function logoutApp() {
       Swal.fire({ title: 'ยืนยันออกจากระบบ?', showCancelButton: true, confirmButtonColor: '#EF4444' }).then((r) => {
           if(r.isConfirmed) { if(auth.currentUser) auth.signOut(); if(liff.isLoggedIn()) liff.logout(); location.reload(); }
       });
   }
 
-  // ==========================================
-  // หมวดที่ 3: ระบบนำทางและภาพรวม (Navigation & Dashboard)
-  // ==========================================
+  // 🌟 ฟังก์ชันจัดการสิทธิ์การเข้าถึงเมนูต่างๆ
+  function grantAccess(adminData, docId) {
+      currentAdminData = { id: docId, ...adminData };
+      let displayRole = adminData.role.replace('Admin-', '');
+      document.getElementById('adminNameDisplay').innerText = `${adminData.name} [${displayRole}]`;
+      
+      applyRoleRestrictions();
+
+      document.getElementById('loginGate').style.display = 'none';
+      showLoader(false);
+      document.getElementById('adminApp').style.display = 'block';
+  }
+
+  function applyRoleRestrictions() {
+      const r = currentAdminData.role;
+      const navOverview = document.getElementById('nav-overview');
+      const navMembers = document.getElementById('nav-members');
+      const navLedger = document.getElementById('nav-ledger');
+      const navClaims = document.getElementById('nav-claims');
+      const navMenu = document.getElementById('nav-menu');
+
+      [navOverview, navMembers, navLedger, navClaims, navMenu].forEach(el => el.style.display = 'none');
+
+      if (r === 'Admin-ผู้ดูแล') {
+          navMembers.style.display = 'block';
+          navClaims.style.display = 'block';
+          switchAdminTab('admin-view-members', navMembers);
+      } 
+      else if (r === 'Admin-ศูนย์ประสานงาน') {
+          navOverview.style.display = 'block';
+          navMembers.style.display = 'block';
+          navLedger.style.display = 'block';
+          navClaims.style.display = 'block';
+          navMenu.style.display = 'block';
+          switchAdminTab('admin-view-members', navMembers);
+      } 
+      else if (r === 'Admin-การเงิน') {
+          navOverview.style.display = 'block';
+          navLedger.style.display = 'block';
+          switchAdminTab('admin-view-overview', navOverview);
+      } 
+      else if (r === 'Admin-สวัสดิการ') {
+          navClaims.style.display = 'block';
+          navMenu.style.display = 'block';
+          switchAdminTab('admin-view-claims', navClaims);
+      } 
+      else { // Master
+          navOverview.style.display = 'block';
+          navMembers.style.display = 'block';
+          navLedger.style.display = 'block';
+          navClaims.style.display = 'block';
+          navMenu.style.display = 'block';
+          document.getElementById('btnAddAdmin').style.display = 'block';
+          switchAdminTab('admin-view-overview', navOverview);
+      }
+
+      // ซ่อน/แสดง เมนูตั้งค่า (Offcanvas)
+      document.getElementById('btn-menu-settings').style.display = (r === 'Admin-Master') ? 'flex' : 'none';
+      document.getElementById('btn-menu-gis').style.display = (r === 'Admin-Master' || r === 'Admin-ศูนย์ประสานงาน') ? 'flex' : 'none';
+      document.getElementById('btn-menu-rules').style.display = (r === 'Admin-Master' || r === 'Admin-สวัสดิการ') ? 'flex' : 'none';
+      document.getElementById('btn-menu-admins').style.display = (r === 'Admin-Master') ? 'flex' : 'none';
+  }
+
+  // =========================================================
+  // หมวดที่ 3: ระบบนำทางและแดชบอร์ด (Navigation & Dashboard)
+  // =========================================================
   function switchAdminTab(tabId, btn) {
     document.querySelectorAll('.admin-tab-pane').forEach(el => { el.classList.remove('d-block'); el.classList.add('d-none'); });
     document.getElementById(tabId).classList.replace('d-none', 'd-block');
@@ -658,6 +720,9 @@
   }
 
   async function loadDashboardOverview() {
+    if(currentAdminData.role === 'Admin-ผู้ดูแล' || currentAdminData.role === 'Admin-สวัสดิการ') {
+        loadMembersData(); return; // ข้ามการโหลดหน้าแดชบอร์ดถ้าไม่มีสิทธิ์
+    }
     showLoader(true, "อัปเดตภาพรวม...");
     try {
       let mCount = 0, pCount = 0, sumIn = 0, sumOut = 0, bankBal = 0, cashBal = 0;
@@ -729,7 +794,7 @@
     } catch (e) { console.error(e); } showLoader(false);
   }
 
-  // 📈 ฟังก์ชันประมวลผลและวาดกราฟสถิติกระแสเงินสด (ฉบับสมบูรณ์ 100%)
+  // 📈 กราฟกระแสเงินสด
   async function renderTrendChart() {
       const filter = document.getElementById('trendFilter').value;
       const ctx = document.getElementById('trendChart');
@@ -738,7 +803,6 @@
       try {
           const snap = await db.collection("transactions").where("status", "==", "อนุมัติแล้ว").get();
           let rawData = [];
-          
           let totalBank = 0, totalCash = 0;
 
           const now = new Date();
@@ -868,13 +932,467 @@
                   scales: { y: { beginAtZero: true, ticks: { font: { family: "'Prompt'" } } }, x: { ticks: { font: { family: "'Prompt'" } } } }
               }
           });
-
       } catch (e) { console.error("Trend Chart Error:", e); }
   }
 
-  // ==========================================
-  // หมวดที่ 4: จัดการสมาชิก (Member Management)
-  // ==========================================
+  // =========================================================
+  // หมวดที่ 4: ระบบทะเบียนสมาชิก (Members Management)
+  // =========================================================
+  async function loadMembersData() {
+    document.getElementById('list-members').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-primary"></div></div>';
+    try {
+      const snap = await db.collection("members").orderBy("timestamp", "desc").get();
+      allMembersCache = []; let pendingLinks = 0;
+      
+      snap.forEach(doc => { 
+          let d = doc.data(); 
+          
+          // 🛡️ กรองข้อมูลตามสิทธิ์ของแอดมินที่ล็อกอิน
+          let allowPush = false;
+          if (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน' || currentAdminData.role === 'Admin-สวัสดิการ') {
+              allowPush = true;
+          } else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) {
+              allowPush = true;
+          } else if (currentAdminData.role === 'Admin-ผู้ดูแล' && d.responsibleAdmin === currentAdminData.name) {
+              allowPush = true;
+          }
+
+          if(allowPush) {
+              if(d.linkStatus === 'pending') pendingLinks++;
+              allMembersCache.push({ id: doc.id, ...d }); 
+          }
+      });
+      
+      const alertBox = document.getElementById('pendingLinkAlert');
+      if(pendingLinks > 0 && currentAdminData.role !== 'Admin-ผู้ดูแล') { 
+          alertBox.classList.remove('d-none'); 
+          document.getElementById('linkRequestCount').innerText = pendingLinks; 
+      } else { 
+          alertBox.classList.add('d-none'); 
+      }
+      
+      // ซ่อนปุ่มเพิ่มสมาชิก ถ้าเป็นแค่ผู้ดูแล
+      if(currentAdminData.role === 'Admin-ผู้ดูแล') {
+          document.getElementById('btn-add-member').style.display = 'none';
+      }
+
+      renderMembersList(allMembersCache);
+    } catch(e) { console.error(e); }
+  }
+
+  function renderMembersList(dataArr) {
+      let html = "";
+      
+      // สิทธิ์ในการแก้ไขและจัดการ
+      let canEdit = (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-ศูนย์ประสานงาน');
+
+      dataArr.forEach(d => {
+        let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
+        
+        let lineBadge = d.lineUid 
+            ? `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-brands fa-line me-1"></i> ผูกแล้ว</span>` 
+            : `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-solid fa-link-slash me-1"></i> ยังไม่ผูก LINE</span>`;
+        
+        let qrButton = (!d.lineUid && canEdit)
+            ? `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-bold" style="font-size:0.75rem;" onclick="generateLinkQR('${d.id}', '${d.fullName}')"><i class="fa-solid fa-qrcode me-1"></i> ผูกบัญชี</button>` 
+            : ``;
+            
+        let statusBtn = canEdit 
+            ? `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-bold" onclick="changeMemberStatus('${d.id}', '${d.status}')" style="font-size:0.75rem;">เปลี่ยนสถานะ</button>`
+            : ``;
+            
+        let assignAction = canEdit 
+            ? `onclick="assignAdminToMember('${d.id}', '${d.responsibleAdmin || '-'}')" class="badge bg-info bg-opacity-10 text-info shadow-sm py-2 cursor-pointer border border-info"`
+            : `class="badge bg-light text-muted border border-secondary shadow-sm py-2"`;
+
+        let profileImage = d.pictureUrl 
+            ? `<img src="${d.pictureUrl}" class="rounded-circle shadow-sm flex-shrink-0" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid #E2E8F0;" alt="Profile">` 
+            : `<div class="icon-box bg-primary bg-opacity-10 text-primary flex-shrink-0 rounded-circle" style="width: 48px; height: 48px;"><i class="fa-solid fa-user"></i></div>`;
+
+        let dateReg = d.timestamp || "ไม่มีระบุ";
+        let natId = d.nationalId || "-";
+        let phone = d.phone || "-";
+        let centerInfo = d.center || "ไม่ระบุศูนย์";
+        let responsibleAdmin = d.responsibleAdmin || "ไม่มีผู้ดูแล";
+        let memberType = d.memberType || "สมาชิกสามัญ";
+        let totalContrib = parseFloat(d.totalContribution || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        let outstanding = parseFloat(d.outstandingBalance || 0);
+        let formatOutstanding = outstanding.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        let annualFee = fundSettings.annualFee || 365;
+        let missingDots = Math.ceil((outstanding / annualFee) * 12);
+        let activeDots = 12 - missingDots;
+        if(activeDots < 0) activeDots = 0; if(activeDots > 12) activeDots = 12;
+
+        const dotColors = ['#B91C1C', '#DC2626', '#EF4444', '#F87171', '#F59E0B', '#F59E0B', '#FBBF24', '#FBBF24', '#34D399', '#34D399', '#10B981', '#10B981'];
+        let dotsHtml = '<div class="d-flex gap-1 mt-2" title="สถานะการส่งสมทบรายปี (12 เดือน)">';
+        for(let i=0; i<12; i++) {
+            let dotColor = (i < activeDots) ? dotColors[i] : '#E2E8F0'; 
+            dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor};"></div>`;
+        }
+        dotsHtml += '</div>';
+
+        let ageStr = "เพิ่งสมัคร / รอตรวจสอบ";
+        if (d.registerDateObj && d.status === 'เป็นสมาชิก') {
+            const regD = new Date(d.registerDateObj); const now = new Date();
+            let years = now.getFullYear() - regD.getFullYear(); let months = now.getMonth() - regD.getMonth(); let days = now.getDate() - regD.getDate();
+            if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+            if (months < 0) { years--; months += 12; }
+            if (years >= 0) {
+                ageStr = '';
+                if(years > 0) ageStr += `${years} ปี `; if(months > 0) ageStr += `${months} เดือน `; ageStr += `${days} วัน`;
+                if(ageStr === '0 วัน') ageStr = 'เพิ่งอนุมัติวันนี้';
+            }
+        }
+
+        // 🌟 เพิ่ม Checkbox สำหรับ Bulk Collect
+        let checkboxHtml = `<input class="form-check-input bulk-collect-check me-3 border-secondary member-checkbox" type="checkbox" value="${d.id}" data-name="${d.fullName}">`;
+
+        html += `<div class="bg-white p-3 mb-3" style="border-left: 4px solid var(--primary-main); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2 w-100" style="overflow: hidden;">
+               ${checkboxHtml}
+               ${profileImage}
+               <div style="min-width: 0; cursor: pointer;" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
+                  <h6 class="fw-bold mb-0 text-dark text-truncate" style="font-size: 0.95rem;">${d.fullName}</h6>
+                  <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2" style="font-size:0.7rem;"><i class="fa-solid fa-id-badge"></i> ${d.memberId}</span>
+                  </div>
+                  ${dotsHtml}
+               </div>
+            </div>
+            
+            <div class="text-end flex-shrink-0 ms-2 d-flex flex-column align-items-end cursor-pointer" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
+               <span class="badge ${statusColor} rounded-pill px-2 py-1 shadow-sm mb-1" style="font-size: 0.7rem;">${d.status}</span>
+               <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted mt-1" style="width: 22px; height: 22px; transition: transform 0.3s;" id="arrow-member-${d.id}">
+                    <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
+               </div>
+            </div>
+          </div>
+          
+          <div class="collapse mt-3 pt-3" id="collapse-member-${d.id}" style="border-top: 1px dashed #E2E8F0;">
+            <div class="row g-2 mb-3 px-2">
+                <div class="col-12 mb-1"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-clock-rotate-left text-primary w-20px"></i> อายุการเป็นสมาชิก</small><strong class="text-primary" style="font-size:0.85rem;">${ageStr}</strong></div>
+                <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-address-card text-secondary w-20px"></i> เลข ปชช.</small><strong class="text-dark" style="font-size:0.85rem;">${natId}</strong></div>
+                <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-phone text-secondary w-20px"></i> เบอร์ติดต่อ</small><strong class="text-dark" style="font-size:0.85rem;">${phone}</strong></div>
+                <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-coins text-success w-20px"></i> สมทบสะสม</small><strong class="text-success" style="font-size:0.85rem;">฿${totalContrib}</strong></div>
+                <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-circle-exclamation text-danger w-20px"></i> ค้างสมทบ</small><strong class="text-danger" style="font-size:0.85rem;">฿${formatOutstanding}</strong></div>
+                <div class="col-12 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-users text-secondary w-20px"></i> ประเภทสมาชิก</small><span class="badge bg-dark bg-opacity-10 text-dark border shadow-sm" style="font-size:0.75rem;">${memberType}</span></div>
+                <div class="col-12 mt-2">
+                    <small class="text-muted d-block mb-2" style="font-size:0.7rem;"><i class="fa-solid fa-house-flag text-secondary w-20px"></i> ศูนย์ประสานงาน & กรรมการ</small>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-light text-dark border border-secondary shadow-sm py-2" style="font-size:0.75rem;"><i class="fa-solid fa-building me-1 text-muted"></i> ${centerInfo}</span>
+                        <span ${assignAction} title="กรรมการผู้ดูแลสาย"><i class="fa-solid fa-user-tie me-1"></i> ${responsibleAdmin} ${canEdit ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded-4 mt-2 flex-wrap gap-2">
+                <div>${lineBadge}</div>
+                <div class="d-flex gap-2 flex-wrap">
+                    ${statusBtn}
+                    ${qrButton}
+                    <button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm fw-bold" onclick="openCollectContributionModal('${d.id}', '${d.fullName}')" style="font-size:0.75rem;"><i class="fa-solid fa-hand-holding-dollar me-1"></i> เก็บสมทบ</button>
+                </div>
+            </div>
+          </div>
+        </div>`;
+      });
+      document.getElementById('list-members').innerHTML = html || "<div class='text-center text-muted small p-3 bg-white rounded-4 border'>ไม่มีรายชื่อสมาชิก</div>";
+  }
+
+
+  // 🌟 1. ฟังก์ชันเก็บเงินสมทบแบบกลุ่ม (ส่งยอดเดียว แต่แยกใบเสร็จรายคน)
+  async function bulkCollectContribution() {
+      const checkboxes = document.querySelectorAll('.bulk-collect-check:checked');
+      if(checkboxes.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาติ๊กเลือกสมาชิกที่ต้องการเก็บเงินก่อนครับ', 'warning');
+
+      let selectedMembers = [];
+      let namesHtml = "";
+      checkboxes.forEach(cb => { 
+          selectedMembers.push({ id: cb.value, name: cb.getAttribute('data-name') }); 
+          namesHtml += `<span class="badge bg-primary bg-opacity-10 text-primary m-1">${cb.getAttribute('data-name')}</span>`;
+      });
+
+      const today = new Date().toISOString().split('T')[0];
+      const { value: formValues } = await Swal.fire({
+          title: `เก็บเงินสมทบกลุ่ม (${checkboxes.length} คน)`,
+          html: `
+              <div class="text-start" style="font-family: 'Prompt', sans-serif;">
+                  <div class="mb-3 p-2 bg-light rounded" style="max-height: 100px; overflow-y: auto;">${namesHtml}</div>
+                  <label class="small text-muted fw-bold mb-1">วันที่รับเงิน</label>
+                  <input type="date" id="bulkDate" class="form-control-modern w-100 mb-3" value="${today}" required>
+                  <label class="small text-muted fw-bold mb-1">จำนวนเงิน (บาท) / ต่อ 1 คน</label>
+                  <input type="number" id="bulkAmt" class="form-control-modern w-100 mb-3 text-success fw-bold fs-4" placeholder="เช่น 100" step="0.01" required>
+                  <label class="small text-muted fw-bold mb-1">หมายเหตุ (ถ้ามี)</label>
+                  <input type="text" id="bulkNote" class="form-control-modern w-100" placeholder="เช่น ประจำเดือน ส.ค.">
+              </div>
+          `,
+          showCancelButton: true, confirmButtonText: 'บันทึกยอดรวม', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#10B981',
+          preConfirm: () => {
+              const amt = document.getElementById('bulkAmt').value;
+              const date = document.getElementById('bulkDate').value;
+              const note = document.getElementById('bulkNote').value;
+              if(!amt || amt <= 0) { Swal.showValidationMessage('กรุณาระบุจำนวนเงินให้ถูกต้อง'); return false; }
+              return { amt: parseFloat(amt), date, note };
+          }
+      });
+
+      if (formValues) {
+          showLoader(true, `กำลังสร้างใบเสร็จ ${selectedMembers.length} รายการและรวบยอด...`);
+          try {
+              const adminName = (typeof currentAdminData !== 'undefined' && currentAdminData && currentAdminData.name) ? currentAdminData.name : 'ระบบ';
+              
+              let setStatus = "รอตรวจสอบ";
+              if(currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน') setStatus = "อนุมัติแล้ว";
+
+              const getTxId = () => {
+                  const now = new Date();
+                  const yy = (now.getFullYear() + 543).toString().slice(-2);
+                  const mm = String(now.getMonth() + 1).padStart(2, '0');
+                  const dd = String(now.getDate()).padStart(2, '0');
+                  const hh = String(now.getHours()).padStart(2, '0');
+                  const min = String(now.getMinutes()).padStart(2, '0');
+                  const sec = String(now.getSeconds()).padStart(2, '0');
+                  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                  return `TX${yy}${mm}${dd}${hh}${min}${sec}-${random}`;
+              };
+
+              // สร้างเลขอ้างอิงแบบกลุ่ม
+              let bulkTxId = "BLK" + getTxId().substring(2); 
+              let totalAmount = formValues.amt * selectedMembers.length;
+              let bulkDataArr = [];
+
+              // วนลูปเพื่ออัปเดตสมาชิกทีละคน และสร้างเลขอ้างอิงแยก
+              for (let member of selectedMembers) {
+                  let individualTxId = getTxId(); // สร้างเลขอ้างอิงรายบุคคล
+                  
+                  // เก็บข้อมูลไว้ใน Array สำหรับซ่อนในบิลรวม
+                  bulkDataArr.push({ 
+                      uid: member.id, 
+                      name: member.name, 
+                      amt: formValues.amt, 
+                      txId: individualTxId 
+                  });
+
+                  // ถ้ายอดถูกอนุมัติเลย ให้อัปเดตเงินในโปรไฟล์สมาชิก
+                  if(setStatus === 'อนุมัติแล้ว') {
+                      await db.collection("members").doc(member.id).update({
+                          totalContribution: firebase.firestore.FieldValue.increment(formValues.amt),
+                          outstandingBalance: firebase.firestore.FieldValue.increment(-formValues.amt) 
+                      });
+                  }
+              }
+
+              // บันทึกเข้าบัญชี "1 รายการ" ที่เป็นยอดรวม
+              const finalNote = formValues.note ? `เก็บเงินกลุ่ม ${selectedMembers.length} คน (${formValues.note})` : `เก็บเงินกลุ่ม ${selectedMembers.length} คน`;
+              
+              await db.collection("transactions").add({
+                  txId: bulkTxId, 
+                  type: 'สมทบเงินกองทุน', 
+                  amount: totalAmount, 
+                  paymentMethod: 'เงินสด',
+                  transactionDate: formValues.date, 
+                  fullName: 'แอดมิน: ' + adminName, 
+                  status: setStatus, 
+                  note: finalNote, 
+                  uid: "BULK", 
+                  bulkMembers: bulkDataArr, // เก็บรายชื่อและเลขใบเสร็จย่อยไว้ข้างในให้ปรินต์ได้
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+              Swal.fire('สำเร็จ', `ส่งยอดเข้าบัญชี 1 รายการ (${formatMoney(totalAmount)} บาท) พร้อมสร้างใบเสร็จรายบุคคลเรียบร้อย`, 'success');
+              
+              document.querySelectorAll('.bulk-collect-check').forEach(cb => cb.checked = false);
+              
+              if(typeof loadMembersData === 'function') loadMembersData();
+              if(typeof loadDashboardOverview === 'function') loadDashboardOverview();
+          } catch(e) {
+              showLoader(false);
+              console.error("Bulk Collect Error:", e);
+              Swal.fire('Error', 'เกิดข้อผิดพลาด: ' + e.message, 'error');
+          }
+      }
+  }
+  // 🌟 1. ฟังก์ชันเก็บเงินสมทบแบบกลุ่ม (ส่งยอดเดียว แต่แยกใบเสร็จรายคน)
+  async function bulkCollectContribution() {
+      const checkboxes = document.querySelectorAll('.bulk-collect-check:checked');
+      if(checkboxes.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาติ๊กเลือกสมาชิกที่ต้องการเก็บเงินก่อนครับ', 'warning');
+
+      let selectedMembers = [];
+      let namesHtml = "";
+      checkboxes.forEach(cb => { 
+          selectedMembers.push({ id: cb.value, name: cb.getAttribute('data-name') }); 
+          namesHtml += `<span class="badge bg-primary bg-opacity-10 text-primary m-1">${cb.getAttribute('data-name')}</span>`;
+      });
+
+      const today = new Date().toISOString().split('T')[0];
+      const { value: formValues } = await Swal.fire({
+          title: `เก็บเงินสมทบกลุ่ม (${checkboxes.length} คน)`,
+          html: `
+              <div class="text-start" style="font-family: 'Prompt', sans-serif;">
+                  <div class="mb-3 p-2 bg-light rounded" style="max-height: 100px; overflow-y: auto;">${namesHtml}</div>
+                  <label class="small text-muted fw-bold mb-1">วันที่รับเงิน</label>
+                  <input type="date" id="bulkDate" class="form-control-modern w-100 mb-3" value="${today}" required>
+                  <label class="small text-muted fw-bold mb-1">จำนวนเงิน (บาท) / ต่อ 1 คน</label>
+                  <input type="number" id="bulkAmt" class="form-control-modern w-100 mb-3 text-success fw-bold fs-4" placeholder="เช่น 100" step="0.01" required>
+                  <label class="small text-muted fw-bold mb-1">หมายเหตุ (ถ้ามี)</label>
+                  <input type="text" id="bulkNote" class="form-control-modern w-100" placeholder="เช่น ประจำเดือน ส.ค.">
+              </div>
+          `,
+          showCancelButton: true, confirmButtonText: 'บันทึกยอดรวม', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#10B981',
+          preConfirm: () => {
+              const amt = document.getElementById('bulkAmt').value;
+              const date = document.getElementById('bulkDate').value;
+              const note = document.getElementById('bulkNote').value;
+              if(!amt || amt <= 0) { Swal.showValidationMessage('กรุณาระบุจำนวนเงินให้ถูกต้อง'); return false; }
+              return { amt: parseFloat(amt), date, note };
+          }
+      });
+
+      if (formValues) {
+          showLoader(true, `กำลังสร้างใบเสร็จ ${selectedMembers.length} รายการและรวบยอด...`);
+          try {
+              const adminName = (typeof currentAdminData !== 'undefined' && currentAdminData && currentAdminData.name) ? currentAdminData.name : 'ระบบ';
+              
+              let setStatus = "รอตรวจสอบ";
+              if(currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน') setStatus = "อนุมัติแล้ว";
+
+              const getTxId = () => {
+                  const now = new Date();
+                  const yy = (now.getFullYear() + 543).toString().slice(-2);
+                  const mm = String(now.getMonth() + 1).padStart(2, '0');
+                  const dd = String(now.getDate()).padStart(2, '0');
+                  const hh = String(now.getHours()).padStart(2, '0');
+                  const min = String(now.getMinutes()).padStart(2, '0');
+                  const sec = String(now.getSeconds()).padStart(2, '0');
+                  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                  return `TX${yy}${mm}${dd}${hh}${min}${sec}-${random}`;
+              };
+
+              // สร้างเลขอ้างอิงแบบกลุ่ม
+              let bulkTxId = "BLK" + getTxId().substring(2); 
+              let totalAmount = formValues.amt * selectedMembers.length;
+              let bulkDataArr = [];
+
+              // วนลูปเพื่ออัปเดตสมาชิกทีละคน และสร้างเลขอ้างอิงแยก
+              for (let member of selectedMembers) {
+                  let individualTxId = getTxId(); // สร้างเลขอ้างอิงรายบุคคล
+                  
+                  // เก็บข้อมูลไว้ใน Array สำหรับซ่อนในบิลรวม
+                  bulkDataArr.push({ 
+                      uid: member.id, 
+                      name: member.name, 
+                      amt: formValues.amt, 
+                      txId: individualTxId 
+                  });
+
+                  // ถ้ายอดถูกอนุมัติเลย ให้อัปเดตเงินในโปรไฟล์สมาชิก
+                  if(setStatus === 'อนุมัติแล้ว') {
+                      await db.collection("members").doc(member.id).update({
+                          totalContribution: firebase.firestore.FieldValue.increment(formValues.amt),
+                          outstandingBalance: firebase.firestore.FieldValue.increment(-formValues.amt) 
+                      });
+                  }
+              }
+
+              // บันทึกเข้าบัญชี "1 รายการ" ที่เป็นยอดรวม
+              const finalNote = formValues.note ? `เก็บเงินกลุ่ม ${selectedMembers.length} คน (${formValues.note})` : `เก็บเงินกลุ่ม ${selectedMembers.length} คน`;
+              
+              await db.collection("transactions").add({
+                  txId: bulkTxId, 
+                  type: 'สมทบเงินกองทุน', 
+                  amount: totalAmount, 
+                  paymentMethod: 'เงินสด',
+                  transactionDate: formValues.date, 
+                  fullName: 'แอดมิน: ' + adminName, 
+                  status: setStatus, 
+                  note: finalNote, 
+                  uid: "BULK", 
+                  bulkMembers: bulkDataArr, // เก็บรายชื่อและเลขใบเสร็จย่อยไว้ข้างในให้ปรินต์ได้
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+              Swal.fire('สำเร็จ', `ส่งยอดเข้าบัญชี 1 รายการ (${formatMoney(totalAmount)} บาท) พร้อมสร้างใบเสร็จรายบุคคลเรียบร้อย`, 'success');
+              
+              document.querySelectorAll('.bulk-collect-check').forEach(cb => cb.checked = false);
+              
+              if(typeof loadMembersData === 'function') loadMembersData();
+              if(typeof loadDashboardOverview === 'function') loadDashboardOverview();
+          } catch(e) {
+              showLoader(false);
+              console.error("Bulk Collect Error:", e);
+              Swal.fire('Error', 'เกิดข้อผิดพลาด: ' + e.message, 'error');
+          }
+      }
+  }
+  function filterMembersLocally() {
+      const txt = document.getElementById('searchMemberInput').value.toLowerCase();
+      renderMembersList(allMembersCache.filter(m => m.fullName.toLowerCase().includes(txt) || m.memberId.toLowerCase().includes(txt) || m.nationalId.includes(txt)));
+  }
+
+  async function openCollectContributionModal(uid, fullName) {
+      const today = new Date().toISOString().split('T')[0];
+      const { value: formValues } = await Swal.fire({
+          title: 'เก็บเงินสมทบ',
+          html: `
+              <div class="text-start" style="font-family: 'Prompt', sans-serif;">
+                  <div class="bg-success bg-opacity-10 p-3 rounded-4 mb-3"><p class="mb-0 fw-bold text-success"><i class="fa-solid fa-user me-2"></i> สมาชิก: ${fullName}</p></div>
+                  <label class="small text-muted fw-bold mb-1">วันที่รับเงิน</label>
+                  <input type="date" id="collectDate" class="form-control-modern w-100 mb-3" value="${today}" required>
+                  <label class="small text-muted fw-bold mb-1">จำนวนเงิน (บาท)</label>
+                  <input type="number" id="collectAmt" class="form-control-modern w-100 mb-3 text-success fw-bold fs-4" placeholder="0.00" step="0.01" required>
+                  <label class="small text-muted fw-bold mb-1">ช่องทางรับเงิน</label>
+                  <select id="collectWallet" class="form-select-modern w-100 mb-3"><option value="เงินสด">เก็บเงินสด</option><option value="ธนาคาร">โอนเข้าธนาคาร</option></select>
+                  <label class="small text-muted fw-bold mb-1">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+                  <input type="text" id="collectNote" class="form-control-modern w-100" placeholder="เช่น ชำระของเดือน ก.ค....">
+              </div>
+          `,
+          showCancelButton: true, confirmButtonText: 'บันทึกรับเงิน', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#10B981',
+          preConfirm: () => {
+              const amt = document.getElementById('collectAmt').value;
+              const date = document.getElementById('collectDate').value;
+              const wallet = document.getElementById('collectWallet').value;
+              const note = document.getElementById('collectNote').value;
+              if(!amt || amt <= 0) { Swal.showValidationMessage('กรุณาระบุจำนวนเงินให้ถูกต้อง'); return false; }
+              return { amt: parseFloat(amt), date, wallet, note };
+          }
+      });
+
+      if (formValues) {
+          showLoader(true, "กำลังบันทึกรายการ...");
+          try {
+              const adminName = (typeof currentAdminData !== 'undefined' && currentAdminData && currentAdminData.name) ? currentAdminData.name : 'ระบบ';
+              const txIdString = generateTxId();
+              const txNote = formValues.note ? `สมาชิก: ${fullName} (${formValues.note})` : `สมาชิก: ${fullName}`;
+              
+              let setStatus = "รอตรวจสอบ";
+              if(currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน') setStatus = "อนุมัติแล้ว";
+
+              await db.collection("transactions").add({
+                  txId: txIdString, type: 'สมทบเงินกองทุน', amount: formValues.amt, paymentMethod: formValues.wallet,
+                  transactionDate: formValues.date, fullName: 'แอดมิน: ' + adminName, status: setStatus, 
+                  note: txNote, uid: uid, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+
+              if(setStatus === 'อนุมัติแล้ว') {
+                  const memberRef = db.collection("members").doc(uid);
+                  await memberRef.update({
+                      totalContribution: firebase.firestore.FieldValue.increment(formValues.amt),
+                      outstandingBalance: firebase.firestore.FieldValue.increment(-formValues.amt) 
+                  });
+              }
+
+              Swal.fire('สำเร็จ', setStatus === 'อนุมัติแล้ว' ? 'บันทึกรับเงินเรียบร้อย' : 'บันทึกแล้ว (รอฝ่ายการเงินอนุมัติ)', 'success');
+              if(typeof loadMembersData === 'function') loadMembersData();
+              if(typeof loadDashboardOverview === 'function') loadDashboardOverview();
+          } catch(e) {
+              showLoader(false); console.error(e);
+              Swal.fire('Error', e.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+          }
+      }
+  }
+
   function openAdminRegisterModal() {
       let centerOptions = '<option value="" disabled selected>-- เลือกศูนย์ประสานงาน --</option>';
       (fundSettings.centers || []).forEach(c => centerOptions += `<option value="${c}">${c}</option>`);
@@ -938,143 +1456,6 @@
           showLoader(false);
           if(res.isConfirmed) { Swal.fire('สำเร็จ', 'ลงทะเบียนสมาชิกออฟไลน์เรียบร้อย', 'success'); loadMembersData(); loadDashboardOverview(); }
       });
-  }
-
-  async function loadMembersData() {
-    document.getElementById('list-members').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-primary"></div></div>';
-    try {
-      const snap = await db.collection("members").orderBy("timestamp", "desc").get();
-      allMembersCache = []; let pendingLinks = 0;
-      snap.forEach(doc => { 
-          let d = doc.data(); 
-          if(d.linkStatus === 'pending') pendingLinks++;
-          allMembersCache.push({ id: doc.id, ...d }); 
-      });
-      
-      const alertBox = document.getElementById('pendingLinkAlert');
-      if(pendingLinks > 0) { alertBox.classList.remove('d-none'); document.getElementById('linkRequestCount').innerText = pendingLinks; }
-      else { alertBox.classList.add('d-none'); }
-
-      renderMembersList(allMembersCache);
-    } catch(e) {}
-  }
-
-  function renderMembersList(dataArr) {
-      let html = "";
-      dataArr.forEach(d => {
-        let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
-        
-        let lineBadge = d.lineUid 
-            ? `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-brands fa-line me-1"></i> ผูกแล้ว</span>` 
-            : `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-solid fa-link-slash me-1"></i> ยังไม่ผูก LINE</span>`;
-        
-        let qrButton = !d.lineUid 
-            ? `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-bold" style="font-size:0.75rem;" onclick="generateLinkQR('${d.id}', '${d.fullName}')"><i class="fa-solid fa-qrcode me-1"></i> QR ผูกบัญชี</button>` 
-            : ``;
-
-        let profileImage = d.pictureUrl 
-            ? `<img src="${d.pictureUrl}" class="rounded-circle shadow-sm flex-shrink-0" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid #E2E8F0;" alt="Profile">` 
-            : `<div class="icon-box bg-primary bg-opacity-10 text-primary flex-shrink-0 rounded-circle" style="width: 48px; height: 48px;"><i class="fa-solid fa-user"></i></div>`;
-
-        let dateReg = d.timestamp || "ไม่มีระบุ";
-        let natId = d.nationalId || "-";
-        let phone = d.phone || "-";
-        let centerInfo = d.center || "ไม่ระบุศูนย์";
-        let responsibleAdmin = d.responsibleAdmin || "ไม่มีผู้ดูแล";
-        let memberType = d.memberType || "สมาชิกสามัญ";
-        let totalContrib = parseFloat(d.totalContribution || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        let outstanding = parseFloat(d.outstandingBalance || 0);
-        let formatOutstanding = outstanding.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-        let annualFee = fundSettings.annualFee || 365;
-        let missingDots = Math.ceil((outstanding / annualFee) * 12);
-        let activeDots = 12 - missingDots;
-        if(activeDots < 0) activeDots = 0; 
-        if(activeDots > 12) activeDots = 12;
-
-        const dotColors = ['#B91C1C', '#DC2626', '#EF4444', '#F87171', '#F59E0B', '#F59E0B', '#FBBF24', '#FBBF24', '#34D399', '#34D399', '#10B981', '#10B981'];
-        let dotsHtml = '<div class="d-flex gap-1 mt-2" title="สถานะการส่งสมทบรายปี (12 เดือน)">';
-        for(let i=0; i<12; i++) {
-            let dotColor = (i < activeDots) ? dotColors[i] : '#E2E8F0'; 
-            dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor};"></div>`;
-        }
-        dotsHtml += '</div>';
-
-        let ageStr = "เพิ่งสมัคร / รอตรวจสอบ";
-        if (d.registerDateObj && d.status === 'เป็นสมาชิก') {
-            const regD = new Date(d.registerDateObj); 
-            const now = new Date();
-            let years = now.getFullYear() - regD.getFullYear(); 
-            let months = now.getMonth() - regD.getMonth(); 
-            let days = now.getDate() - regD.getDate();
-            if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
-            if (months < 0) { years--; months += 12; }
-            if (years >= 0) {
-                ageStr = '';
-                if(years > 0) ageStr += `${years} ปี `; 
-                if(months > 0) ageStr += `${months} เดือน `; 
-                ageStr += `${days} วัน`;
-                if(ageStr === '0 วัน') ageStr = 'เพิ่งอนุมัติวันนี้';
-            }
-        }
-
-        html += `<div class="bg-white p-3 mb-3" style="border-left: 4px solid var(--primary-main); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-          <div class="d-flex justify-content-between align-items-center cursor-pointer" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
-            <div class="d-flex align-items-center gap-3 w-100" style="overflow: hidden;">
-               ${profileImage}
-               <div style="min-width: 0;">
-                  <h6 class="fw-bold mb-0 text-dark text-truncate" style="font-size: 0.95rem;">${d.fullName}</h6>
-                  <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2" style="font-size:0.7rem;"><i class="fa-solid fa-id-badge"></i> ${d.memberId}</span>
-                      <small class="text-muted" style="font-size:0.7rem;"><i class="fa-regular fa-calendar text-secondary"></i> สมัคร: ${dateReg}</small>
-                  </div>
-                  ${dotsHtml}
-               </div>
-            </div>
-            
-            <div class="text-end flex-shrink-0 ms-2 d-flex flex-column align-items-end">
-               <span class="badge ${statusColor} rounded-pill px-2 py-1 shadow-sm mb-1" style="font-size: 0.7rem;">${d.status}</span>
-               <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted mt-1" style="width: 22px; height: 22px; transition: transform 0.3s;" id="arrow-member-${d.id}">
-                    <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
-               </div>
-            </div>
-          </div>
-          
-          <div class="collapse mt-3 pt-3" id="collapse-member-${d.id}" style="border-top: 1px dashed #E2E8F0;">
-            <div class="row g-2 mb-3 px-2">
-                <div class="col-12 mb-1"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-clock-rotate-left text-primary w-20px"></i> อายุการเป็นสมาชิก</small><strong class="text-primary" style="font-size:0.85rem;">${ageStr}</strong></div>
-                <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-address-card text-secondary w-20px"></i> เลข ปชช.</small><strong class="text-dark" style="font-size:0.85rem;">${natId}</strong></div>
-                <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-phone text-secondary w-20px"></i> เบอร์ติดต่อ</small><strong class="text-dark" style="font-size:0.85rem;">${phone}</strong></div>
-                <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-coins text-success w-20px"></i> สมทบสะสม</small><strong class="text-success" style="font-size:0.85rem;">฿${totalContrib}</strong></div>
-                <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-circle-exclamation text-danger w-20px"></i> ค้างสมทบ</small><strong class="text-danger" style="font-size:0.85rem;">฿${formatOutstanding}</strong></div>
-                <div class="col-12 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-users text-secondary w-20px"></i> ประเภทสมาชิก</small><span class="badge bg-dark bg-opacity-10 text-dark border shadow-sm" style="font-size:0.75rem;">${memberType}</span></div>
-                <div class="col-12 mt-2">
-                    <small class="text-muted d-block mb-2" style="font-size:0.7rem;"><i class="fa-solid fa-house-flag text-secondary w-20px"></i> ศูนย์ประสานงาน & กรรมการ</small>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="badge bg-light text-dark border border-secondary shadow-sm py-2" style="font-size:0.75rem;"><i class="fa-solid fa-building me-1 text-muted"></i> ${centerInfo}</span>
-                        <span class="badge bg-info bg-opacity-10 text-info shadow-sm py-2 cursor-pointer border border-info" style="font-size:0.75rem;" onclick="assignAdminToMember('${d.id}', '${responsibleAdmin}')" title="เปลี่ยนกรรมการ"><i class="fa-solid fa-user-tie me-1"></i> ${responsibleAdmin} <i class="fa-solid fa-pen ms-1"></i></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded-4 mt-2 flex-wrap gap-2">
-                <div>${lineBadge}</div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-bold" onclick="changeMemberStatus('${d.id}', '${d.status}')" style="font-size:0.75rem;">เปลี่ยนสถานะ</button>
-                    ${qrButton}
-                    <button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm fw-bold" onclick="openCollectContributionModal('${d.id}', '${d.fullName}')" style="font-size:0.75rem;"><i class="fa-solid fa-hand-holding-dollar me-1"></i> เก็บสมทบ</button>
-                </div>
-            </div>
-          </div>
-
-        </div>`;
-      });
-      document.getElementById('list-members').innerHTML = html || "<div class='text-center text-muted small p-3 bg-white rounded-4 border'>ไม่มีรายชื่อสมาชิก</div>";
-  }
-
-  function filterMembersLocally() {
-      const txt = document.getElementById('searchMemberInput').value.toLowerCase();
-      renderMembersList(allMembersCache.filter(m => m.fullName.toLowerCase().includes(txt) || m.memberId.toLowerCase().includes(txt) || m.nationalId.includes(txt)));
   }
 
   async function changeMemberStatus(id, currStatus) {
@@ -1148,86 +1529,11 @@
       }
   }
 
-  async function openCollectContributionModal(uid, fullName) {
-      const today = new Date().toISOString().split('T')[0];
-      const { value: formValues } = await Swal.fire({
-          title: 'เก็บเงินสมทบ',
-          html: `
-              <div class="text-start" style="font-family: 'Prompt', sans-serif;">
-                  <div class="bg-success bg-opacity-10 p-3 rounded-4 mb-3">
-                      <p class="mb-0 fw-bold text-success"><i class="fa-solid fa-user me-2"></i> สมาชิก: ${fullName}</p>
-                  </div>
-                  <label class="small text-muted fw-bold mb-1">วันที่รับเงิน</label>
-                  <input type="date" id="collectDate" class="form-control-modern w-100 mb-3" value="${today}" required>
-                  <label class="small text-muted fw-bold mb-1">จำนวนเงิน (บาท)</label>
-                  <input type="number" id="collectAmt" class="form-control-modern w-100 mb-3 text-success fw-bold fs-4" placeholder="0.00" step="0.01" required>
-                  <label class="small text-muted fw-bold mb-1">ช่องทางรับเงิน</label>
-                  <select id="collectWallet" class="form-select-modern w-100 mb-3">
-                      <option value="เงินสด">เก็บเงินสด</option>
-                      <option value="ธนาคาร">โอนเข้าธนาคาร</option>
-                  </select>
-                  <label class="small text-muted fw-bold mb-1">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
-                  <input type="text" id="collectNote" class="form-control-modern w-100" placeholder="เช่น ชำระของเดือน ก.ค....">
-              </div>
-          `,
-          showCancelButton: true, confirmButtonText: 'บันทึกรับเงิน', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#10B981',
-          preConfirm: () => {
-              const amt = document.getElementById('collectAmt').value;
-              const date = document.getElementById('collectDate').value;
-              const wallet = document.getElementById('collectWallet').value;
-              const note = document.getElementById('collectNote').value;
-              if(!amt || amt <= 0) { Swal.showValidationMessage('กรุณาระบุจำนวนเงินให้ถูกต้อง'); return false; }
-              return { amt: parseFloat(amt), date, wallet, note };
-          }
-      });
-
-      if (formValues) {
-          showLoader(true, "กำลังบันทึกรายการ...");
-          try {
-              const adminName = (typeof currentAdminData !== 'undefined' && currentAdminData && currentAdminData.name) ? currentAdminData.name : 'ระบบ';
-              const txIdString = (typeof generateTxId === 'function') ? generateTxId() : "TX" + Date.now();
-              const txNote = formValues.note ? `สมาชิก: ${fullName} (${formValues.note})` : `สมาชิก: ${fullName}`;
-              
-              await db.collection("transactions").add({
-                  txId: txIdString, type: 'สมทบเงินกองทุน', amount: formValues.amt, paymentMethod: formValues.wallet,
-                  transactionDate: formValues.date, fullName: 'แอดมิน: ' + adminName, status: 'อนุมัติแล้ว', 
-                  note: txNote, uid: uid, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-              });
-
-              const memberRef = db.collection("members").doc(uid);
-              await memberRef.update({
-                  totalContribution: firebase.firestore.FieldValue.increment(formValues.amt),
-                  outstandingBalance: firebase.firestore.FieldValue.increment(-formValues.amt) 
-              });
-
-              Swal.fire('สำเร็จ', 'บันทึกรับเงินสมทบเข้าบัญชีเรียบร้อย', 'success');
-              if(typeof loadMembersData === 'function') loadMembersData();
-              if(typeof loadDashboardOverview === 'function') loadDashboardOverview();
-          } catch(e) {
-              showLoader(false);
-              console.error("Save Contribution Error: ", e);
-              Swal.fire('Error', e.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-          }
-      }
-  }
-
   // ==========================================
   // หมวดที่ 5: จัดการการเงินและสมุดบัญชี (Ledger & Transactions)
   // ==========================================
   let incomeNotes = []; let expenseNotes = []; let allTransactionsCache = []; 
   let currentTxPage = 1; const itemsPerTxPage = 10; let txSearchDate = "";         
-
-  function generateTxId() {
-      const now = new Date();
-      const yy = (now.getFullYear() + 543).toString().slice(-2);
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const dd = String(now.getDate()).padStart(2, '0');
-      const hh = String(now.getHours()).padStart(2, '0');
-      const min = String(now.getMinutes()).padStart(2, '0');
-      const sec = String(now.getSeconds()).padStart(2, '0');
-      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `TX${yy}${mm}${dd}${hh}${min}${sec}-${random}`;
-  }
 
   async function loadLedgerNotes() {
       try {
@@ -1336,7 +1642,12 @@
     document.getElementById('list-approved-transactions').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-success"></div></div>';
     
     try {
-      const snap = await db.collection("transactions").orderBy("timestamp", "desc").get(); 
+      let query = db.collection("transactions");
+      if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน') {
+          query = query.where("fullName", "==", "แอดมิน: " + currentAdminData.name);
+      }
+
+      const snap = await query.orderBy("timestamp", "desc").get(); 
       allTransactionsCache = [];
       snap.forEach(doc => { 
           const d = doc.data();
@@ -1401,6 +1712,7 @@
       document.getElementById('tx-pagination').innerHTML = paginationHtml;
   }
 
+  // 🌟 2. ฟังก์ชันเรนเดอร์สมุดบัญชี (เพิ่มส่วนแสดงใบเสร็จย่อยแบบกลุ่ม)
   function buildTxHtmlString(txArray) {
       let html = "";
       txArray.forEach(d => {
@@ -1426,10 +1738,13 @@
         let safeType = d.type ? d.type.replace(/'/g, "\\'") : ""; let safeNote = d.note ? d.note.replace(/'/g, "\\'") : "";
         let safeUid = d.uid ? d.uid : ""; let displayTxId = d.txId ? d.txId : "-";
 
-        let actionBtns = `
-            <button onclick="editTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeNote}', '${d.paymentMethod}', '${safeUid}')" class="btn btn-sm btn-outline-warning py-1 px-3 rounded-pill" title="แก้ไขรายการ"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeUid}')" class="btn btn-sm btn-outline-danger py-1 px-3 ms-2 rounded-pill" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
-        `;
+        let actionBtns = "";
+        if (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน') {
+            actionBtns = `
+                <button onclick="editTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeNote}', '${d.paymentMethod}', '${safeUid}')" class="btn btn-sm btn-outline-warning py-1 px-3 rounded-pill" title="แก้ไขรายการ"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteTransaction('${d.id}', ${d.amount}, '${safeType}', '${safeUid}')" class="btn btn-sm btn-outline-danger py-1 px-3 ms-2 rounded-pill" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+            `;
+        }
         
         let historyHtml = "";
         if(d.editHistory && d.editHistory.length > 0 && currentAdminData.role === 'Admin-Master') {
@@ -1439,6 +1754,24 @@
                 historyHtml += `<li>จากเดิม: ${h.oldType} ${h.oldNote ? `(${h.oldNote})` : ''} <strong class="text-dark">(${h.oldMethod} ฿${formattedOldAmount})</strong> แก้โดย ${h.editedBy}</li>`; 
             });
             historyHtml += `</ul></div>`;
+        }
+
+        // 🌟 เพิ่มการดึงใบเสร็จย่อยของกลุ่มมาแสดง
+        let bulkReceiptsHtml = "";
+        if (d.uid === "BULK" && d.bulkMembers && d.bulkMembers.length > 0) {
+            bulkReceiptsHtml = `
+            <div class="mt-3 p-3 bg-info bg-opacity-10 rounded-4 border border-info" style="font-size:0.75rem;">
+                <span class="text-primary fw-bold d-block mb-2"><i class="fa-solid fa-users"></i> รายละเอียดใบเสร็จรายบุคคล (${d.bulkMembers.length} คน):</span>
+                <ul class="mb-0 ps-3 text-dark" style="list-style: decimal;">`;
+            d.bulkMembers.forEach(m => {
+                let mFormatAmt = parseFloat(m.amt).toLocaleString('en-US', {minimumFractionDigits: 2});
+                bulkReceiptsHtml += `<li class="mb-2 border-bottom pb-1 border-secondary border-opacity-25">
+                    ${m.name} 
+                    <br><strong class="text-primary">Ref: ${m.txId}</strong> <span class="text-success fw-bold">(฿${mFormatAmt})</span>
+                    <button class="btn btn-sm btn-light border py-0 px-2 ms-2 rounded-pill text-primary shadow-sm" onclick="Swal.fire('ตัวอย่างการพิมพ์', 'พิมพ์ใบเสร็จเลขที่: ${m.txId}<br>ชื่อ: ${m.name}<br>ยอดเงิน: ฿${mFormatAmt}', 'info')"><i class="fa-solid fa-print"></i> พิมพ์</button>
+                </li>`;
+            });
+            bulkReceiptsHtml += `</ul></div>`;
         }
 
         let formattedAmount = parseFloat(d.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -1468,8 +1801,11 @@
                 <small class="text-dark fw-bold d-block text-truncate mt-2" style="font-size:0.65rem;"><i class="fa-regular fa-calendar-check text-success me-2"></i> วันเกิดรายการ: ${txDateDisplay}</small>
                 <small class="text-muted d-block text-truncate mt-1" style="font-size:0.65rem;"><i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i> บันทึกเข้าระบบ: ${recordDateStr}</small>
             </div>
-            <div class="d-flex justify-content-end align-items-center bg-light p-2 rounded-pill">
-                ${d.status === 'รอตรวจสอบ' 
+            
+            ${bulkReceiptsHtml} <!-- 🌟 แทรกรายละเอียดใบเสร็จกลุ่มตรงนี้ -->
+
+            <div class="d-flex justify-content-end align-items-center bg-light p-2 rounded-pill mt-3">
+                ${(d.status === 'รอตรวจสอบ' && (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน'))
                   ? `<button onclick="approveTx('${d.id}', '${safeUid}', ${d.amount}, '${d.txId || ''}')" class="btn btn-sm btn-success rounded-pill py-2 px-4 fw-bold shadow-sm w-100">อนุมัติรายการนี้</button>` 
                   : `${actionBtns}`}
             </div>
@@ -1480,7 +1816,12 @@
       return html;
   }
 
+  // 🌟 2. ฟังก์ชันแก้ไขธุรกรรม (ป้องกันการแก้ยอดบิลกลุ่ม ป้องกันบิลพัง)
   async function editTransaction(txId, oldAmt, oldType, oldNote, oldMethod, uid) {
+      if (uid === "BULK") {
+          return Swal.fire('ไม่อนุญาต', 'บิลรวมแบบกลุ่ม (Bulk) ไม่สามารถแก้ไขยอดย้อนหลังได้ หากยอดผิดพลาดกรุณากด "ลบรายการ" แล้วทำใหม่เพื่อความถูกต้องของบัญชีครับ', 'warning');
+      }
+
       const { value: formValues } = await Swal.fire({
           title: 'แก้ไขประวัติ',
           html: `<label class="small fw-bold text-start w-100">หมวดหมู่รายการ:</label><input id="edit-type" type="text" class="form-control mb-2 text-primary fw-bold" value="${oldType}"><label class="small fw-bold text-start w-100">คำอธิบายเพิ่มเติม:</label><input id="edit-note" type="text" class="form-control mb-2" value="${oldNote}"><label class="small fw-bold text-start w-100">จำนวนเงิน:</label><input id="edit-amt" type="number" class="form-control mb-2 fw-bold text-primary" value="${oldAmt}" step="0.01"><label class="small fw-bold text-start w-100">ช่องทางเงิน:</label><select id="edit-wallet" class="form-select"><option value="ธนาคาร" ${oldMethod.includes('ธนาคาร') ? 'selected' : ''}>ธนาคาร</option><option value="เงินสด" ${oldMethod.includes('เงินสด') ? 'selected' : ''}>เงินสด</option></select>`,
@@ -1505,49 +1846,101 @@
       }
   }
 
+  // 🌟 3. ฟังก์ชันลบธุรกรรม (อัปเกรดให้สามารถดึงยอดเงินคืนสมาชิกทั้งกลุ่มได้อัตโนมัติ)
   async function deleteTransaction(txId, amount, txType, uid) {
-      if(currentAdminData.role !== 'Admin-Master') return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่สามารถลบข้อมูลได้', 'error');
+      if(currentAdminData.role !== 'Admin-Master' && currentAdminData.role !== 'Admin-การเงิน') {
+          return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master และ การเงิน เท่านั้นที่สามารถลบข้อมูลได้', 'error');
+      }
+
       Swal.fire({
-          title: 'ยืนยันการลบประวัติ?', text: "ยอดเงินกลางและยอดของสมาชิกที่ผูกไว้จะถูกดึงกลับอัตโนมัติ ไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', cancelButtonColor: '#64748B', confirmButtonText: 'ยืนยันลบข้อมูล', cancelButtonText: 'ยกเลิก'
+          title: 'ยืนยันการลบประวัติ?', text: "ยอดเงินกลางและยอดของสมาชิกทั้งหมดในบิลจะถูกดึงกลับอัตโนมัติ ไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', cancelButtonColor: '#64748B', confirmButtonText: 'ยืนยันลบ', cancelButtonText: 'ยกเลิก'
       }).then(async (result) => {
           if (result.isConfirmed) {
-              showLoader(true, "กำลังลบและคำนวณยอดใหม่...");
+              showLoader(true, "กำลังลบและดึงยอดเงินคืน...");
               try {
-                  await db.collection("transactions").doc(txId).delete();
-                  if (uid && uid !== "") {
-                      if(txType.includes('รับ') || txType.includes('สมทบ')) await db.collection("members").doc(uid).update({ totalContribution: firebase.firestore.FieldValue.increment(-amount) });
-                      else if(txType.includes('จ่าย') || txType === 'จ่ายสวัสดิการ') await db.collection("members").doc(uid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(-amount) });
+                  const txRef = db.collection("transactions").doc(txId);
+                  const txDoc = await txRef.get();
+                  const txData = txDoc.data();
+                  
+                  await txRef.delete();
+                  
+                  // ดึงยอดกลับเฉพาะกรณีที่เคยถูก "อนุมัติแล้ว"
+                  if (txData && txData.status === 'อนุมัติแล้ว') {
+                      // ถ้าเป็นบิลกลุ่ม ให้วนลูปดึงยอดคืนสมาชิกทุกคน
+                      if (txData.bulkMembers && txData.bulkMembers.length > 0) {
+                          for(let m of txData.bulkMembers) {
+                              await db.collection("members").doc(m.uid).update({ 
+                                  totalContribution: firebase.firestore.FieldValue.increment(-m.amt),
+                                  outstandingBalance: firebase.firestore.FieldValue.increment(m.amt)
+                              });
+                          }
+                      } 
+                      // ถ้าเป็นบิลเดี่ยวปกติ
+                      else if (uid && uid !== "" && uid !== "BULK") {
+                          if(txType.includes('รับ') || txType.includes('สมทบ')) {
+                              await db.collection("members").doc(uid).update({ totalContribution: firebase.firestore.FieldValue.increment(-amount) });
+                          } else if(txType.includes('จ่าย') || txType === 'จ่ายสวัสดิการ') {
+                              await db.collection("members").doc(uid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(-amount) });
+                          }
+                      }
                   }
-                  Swal.fire({icon:'success', title:'ลบข้อมูลสำเร็จ', timer:1500, showConfirmButton:false}); loadTransactions(); loadDashboardOverview(); 
-              } catch(e) { showLoader(false); Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error'); }
+                  
+                  Swal.fire({icon:'success', title:'ลบข้อมูลและคืนยอดสำเร็จ', timer:1500, showConfirmButton:false}); 
+                  loadTransactions(); loadDashboardOverview(); 
+              } catch(e) { 
+                  showLoader(false); Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error'); 
+              }
           }
       });
   }
 
+  // 🌟 4. ฟังก์ชันอนุมัติเงิน (อัปเกรดให้สามารถกระจายยอดเงินให้สมาชิกทั้งกลุ่มได้เมื่อกดอนุมัติ)
   async function approveTx(txId, memberUid, amount, currentTxId) {
-    if(confirm("ยืนยันรับยอดเงินนี้เข้าสู่ระบบ?")) {
-      showLoader(true, "กำลังอนุมัติ...");
+    if(confirm("ยืนยันอนุมัติและรับยอดเงินนี้เข้าสู่ระบบ?")) {
+      showLoader(true, "กำลังกระจายยอดเงิน...");
       try {
+          const txRef = db.collection("transactions").doc(txId);
+          const txDoc = await txRef.get();
+          const txData = txDoc.data();
+          
+          if (!txData) throw new Error("ไม่พบข้อมูลธุรกรรม");
+          
           let updateData = { status: "อนุมัติแล้ว" };
-          if (!currentTxId || currentTxId === 'undefined' || currentTxId === '') { updateData.txId = generateTxId(); }
-          await db.collection("transactions").doc(txId).update(updateData);
-          if(memberUid && memberUid !== "undefined") { 
-             const txDoc = await db.collection("transactions").doc(txId).get();
-             const txData = txDoc.data();
-             if (txData) {
-                 if (txData.type.includes('รับ') || txData.type.includes('สมทบ')) await db.collection("members").doc(memberUid).update({ totalContribution: firebase.firestore.FieldValue.increment(amount) }); 
-                 else if (txData.type.includes('จ่าย') || txData.type === 'จ่ายสวัสดิการ') await db.collection("members").doc(memberUid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(amount) }); 
-             }
+          // ถ้าไม่มีรหัส ให้ออกรหัสใหม่ (เช็คว่าเป็นกลุ่มหรือเดี่ยว)
+          if (!currentTxId || currentTxId === 'undefined' || currentTxId === '') { 
+              updateData.txId = txData.uid === "BULK" ? ("BLK" + generateTxId().substring(2)) : generateTxId(); 
           }
+          await txRef.update(updateData);
+          
+          // กระจายยอดเงินเข้าโปรไฟล์สมาชิกทุกคนที่อยู่ในบิลนี้
+          if (txData.bulkMembers && txData.bulkMembers.length > 0) {
+              for(let m of txData.bulkMembers) {
+                  await db.collection("members").doc(m.uid).update({ 
+                      totalContribution: firebase.firestore.FieldValue.increment(m.amt),
+                      outstandingBalance: firebase.firestore.FieldValue.increment(-m.amt)
+                  });
+              }
+          } 
+          // กระจายยอดเงินแบบเดี่ยว
+          else if(memberUid && memberUid !== "undefined" && memberUid !== "BULK") { 
+              if (txData.type.includes('รับ') || txData.type.includes('สมทบ')) {
+                  await db.collection("members").doc(memberUid).update({ totalContribution: firebase.firestore.FieldValue.increment(amount) }); 
+              } else if (txData.type.includes('จ่าย') || txData.type === 'จ่ายสวัสดิการ') {
+                  await db.collection("members").doc(memberUid).update({ totalWelfareReceived: firebase.firestore.FieldValue.increment(amount) }); 
+              }
+          }
+          
           Swal.fire({icon: 'success', title: 'อนุมัติเรียบร้อย', showConfirmButton: false, timer: 1500}); 
           loadTransactions(); loadDashboardOverview();
-      } catch (error) { showLoader(false); Swal.fire('Error', 'ผิดพลาด', 'error'); }
+      } catch (error) { 
+          showLoader(false); Swal.fire('Error', error.message || 'ผิดพลาด', 'error'); 
+      }
     }
   }
 
-  // ==========================================
+  // =========================================================
   // หมวดที่ 6: การตั้งค่าระบบกลาง (Global Settings)
-  // ==========================================
+  // =========================================================
   async function loadGlobalSettings() {
       showLoader(true, "กำลังโหลดการตั้งค่า...");
       try {
@@ -1570,7 +1963,7 @@
               
               if(d.fundName) {
                   fundSettings.fundName = d.fundName;
-                  if(document.getElementById('headerFundNameMember')) document.getElementById('headerFundNameMember').innerText = d.fundName;
+                  if(document.getElementById('adminNameDisplay')) document.getElementById('adminNameDisplay').innerText = currentAdminData ? `${currentAdminData.name} [${currentAdminData.role.replace('Admin-', '')}]` : d.fundName;
               }
           }
           showLoader(false);
@@ -1670,7 +2063,6 @@
       try {
           await db.collection("settings").doc("master").set(payload, {merge: true});
           fundSettings = { ...fundSettings, ...payload };
-          if(document.getElementById('headerFundNameMember')) document.getElementById('headerFundNameMember').innerText = payload.fundName || "กองทุนสวัสดิการชุมชน";
           showLoader(false); Swal.fire({icon:'success', title:'บันทึกข้อมูลเรียบร้อย', showConfirmButton:false, timer: 1500});
       } catch(e) { showLoader(false); Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
   }
@@ -1795,9 +2187,9 @@
       }
   }
 
-  // ==========================================
+  // =========================================================
   // หมวดที่ 7: ระบบแผนที่พิกัด (GIS Map)
-  // ==========================================
+  // =========================================================
   async function loadGISMap() {
       if (!mapInstance) {
           const mapOptions = { zoom: 12, center: { lat: 5.92, lng: 101.81 }, mapTypeId: 'roadmap', mapTypeControl: false, streetViewControl: false }; 
@@ -1820,7 +2212,12 @@
       mapMarkers = [];
       
       try {
-          const snap = await db.collection("members").get(); 
+          let query = db.collection("members");
+          if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน') {
+              query = query.where("center", "==", currentAdminData.center);
+          }
+
+          const snap = await query.get(); 
           const bounds = new google.maps.LatLngBounds(); 
           let hasPins = false;
           
@@ -1866,23 +2263,28 @@
       showLoader(false);
   }
 
-  // ==========================================
+  // =========================================================
   // หมวดที่ 8: จัดการระเบียบสวัสดิการ (Rules)
-  // ==========================================
+  // =========================================================
   async function loadRulesData() {
       document.getElementById('list-rules').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-warning"></div></div>';
       try {
           const snap = await db.collection("rules").get(); 
           let html = "";
+          
+          let canEdit = (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-สวัสดิการ');
+
           snap.forEach(doc => { 
               const d = doc.data(); 
               let formatMaxClaim = parseFloat(d.maxPerClaim || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
               let formatMaxYear = parseFloat(d.maxPerYear || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
+              let delBtn = canEdit ? `<button class="btn btn-sm btn-light text-danger rounded-circle p-2" style="width:32px; height:32px;" onclick="deleteRecord('rules', '${doc.id}')"><i class="fa-solid fa-trash"></i></button>` : '';
+
               html += `<div class="admin-card p-3 mb-3">
                   <div class="d-flex justify-content-between align-items-center">
                       <h6 class="fw-bold text-dark mb-0">${d.name}</h6>
-                      <button class="btn btn-sm btn-light text-danger rounded-circle p-2" style="width:32px; height:32px;" onclick="deleteRecord('rules', '${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                      ${delBtn}
                   </div>
                   <div class="row g-2 mt-2 pt-2 border-top">
                       <div class="col-6"><small class="text-muted d-block" style="font-size:0.7rem;">สูงสุด/ครั้ง</small><strong class="small text-primary">${formatMaxClaim} ฿</strong></div>
@@ -1895,7 +2297,7 @@
   }
 
   function openAddRuleModal() {
-      if(currentAdminData.role !== 'Admin-Master') return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้น', 'error');
+      if(currentAdminData.role !== 'Admin-Master' && currentAdminData.role !== 'Admin-สวัสดิการ') return Swal.fire('ไม่อนุญาต', 'เฉพาะกรรมการสวัสดิการ และ Master', 'error');
       Swal.fire({ 
           title: 'เพิ่มสวัสดิการใหม่', 
           html: `<div class="text-start">
@@ -1928,9 +2330,9 @@
       });
   }
 
-  // ==========================================
-  // หมวดที่ 9: จัดการผู้ดูแลระบบ (Admin Management)
-  // ==========================================
+  // =========================================================
+  // หมวดที่ 9: จัดการผู้ดูแลระบบ (Admin Management & Authentication)
+  // =========================================================
   async function loadAdminsData() {
       document.getElementById('list-admins').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-info"></div></div>';
       try {
@@ -1938,11 +2340,17 @@
           let html = "";
           snap.forEach(doc => { 
               const d = doc.data(); 
-              const badgeColor = d.status === 'ใช้งาน' ? 'bg-success' : 'bg-danger'; 
-              let toggleStatusBtn = "";
+              const badgeColor = d.status === 'ใช้งาน' ? 'bg-success' : (d.status === 'รอตั้งรหัสผ่าน' ? 'bg-warning text-dark' : 'bg-danger'); 
+              let actionBtns = "";
               
+              // Master สามารถแก้ไข/ลบ/สลับสถานะ คนอื่นได้
               if (currentAdminData.role === 'Admin-Master' && doc.id !== currentAdminData.email) { 
-                  toggleStatusBtn = `<button onclick="toggleAdminStatus('${doc.id}', '${d.status}')" class="btn btn-sm btn-outline-secondary mt-2 py-0 px-3 rounded-pill" style="font-size:0.7rem;">สลับสถานะ</button>`; 
+                  actionBtns = `
+                    <div class="mt-2 text-end">
+                        <button onclick="toggleAdminStatus('${doc.id}', '${d.status}')" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill shadow-sm" style="font-size:0.7rem;"><i class="fa-solid fa-power-off"></i> สลับสถานะ</button>
+                        <button onclick="editAdminRole('${doc.id}', '${d.role}', '${d.center}')" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill shadow-sm ms-1" style="font-size:0.7rem;"><i class="fa-solid fa-pen"></i> สิทธิ์</button>
+                        <button onclick="deleteAdmin('${doc.id}')" class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill shadow-sm ms-1" style="font-size:0.7rem;"><i class="fa-solid fa-trash"></i> ลบ</button>
+                    </div>`; 
               }
               
               html += `<div class="admin-card p-3 mb-3">
@@ -1952,63 +2360,271 @@
                           <div>
                               <h6 class="fw-bold text-dark mb-0" style="font-size:0.9rem;">${d.name}</h6>
                               <small class="text-muted d-block" style="font-size:0.75rem;">${d.email}</small>
-                              <small class="text-primary fw-bold d-block" style="font-size:0.75rem;">${d.role}</small>
+                              <div class="mt-1 d-flex gap-2 flex-wrap">
+                                  <span class="badge border border-primary text-primary" style="font-size:0.65rem;">${d.role}</span>
+                                  <span class="badge bg-light text-muted border" style="font-size:0.65rem;">ศูนย์: ${d.center || 'ALL'}</span>
+                              </div>
                           </div>
                       </div>
-                      <div class="text-end">
-                          <span class="badge ${badgeColor} bg-opacity-10 text-${d.status==='ใช้งาน'?'success':'danger'} rounded-pill px-3 py-1 shadow-sm">${d.status}</span><br>
-                          ${toggleStatusBtn}
+                      <div class="text-end flex-shrink-0">
+                          <span class="badge ${badgeColor} bg-opacity-10 rounded-pill px-3 py-1 shadow-sm">${d.status}</span><br>
                       </div>
                   </div>
+                  ${actionBtns}
               </div>`;
           }); 
           document.getElementById('list-admins').innerHTML = html;
       } catch(e) { console.error(e); }
   }
 
-  function openAddAdminModal() {
+  window.autoFillAdminForm = function(selectEl) {
+      const selectedOption = selectEl.options[selectEl.selectedIndex];
+      if(selectedOption.value !== "") {
+          document.getElementById('newAdminName').value = selectedOption.getAttribute('data-name');
+          if(selectedOption.getAttribute('data-email') && selectedOption.getAttribute('data-email') !== 'null') {
+              document.getElementById('newAdminEmail').value = selectedOption.getAttribute('data-email');
+          }
+      } else {
+          document.getElementById('newAdminName').value = ""; document.getElementById('newAdminEmail').value = "";
+      }
+  };
+
+  let adminModalMembersCache = []; 
+  window.filterAdminSearch = function() {
+      const input = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+      const select = document.getElementById('newAdminMemberRef');
+      select.innerHTML = '<option value="">-- ไม่ผูกกับสมาชิก (กรอกข้อมูลเอง) --</option>';
+      if (!input) return; 
+
+      let matchedCount = 0;
+      for (let m of adminModalMembersCache) {
+          let nId = m.nationalId || ""; let fName = (m.fullName || "").toLowerCase(); let mail = (m.email || "").toLowerCase();
+          if (nId.includes(input) || fName.includes(input) || mail.includes(input)) {
+              let opt = document.createElement('option');
+              opt.value = m.id; 
+              opt.setAttribute('data-name', m.fullName || ""); opt.setAttribute('data-email', m.email || ""); opt.setAttribute('data-line', m.lineUid || ""); 
+              opt.text = `[${m.nationalId || '-'}] : ${m.fullName}`;
+              select.appendChild(opt);
+              matchedCount++; if(matchedCount >= 15) break; 
+          }
+      }
+  };
+
+  // 🌟 เพิ่มผู้ดูแลระบบแบบส่งลิงก์
+  async function openAddAdminModal() {
       if(currentAdminData.role !== 'Admin-Master') return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้น', 'error');
+      
+      showLoader(true, "กำลังเตรียมข้อมูล...");
+      try {
+          const snap = await db.collection("members").get();
+          adminModalMembersCache = [];
+          snap.forEach(doc => { adminModalMembersCache.push({ id: doc.id, ...doc.data() }); });
+      } catch(e) { console.error(e); }
+      showLoader(false);
+
+      let centerOptions = '<option value="ALL" selected>-- ส่วนกลาง (ALL) --</option>';
+      (fundSettings.centers || []).forEach(c => centerOptions += `<option value="${c}">${c}</option>`);
+
       Swal.fire({ 
-          title: 'เพิ่มผู้ดูแลระบบ', 
-          html: `<div class="text-start">
+          title: 'เพิ่มแอดมินใหม่เข้าสู่ระบบ', 
+          html: `<div class="text-start" style="font-family:'Prompt';">
+                 <div class="alert alert-info py-2 small border-0"><i class="fa-solid fa-circle-info"></i> ระบบจะสร้างลิงก์สำหรับตั้งรหัสผ่าน/PIN เพื่อให้คุณส่งไปทางอีเมล หรือ LINE ของแอดมินคนนี้</div>
+                 
+                 <label class="small text-muted fw-bold ms-1">1. ค้นหาสมาชิก (เพื่อผูกบัญชี LINE)</label>
+                 <div class="input-group mb-2"><span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span><input type="text" id="adminSearchInput" class="form-control border-start-0 ps-0" placeholder="พิมพ์ชื่อ, เลข ปชช, อีเมล..." onkeyup="filterAdminSearch()"></div>
+                 <select id="newAdminMemberRef" class="form-select-modern w-100 mb-3 border border-primary text-primary" onchange="autoFillAdminForm(this)"><option value="">-- ไม่ผูกกับสมาชิก (กรอกข้อมูลเอง) --</option></select>
+
+                 <label class="small text-muted fw-bold ms-1">2. ข้อมูลล็อกอิน</label>
                  <input type="text" id="newAdminName" class="form-control-modern w-100 mb-2" placeholder="ชื่อ-นามสกุล">
-                 <input type="email" id="newAdminEmail" class="form-control-modern w-100 mb-2" placeholder="อีเมลสำหรับล็อกอิน">
-                 <input type="text" id="newAdminPass" class="form-control-modern w-100 mb-2" placeholder="ตั้งรหัสผ่าน">
-                 <input type="number" id="newAdminPin" class="form-control-modern w-100 mb-2" placeholder="PIN 6 หลัก" maxlength="6">
+                 <input type="email" id="newAdminEmail" class="form-control-modern w-100 mb-3" placeholder="อีเมล (ใช้เป็น ID ล็อกอิน)">
+                 
+                 <label class="small text-muted fw-bold ms-1">3. ระดับสิทธิ์ และ สังกัด</label>
                  <select id="newAdminRole" class="form-select-modern w-100 mb-2">
-                    <option value="Admin-ศูนย์ประสานงาน">แอดมินทั่วไป</option>
-                    <option value="Admin-Master">แอดมินสูงสุด (Master)</option>
+                    <option value="Admin-ผู้ดูแล">1. กรรมการผู้ดูแล (Caretaker)</option>
+                    <option value="Admin-ศูนย์ประสานงาน">2. กรรมการศูนย์ฯ (Center Admin)</option>
+                    <option value="Admin-การเงิน">3. กรรมการการเงิน (Finance Admin)</option>
+                    <option value="Admin-สวัสดิการ">4. กรรมการสวัสดิการ (Welfare Admin)</option>
+                    <option value="Admin-Master">5. แอดมินสูงสุด (Master)</option>
                  </select>
+                 <select id="newAdminCenter" class="form-select-modern w-100 mb-2">${centerOptions}</select>
                  </div>`, 
-          showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2563EB',
+          showCancelButton: true, confirmButtonText: 'บันทึกและสร้างลิงก์', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2563EB',
           preConfirm: async () => {
               const email = document.getElementById('newAdminEmail').value.trim(); 
-              const pass = document.getElementById('newAdminPass').value.trim(); 
               const name = document.getElementById('newAdminName').value.trim(); 
-              const pin = document.getElementById('newAdminPin').value.trim();
+              const role = document.getElementById('newAdminRole').value;
+              const center = document.getElementById('newAdminCenter').value;
+              const memberSelect = document.getElementById('newAdminMemberRef');
+              const memberUid = memberSelect.value; 
+              const lineUid = memberUid ? memberSelect.options[memberSelect.selectedIndex].getAttribute('data-line') : ""; 
               
-              if(!email || !pass || !name) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ'); return false; }
+              if(!email || !name) { Swal.showValidationMessage('กรุณากรอกชื่อและอีเมล'); return false; }
+              if((role === 'Admin-ผู้ดูแล' || role === 'Admin-ศูนย์ประสานงาน') && center === 'ALL') { Swal.showValidationMessage('กรุณาเลือกสังกัดศูนย์ให้ถูกต้อง'); return false; }
               
-              showLoader(true, "กำลังตรวจสอบ...");
+              showLoader(true, "กำลังสร้างบัญชี...");
               try { 
                   const existCheck = await db.collection("admins").doc(email).get(); 
-                  if(existCheck.exists) throw new Error("อีเมลนี้ถูกใช้งานแล้ว");
+                  if(existCheck.exists) throw new Error("อีเมลนี้มีอยู่ในระบบผู้ดูแลแล้ว");
                   
+                  // สร้างบัญชีโดยยังไม่มีรหัสผ่าน
                   await db.collection("admins").doc(email).set({ 
-                      email: email, password: pass, pin: pin, name: name, 
-                      role: document.getElementById('newAdminRole').value, 
-                      status: "ใช้งาน", timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                      email: email, name: name, role: role, center: center, 
+                      memberUid: memberUid, lineUid: lineUid,
+                      password: "", pin: "", 
+                      status: "รอตั้งรหัสผ่าน", timestamp: firebase.firestore.FieldValue.serverTimestamp() 
                   }); 
-                  return true;
+
+                  if (memberUid !== "") {
+                      await db.collection("members").doc(memberUid).update({ isAdmin: true, adminRole: role, adminEmail: email });
+                  }
+                  
+                  // สร้างลิงก์ LIFF สำหรับให้แอดมินเข้าไปตั้งรหัสผ่าน
+                  return `https://liff.line.me/${LIFF_ID}?action=setupAdmin&email=${encodeURIComponent(email)}`;
+
               } catch(err) { 
-                  showLoader(false);
-                  Swal.showValidationMessage(err.message); return false; 
+                  showLoader(false); Swal.showValidationMessage(err.message); return false; 
               }
           }
       }).then((res) => { 
           showLoader(false); 
-          if(res.isConfirmed) { Swal.fire('สำเร็จ', 'เพิ่มผู้ดูแลเรียบร้อย', 'success'); loadAdminsData(); } 
+          if(res.isConfirmed) { 
+              const setupLink = res.value;
+              Swal.fire({
+                  title: 'สำเร็จ!',
+                  html: `
+                    <p class="small text-muted mb-2">บัญชีแอดมินถูกสร้างแล้ว กรุณาส่งลิงก์นี้ให้เขาเพื่อตั้งรหัสผ่าน:</p>
+                    <textarea class="form-control text-center text-primary bg-light fw-bold" readonly rows="3">${setupLink}</textarea>
+                    <div class="mt-3 d-flex gap-2 justify-content-center">
+                        <button onclick="navigator.clipboard.writeText('${setupLink}'); Swal.fire('คัดลอกแล้ว', '', 'success');" class="btn btn-primary rounded-pill px-4"><i class="fa-solid fa-copy me-1"></i> คัดลอกลิงก์</button>
+                        <a href="mailto:?subject=ตั้งค่ารหัสผ่านผู้ดูแลระบบ SmartWelf&body=กรุณาคลิกลิงก์เพื่อตั้งรหัสผ่าน: ${setupLink}" class="btn btn-warning rounded-pill px-4"><i class="fa-solid fa-envelope me-1"></i> ส่งอีเมล</a>
+                    </div>
+                  `,
+                  showConfirmButton: true, confirmButtonText: 'ปิด', confirmButtonColor: '#64748B'
+              });
+              loadAdminsData(); 
+          } 
       });
+  }
+
+  // 🌟 ฟังก์ชัน: ลืมรหัสผ่าน / ขอรีเซ็ตรหัส
+  async function forgotAdminPassword() {
+      const { value: email } = await Swal.fire({
+          title: 'ลืมรหัสผ่าน / ลืม PIN',
+          input: 'email',
+          inputLabel: 'กรุณากรอกอีเมลที่ใช้ล็อกอินแอดมิน',
+          inputPlaceholder: 'admin@email.com',
+          showCancelButton: true, confirmButtonText: 'รับลิงก์ตั้งรหัสใหม่', confirmButtonColor: '#2563EB'
+      });
+
+      if (email) {
+          showLoader(true, "ตรวจสอบข้อมูล...");
+          try {
+              const doc = await db.collection("admins").doc(email).get();
+              showLoader(false);
+              if (doc.exists) {
+                  const setupLink = `https://liff.line.me/${LIFF_ID}?action=setupAdmin&email=${encodeURIComponent(email)}`;
+                  Swal.fire({
+                      title: 'สร้างลิงก์สำเร็จ',
+                      html: `
+                        <p class="small text-muted">เนื่องจากระบบไม่อนุญาตให้เปลี่ยนรหัสทันทีเพื่อความปลอดภัย กรุณาคัดลอกลิงก์ด้านล่างเพื่อทำการตั้งรหัสผ่านใหม่ด้วยตัวท่านเอง:</p>
+                        <textarea class="form-control text-center text-primary bg-light fw-bold" readonly rows="3">${setupLink}</textarea>
+                        <button onclick="navigator.clipboard.writeText('${setupLink}'); Swal.fire('คัดลอกแล้ว', '', 'success');" class="btn btn-primary rounded-pill px-4 mt-3 w-100"><i class="fa-solid fa-copy me-1"></i> คัดลอกลิงก์</button>
+                      `,
+                      showConfirmButton: false, showCloseButton: true
+                  });
+              } else {
+                  Swal.fire('ไม่พบข้อมูล', 'ไม่มีอีเมลนี้ในระบบผู้ดูแล', 'error');
+              }
+          } catch (error) { showLoader(false); Swal.fire('Error', 'ตรวจสอบล้มเหลว', 'error'); }
+      }
+  }
+
+  // 🌟 ฟังก์ชัน: หน้าจอตั้งค่ารหัสผ่านใหม่ (เมื่อกดจากลิงก์ที่ส่งให้)
+  function setupAdminCredentials(email) {
+      Swal.fire({
+          title: 'ตั้งค่ารหัสผ่านและ PIN ใหม่',
+          html: `
+              <p class="small text-muted">สำหรับแอดมินบัญชี: <strong class="text-primary">${email}</strong></p>
+              <input type="password" id="setupPass" class="form-control-modern w-100 mb-3" placeholder="ตั้งรหัสผ่านล็อกอิน (สำหรับเข้าผ่านเบราว์เซอร์)">
+              <input type="number" id="setupPin" class="form-control-modern w-100 text-center fs-4 text-primary fw-bold" placeholder="ตั้งรหัส PIN 6 หลัก" maxlength="6">
+          `,
+          allowOutsideClick: false, confirmButtonText: 'บันทึกการตั้งค่า', confirmButtonColor: '#10B981',
+          preConfirm: async () => {
+              const pass = document.getElementById('setupPass').value;
+              const pin = document.getElementById('setupPin').value;
+              if(!pass || pin.length !== 6) { Swal.showValidationMessage('กรุณาตั้งรหัสผ่าน และรหัส PIN ให้ครบ 6 หลัก'); return false; }
+              
+              showLoader(true, "กำลังอัปเดตความปลอดภัย...");
+              try {
+                  await db.collection("admins").doc(email).update({
+                      password: pass,
+                      pin: pin,
+                      status: "ใช้งาน" // เปลี่ยนสถานะพร้อมใช้
+                  });
+                  return true;
+              } catch (error) {
+                  showLoader(false); Swal.showValidationMessage('อัปเดตล้มเหลว: ' + error.message); return false;
+              }
+          }
+      }).then((res) => {
+          if (res.isConfirmed) {
+              Swal.fire('ตั้งค่าเรียบร้อย!', 'คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที', 'success').then(() => {
+                  window.location.href = `https://liff.line.me/${LIFF_ID}`; // เด้งกลับหน้าหลัก
+              });
+          }
+      });
+  }
+
+  // 🌟 ฟังก์ชัน: Master แก้ไขสิทธิ์แอดมินคนอื่น
+  async function editAdminRole(emailId, currentRole, currentCenter) {
+      let centerOptions = '<option value="ALL">-- ส่วนกลาง (ALL) --</option>';
+      (fundSettings.centers || []).forEach(c => centerOptions += `<option value="${c}">${c}</option>`);
+
+      const { value: formValues } = await Swal.fire({
+          title: `แก้ไขสิทธิ์: ${emailId}`,
+          html: `<div class="text-start">
+                    <label class="small text-muted fw-bold">ระดับสิทธิ์</label>
+                    <select id="editRole" class="form-select-modern w-100 mb-3">
+                        <option value="Admin-ผู้ดูแล" ${currentRole==='Admin-ผู้ดูแล'?'selected':''}>กรรมการผู้ดูแล</option>
+                        <option value="Admin-ศูนย์ประสานงาน" ${currentRole==='Admin-ศูนย์ประสานงาน'?'selected':''}>กรรมการศูนย์ฯ</option>
+                        <option value="Admin-การเงิน" ${currentRole==='Admin-การเงิน'?'selected':''}>กรรมการการเงิน</option>
+                        <option value="Admin-สวัสดิการ" ${currentRole==='Admin-สวัสดิการ'?'selected':''}>กรรมการสวัสดิการ</option>
+                        <option value="Admin-Master" ${currentRole==='Admin-Master'?'selected':''}>แอดมินสูงสุด (Master)</option>
+                    </select>
+                    <label class="small text-muted fw-bold">ศูนย์ประสานงาน</label>
+                    <select id="editCenter" class="form-select-modern w-100">${centerOptions}</select>
+                 </div>`,
+          didOpen: () => { document.getElementById('editCenter').value = currentCenter || "ALL"; },
+          showCancelButton: true, confirmButtonText: 'บันทึก', confirmButtonColor: '#2563EB',
+          preConfirm: () => {
+              const role = document.getElementById('editRole').value;
+              const center = document.getElementById('editCenter').value;
+              if((role === 'Admin-ผู้ดูแล' || role === 'Admin-ศูนย์ประสานงาน') && center === 'ALL') { Swal.showValidationMessage('กรุณาเลือกศูนย์ให้ถูกต้อง'); return false; }
+              return { role, center };
+          }
+      });
+
+      if(formValues) {
+          showLoader(true);
+          try {
+              await db.collection("admins").doc(emailId).update({ role: formValues.role, center: formValues.center });
+              loadAdminsData();
+              Swal.fire('สำเร็จ', 'อัปเดตสิทธิ์เรียบร้อย', 'success');
+          } catch(e) { showLoader(false); Swal.fire('Error', e.message, 'error'); }
+      }
+  }
+
+  // 🌟 ฟังก์ชัน: Master ลบแอดมินออก
+  async function deleteAdmin(emailId) {
+      if(confirm(`ยืนยันการลบแอดมินบัญชี ${emailId} ถาวรใช่หรือไม่?`)) { 
+          showLoader(true, "กำลังลบ..."); 
+          try {
+              await db.collection("admins").doc(emailId).delete(); 
+              loadAdminsData(); 
+              Swal.fire('ลบสำเร็จ', '', 'success');
+          } catch(e) { console.error(e); Swal.fire('Error', 'ไม่สามารถลบได้', 'error'); }
+          showLoader(false);
+      }
   }
 
   async function toggleAdminStatus(email, currentStatus) {
@@ -2022,19 +2638,10 @@
           showLoader(false);
       }
   }
+</script>
+</body>
+</html>
 
-  // ฟังก์ชันลบข้อมูล Global (ใช้ลบระเบียบกองทุน)
-  async function deleteRecord(collectionName, docId) {
-      if(currentAdminData.role !== 'Admin-Master') return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่ลบได้', 'error');
-      if(confirm("ยืนยันการลบข้อมูลถาวร?")) { 
-          showLoader(true, "กำลังลบ..."); 
-          try {
-              await db.collection(collectionName).doc(docId).delete(); 
-              if(collectionName === 'rules') loadRulesData(); 
-          } catch(e) { console.error(e); }
-          showLoader(false);
-      }
-  }
 </script>
 </body>
 </html>
