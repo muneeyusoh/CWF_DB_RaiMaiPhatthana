@@ -1992,12 +1992,26 @@
       }
   }
 
-  function openAdminRegisterModal() {
+  // 🌟 ฟังก์ชันเพิ่มสมาชิกออฟไลน์ (เพิ่มกันเลขซ้ำ และ เลือกผู้ดูแลทันที)
+  async function openAdminRegisterModal() {
+      showLoader(true, "กำลังเตรียมข้อมูล...");
+      
+      // ดึงรายชื่อกรรมการมาทำ Dropdown
+      let adminOptionsHTML = '<option value="">-- ไม่ระบุผู้ดูแล --</option>';
+      try {
+          const adminSnap = await db.collection("admins").where("status", "==", "ใช้งาน").get();
+          adminSnap.forEach(doc => {
+              adminOptionsHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`;
+          });
+      } catch(e) { console.error(e); }
+
       let centerOptions = '<option value="" disabled selected>-- เลือกศูนย์ประสานงาน --</option>';
       (fundSettings.centers || []).forEach(c => centerOptions += `<option value="${c}">${c}</option>`);
       
       let villageOptions = '<option value="" disabled selected>-- เลือกหมู่บ้าน --</option>';
       (fundSettings.inZoneVillages || []).forEach(v => villageOptions += `<option value="${v}">${v}</option>`);
+
+      showLoader(false);
 
       Swal.fire({
           title: 'เพิ่มสมาชิก (ออฟไลน์)',
@@ -2012,10 +2026,15 @@
               <input type="tel" id="adminRegNatId" class="form-control mb-3 shadow-sm" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 13);" required>
               <label class="small text-muted fw-bold mb-1">เบอร์โทรศัพท์ (ถ้ามี)</label>
               <input type="tel" id="adminRegPhone" class="form-control mb-3 shadow-sm" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+              
               <label class="small text-muted fw-bold mb-1">ศูนย์ประสานงาน</label>
               <select id="adminRegCenter" class="form-select mb-3 shadow-sm">${centerOptions}</select>
               <label class="small text-muted fw-bold mb-1">หมู่บ้านที่พักอาศัยปัจจุบัน</label>
               <select id="adminRegVillage" class="form-select mb-3 shadow-sm">${villageOptions}</select>
+
+              <!-- 🌟 เพิ่ม Dropdown เลือกกรรมการผู้ดูแล -->
+              <label class="small text-muted fw-bold mb-1 text-primary">กรรมการผู้ดูแล (รับผิดชอบ)</label>
+              <select id="adminRegResponsible" class="form-select border-primary mb-3 shadow-sm">${adminOptionsHTML}</select>
             </div>
           `,
           showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#2563EB',
@@ -2026,6 +2045,7 @@
               const phone = document.getElementById('adminRegPhone').value;
               const center = document.getElementById('adminRegCenter').value;
               const village = document.getElementById('adminRegVillage').value;
+              const responsible = document.getElementById('adminRegResponsible').value; // 🌟 ดึงค่าผู้ดูแล
 
               if(!name || natId.length !== 13 || !center || !village) { Swal.showValidationMessage('กรุณากรอกชื่อ, เลข ปชช. (13 หลัก), ศูนย์ และหมู่บ้านให้ครบ'); return false; }
 
@@ -2036,6 +2056,7 @@
 
               const newMemberData = {
                   prefix: prefix, fullName: name, nationalId: natId, phone: phone, center: center, village: village,
+                  responsibleAdmin: responsible, // 🌟 บันทึกผู้ดูแล
                   memberId: "CWF" + Date.now().toString().slice(-5), status: "เป็นสมาชิก", 
                   memberType: mType, addressZoneType: mType === 'สมาชิกสามัญ' ? 'ในเขต' : 'นอกเขต', 
                   cwfPoints: 0, totalContribution: 0, totalWelfareReceived: 0,
@@ -2045,8 +2066,10 @@
 
               showLoader(true, "กำลังบันทึก...");
               try {
+                  // 🌟 ตรวจสอบเลข ปชช ซ้ำ (โค้ดป้องกันทำงานตรงนี้)
                   const existCheck = await db.collection("members").where("nationalId", "==", natId).get();
-                  if(!existCheck.empty) throw new Error("เลข ปชช นี้มีในระบบแล้ว!");
+                  if(!existCheck.empty) throw new Error("เลขบัตรประชาชนนี้ถูกลงทะเบียนในระบบแล้ว!");
+                  
                   await db.collection("members").doc(tempDocId).set(newMemberData);
                   return true;
               } catch(err) { showLoader(false); Swal.showValidationMessage(err.message); return false; }
