@@ -21,6 +21,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3QY1t2cY8gB_w_ZtSGqidVi65JBEVZIUs&libraries=visualization"></script>
+  <!-- ลบ Google Maps ที่ซ้ำซ้อนออก 1 บรรทัด เพื่อไม่ให้เบราว์เซอร์ Error -->
+
   <!-- ==========================================
        [2] ส่วนการตกแต่งหน้าตา (CSS)
   =========================================== -->
@@ -94,6 +98,16 @@
     /* อื่นๆ */
     .vulnerable-item { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; }
     .cursor-pointer { cursor: pointer; }
+
+    /* 🌟 สไตล์พิเศษสำหรับระบบ Gamification */
+    .streak-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); border: 2px solid rgba(255,255,255,0.2); transition: 0.3s; }
+    .streak-circle.active { background: #10B981; color: white; border-color: #34D399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
+    .streak-circle.gift { background: transparent; border-color: #F59E0B; color: #F59E0B; }
+    .streak-circle.gift.active { background: #F59E0B; color: white; border-color: #FBBF24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+    
+    .transparency-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid var(--card-border); }
+    @keyframes blinkWarning { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    .blink-anim { animation: blinkWarning 1.5s infinite; }
   </style>
 </head>
 <body>
@@ -219,6 +233,14 @@
     
     <div id="dashTierBadge" class="badge-tier" style="display: none;"></div>
 
+    <!-- 🌟 เพิ่มปุ่มสแกนจ่ายเงิน สำหรับสมาชิก ตรงนี้! 🌟 -->
+    <div class="mt-4 mb-3 px-3">
+        <button onclick="scanToPayAdmin()" class="btn btn-success w-100 rounded-4 py-3 fw-bold shadow" style="font-size: 1.1rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border: none;">
+            <i class="fa-solid fa-qrcode me-2 fs-5"></i> สแกนเพื่อจ่ายเงินสมทบ
+        </button>
+        <p class="text-center text-muted small mt-2"><i class="fa-solid fa-camera me-1"></i> ให้สแกน QR Code จากเครื่องของกรรมการเพื่อชำระเงิน</p>
+    </div>
+
     <hr class="my-4" style="border-color: #E5E7EB;">
     
     <div class="d-flex flex-column gap-2 mb-4">
@@ -263,25 +285,45 @@
       </div>
     </div>
 
-    <!-- 🎮 ศูนย์ภารกิจ -->
-    <div class="mission-hub text-start">
-      <div class="d-flex align-items-center mb-3">
-        <i class="fa-solid fa-gamepad hub-icon fs-5 me-2"></i>
-        <h6 class="fw-bold hub-title mb-0 m-0">ศูนย์ภารกิจรับคะแนน</h6>
+    <!-- 🎮 ศูนย์ภารกิจ & เช็คอิน (Gamification Hub) -->
+    <div class="mission-hub text-start mt-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center">
+          <i class="fa-solid fa-fire text-warning fs-4 me-2" style="text-shadow: 0 0 10px rgba(245,158,11,0.5);"></i>
+          <h6 class="fw-bold hub-title mb-0 m-0">เช็คอินต่อเนื่อง 7 วัน</h6>
+        </div>
+        <small class="text-white-50" style="font-size: 0.7rem;">(รีเซ็ตทุกสัปดาห์)</small>
       </div>
-      <div class="row g-2">
-        <div class="col-6 text-center">
-          <div class="mission-btn w-100" onclick="dailyCheckIn()" role="button">
-            <i class="fa-solid fa-calendar-check d-block fs-3 mb-2 text-success"></i>
-            <span class="small fw-bold text-dark">เช็คอินรายวัน</span>
-          </div>
-        </div>
-        <div class="col-6 text-center">
-          <div class="mission-btn w-100" onclick="openShareModal('news')" role="button">
-            <i class="fa-solid fa-share-from-square d-block fs-3 mb-2 text-info"></i>
-            <span class="small fw-bold text-dark">แชร์ข่าวสาร</span>
-          </div>
-        </div>
+      
+      <!-- แถบวงกลม 7 วัน -->
+      <div class="d-flex justify-content-between align-items-center mb-4 px-1" id="streakContainer">
+          <div class="streak-circle" id="streak-1">1</div>
+          <div class="streak-circle" id="streak-2">2</div>
+          <div class="streak-circle" id="streak-3">3</div>
+          <div class="streak-circle" id="streak-4">4</div>
+          <div class="streak-circle" id="streak-5">5</div>
+          <div class="streak-circle" id="streak-6">6</div>
+          <div class="streak-circle gift" id="streak-7"><i class="fa-solid fa-gift"></i></div>
+      </div>
+      
+      <button id="btnCheckIn" class="btn btn-success w-100 rounded-pill py-2 fw-bold shadow-sm" onclick="processDailyCheckIn()" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border: none;">
+        <i class="fa-solid fa-calendar-check me-1"></i> กดเช็คอินรับแต้มวันนี้
+      </button>
+    </div>
+
+    <!-- 👁️ กระดานตรวจสอบความโปร่งใสชุมชน (Transparency Board) -->
+    <div class="text-start mt-4">
+      <div class="d-flex align-items-center mb-3 px-1">
+        <i class="fa-solid fa-magnifying-glass-chart text-primary fs-4 me-2"></i>
+        <h6 class="fw-bold text-dark mb-0 m-0">กระดานความโปร่งใสชุมชน</h6>
+      </div>
+      <div class="alert alert-info border-0 rounded-4 small p-3 mb-3 bg-primary bg-opacity-10 text-primary">
+        <i class="fa-solid fa-circle-info me-1"></i> ร่วมตรวจสอบรับทราบการเบิกจ่ายสวัสดิการ เพื่อชิงแต้มโควต้าพิเศษรายวัน!
+      </div>
+      
+      <div id="transparencyFeed">
+         <!-- ระบบจะดึงข้อมูลธุรกรรมล่าสุดมาแสดงผลที่นี่ -->
+         <div class="text-center text-muted small p-3"><div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดกระดานชุมชน...</div>
       </div>
     </div>
     
@@ -560,7 +602,17 @@
 
       if (docSnap.exists) {
         cachedUserData = docSnap.data();
-        renderDashboardData(cachedUserData, pictureUrl);
+        
+        // 🌟 แก้ไข: จัดการกรณีไม่ได้ส่ง pictureUrl เข้ามา ให้ใช้รูปเดิมในฐานข้อมูล
+        let finalPicUrl = pictureUrl || cachedUserData.pictureUrl || "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg";
+        
+        // ถ้ารูปใน LINE เปลี่ยนไปจากเดิม ให้แอบอัปเดตลงฐานข้อมูล
+        if (pictureUrl && cachedUserData.pictureUrl !== pictureUrl) {
+            await docRef.update({ pictureUrl: pictureUrl });
+            cachedUserData.pictureUrl = pictureUrl;
+        }
+
+        renderDashboardData(cachedUserData, finalPicUrl);
       } else { 
         document.getElementById('accountLinkView').style.display = 'block'; 
       }
@@ -699,32 +751,6 @@
       }
   }
 
-  // 🌟 (แถม) ฟังก์ชันโหลดหน้าเว็บปกติ ถ้าไลน์เปลี่ยนรูป ให้ระบบอัปเดตอัตโนมัติ
-  async function checkMemberOnCloud(uid, pictureUrl) {
-    try {
-      const docRef = db.collection("members").doc(uid);
-      const docSnap = await docRef.get();
-      document.getElementById('systemLoading').style.display = 'none';
-
-      if (docSnap.exists) {
-        cachedUserData = docSnap.data();
-        
-        // ถ้ารูปใน LINE เปลี่ยนไปจากเดิม ให้แอบอัปเดตลงฐานข้อมูล
-        if (pictureUrl && cachedUserData.pictureUrl !== pictureUrl) {
-            await docRef.update({ pictureUrl: pictureUrl });
-            cachedUserData.pictureUrl = pictureUrl;
-        }
-
-        renderDashboardData(cachedUserData, pictureUrl);
-      } else { 
-        document.getElementById('accountLinkView').style.display = 'block'; 
-      }
-    } catch (error) { 
-       console.error("Firebase Check Error:", error);
-       document.getElementById('systemLoading').innerHTML = `<div class="text-danger text-center px-4"><h6>Database Error</h6><p class="small">ไม่สามารถเชื่อมต่อฐานข้อมูลได้</p></div>`;
-    }
-  }
-
   // -----------------------------------------------------------
   // หมวดที่ 4: ระบบแดชบอร์ดและการซ่อนข้อมูล (Dashboard & UI Render)
   // -----------------------------------------------------------
@@ -773,6 +799,9 @@
     }
     
     document.getElementById('accountLinkView').style.display = 'none';
+    // เติม 2 บรรทัดนี้ใน renderDashboardData 
+    renderStreakUI(data.checkInStreak || 0, data.lastCheckInDate || "");
+    loadTransparencyBoard();
     document.getElementById('dashboardView').style.display = 'block';
   }
 
@@ -1018,29 +1047,216 @@
   }
 
   // -----------------------------------------------------------
-  // หมวดที่ 6: ระบบภารกิจและการแชร์รับแต้ม (Gamification & Share)
+  // หมวดที่ 6: ระบบภารกิจและการแชร์รับแต้ม (Gamification & Transparency)
   // -----------------------------------------------------------
-  async function dailyCheckIn() {
-    Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-    try {
-      const uid = document.getElementById('uid').value;
-      const docRef = db.collection("members").doc(uid);
-      const docSnap = await docRef.get();
 
-      if (docSnap.exists) {
-          const lastCheckIn = docSnap.data().lastCheckInDate;
-          const d = new Date(); const today = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-          if (lastCheckIn === today) {
-              Swal.fire({ icon: 'info', title: 'เช็คอินแล้ว', text: 'วันนี้รับแต้มไปแล้ว มาเช็คอินใหม่พรุ่งนี้นะครับ' });
-          } else {
-              await docRef.update({ cwfPoints: firebase.firestore.FieldValue.increment(10), lastCheckInDate: today });
-              const newPoints = (await docRef.get()).data().cwfPoints;
-              document.getElementById('dashCwfPoints').innerText = newPoints;
-              updateTierOnScreen(newPoints);
-              Swal.fire({ icon: 'success', title: 'เยี่ยมมาก!', text: 'ได้รับ 10 คะแนนจากการเช็คอินวันนี้' });
+  // 🌟 ฟังก์ชันโหลดกระดานโปร่งใส และคำนวณขั้นบันได (Dynamic Points)
+  async function loadTransparencyBoard() {
+      const feed = document.getElementById('transparencyFeed');
+      try {
+          // ดึงธุรกรรม 5 รายการล่าสุดที่อนุมัติแล้วมาโชว์บนกระดาน
+          const snap = await db.collection("transactions").where("status", "==", "อนุมัติแล้ว").orderBy("timestamp", "desc").limit(5).get();
+          let html = "";
+          
+          snap.forEach(doc => {
+              const d = doc.data();
+              const currentUserUid = document.getElementById('uid').value;
+              
+              // ตรวจสอบว่ามีคนกดกี่คนแล้ว
+              let verifiedByArray = d.verifiedBy || [];
+              let verifiedCount = verifiedByArray.length;
+              
+              // 🌟 กลไกแจกแต้มขั้นบันได (FOMO Effect)
+              let pointsToGive = 1;
+              let badgeHtml = "";
+              let btnColor = "btn-outline-secondary";
+              let btnText = "รับทราบและร่วมยินดี";
+              
+              if(verifiedCount < 10) { 
+                  pointsToGive = 5; 
+                  badgeHtml = `<span class="badge bg-danger rounded-pill blink-anim shadow-sm" style="font-size:0.65rem;">🔥 โควต้า 5 แต้ม (เหลือ ${10 - verifiedCount})</span>`; 
+                  btnColor = "btn-success"; 
+              } else if(verifiedCount < 30) { 
+                  pointsToGive = 3; 
+                  badgeHtml = `<span class="badge bg-warning text-dark rounded-pill shadow-sm" style="font-size:0.65rem;">⚡ โควต้า 3 แต้ม (เหลือ ${30 - verifiedCount})</span>`; 
+                  btnColor = "btn-warning text-dark"; 
+              } else { 
+                  badgeHtml = `<span class="badge bg-light text-muted border rounded-pill" style="font-size:0.65rem;">✅ โควต้าแต้มพิเศษหมดแล้ว</span>`; 
+                  btnColor = "btn-outline-primary";
+              }
+
+              let alreadyVerified = verifiedByArray.includes(currentUserUid);
+              
+              // ปุ่มกดรับแต้ม
+              let btnHtml = alreadyVerified 
+                  ? `<button class="btn btn-sm btn-light text-success w-100 rounded-pill fw-bold" disabled><i class="fa-solid fa-circle-check"></i> คุณตรวจสอบรายการนี้แล้ว</button>`
+                  : `<button class="btn btn-sm ${btnColor} w-100 rounded-pill fw-bold" onclick="verifyTransaction('${doc.id}', ${pointsToGive})"><i class="fa-solid fa-eye"></i> ${btnText} (+${pointsToGive} แต้ม)</button>`;
+
+              let amtStr = parseFloat(d.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
+              let dateStr = d.transactionDate || "ไม่ระบุวันที่";
+
+              html += `
+              <div class="transparency-card">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                          <h6 class="fw-bold text-dark mb-0" style="font-size:0.85rem;"><i class="fa-solid fa-file-invoice text-primary me-1"></i> ${d.type}</h6>
+                          <small class="text-muted" style="font-size:0.75rem;">${d.note || d.fullName}</small>
+                      </div>
+                      <h6 class="fw-bold text-success mb-0 bg-success bg-opacity-10 px-2 py-1 rounded-3">฿${amtStr}</h6>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3 mt-3 border-top pt-2">
+                      <small class="text-muted" style="font-size:0.7rem;"><i class="fa-regular fa-calendar"></i> ${dateStr}</small>
+                      ${badgeHtml}
+                  </div>
+                  ${btnHtml}
+              </div>`;
+          });
+          
+          feed.innerHTML = html || '<div class="text-center text-muted small p-3 bg-white rounded-4">ยังไม่มีรายการสวัสดิการใหม่</div>';
+      } catch(e) {
+          console.error(e); feed.innerHTML = '<div class="text-center text-danger small p-3">โหลดข้อมูลกระดานล้มเหลว</div>';
+      }
+  }
+
+  // 🌟 ฟังก์ชันเมื่อสมาชิกกดปุ่ม "รับทราบ" ในกระดาน
+  async function verifyTransaction(txId, pointsToGive) {
+      if (typeof showLoader === "function") showLoader(true, "กำลังประมวลผล...");
+      else Swal.fire({ title: 'กำลังประมวลผล...', didOpen: () => Swal.showLoading() });
+      
+      try {
+          const uid = document.getElementById('uid').value;
+          const txRef = db.collection("transactions").doc(txId);
+          const memberRef = db.collection("members").doc(uid);
+          
+          const batch = db.batch();
+          // เพิ่ม UID คนสแกนเข้าไปใน Array verifiedBy ของรายการนั้น
+          batch.update(txRef, { verifiedBy: firebase.firestore.FieldValue.arrayUnion(uid) });
+          // เพิ่มแต้มให้สมาชิก
+          batch.update(memberRef, { cwfPoints: firebase.firestore.FieldValue.increment(pointsToGive) });
+          
+          await batch.commit();
+          
+          if (typeof showLoader === "function") showLoader(false); else Swal.close();
+          
+          Swal.fire({
+              icon: 'success',
+              title: `ยอดเยี่ยม! รับ ${pointsToGive} แต้ม`,
+              text: 'ขอบคุณที่ร่วมตรวจสอบความโปร่งใสให้กองทุนของเราครับ',
+              confirmButtonColor: '#10B981'
+          });
+          
+          // โหลดกระดานใหม่เพื่ออัปเดตปุ่มและอัปเดตแต้ม
+          loadTransparencyBoard();
+          checkMemberOnCloud(uid); // อัปเดตยอดแต้มมุมบนจอ
+          
+      } catch(e) {
+          if (typeof showLoader === "function") showLoader(false); else Swal.close();
+          Swal.fire('Error', 'เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+      }
+  }
+
+  // 🌟 ฟังก์ชันเช็คอินรายวัน (แบบ 7 วัน Streak)
+  async function processDailyCheckIn() {
+      Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+      try {
+          const uid = document.getElementById('uid').value;
+          const docRef = db.collection("members").doc(uid);
+          const docSnap = await docRef.get();
+
+          if (docSnap.exists) {
+              const d = docSnap.data();
+              const lastCheckIn = d.lastCheckInDate;
+              let currentStreak = d.checkInStreak || 0;
+              
+              const now = new Date();
+              const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+              
+              // เช็คว่าเช็คอินวันนี้ไปหรือยัง
+              if (lastCheckIn === todayStr) {
+                  return Swal.fire({ icon: 'info', title: 'คุณเช็คอินไปแล้ว', text: 'ไว้มาเช็คอินใหม่พรุ่งนี้นะครับ!', confirmButtonColor: '#2563EB' });
+              }
+
+              // ตรวจสอบว่าเช็คอินต่อเนื่องไหม (ถ้าขาดเช็คอินไป 1 วัน ให้รีเซ็ตกลับเป็น 1)
+              let isContinuous = false;
+              if (lastCheckIn) {
+                  const parts = lastCheckIn.split('/');
+                  const lastDate = new Date(parts[2], parts[1]-1, parts[0]);
+                  const diffTime = Math.abs(now - lastDate);
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                  if (diffDays === 1) isContinuous = true; // เช็คอินติดกัน
+              }
+
+              if (isContinuous) {
+                  currentStreak += 1;
+              } else {
+                  currentStreak = 1; // เริ่มนับ 1 ใหม่
+              }
+
+              // ถ้าครบ 7 วัน แจกโบนัสและรีเซ็ต!
+              let pointsToGive = 2; // แต้มพื้นฐานต่อวัน
+              let alertMsg = 'ได้รับ 2 คะแนนจากการเช็คอินวันนี้';
+              let alertIcon = 'success';
+              let alertTitle = 'ยอดเยี่ยม!';
+
+              if (currentStreak >= 7) {
+                  pointsToGive = 15; // แต้มโบนัสวันที่ 7
+                  currentStreak = 0; // รีเซ็ตวงกลมรอบใหม่
+                  alertMsg = 'คุณเช็คอินครบ 7 วันต่อเนื่อง! เปิดกล่องของขวัญรับ 15 คะแนนไปเลย!';
+                  alertIcon = 'success';
+                  alertTitle = '🎉 แจ็คพอตแตก!';
+              }
+
+              // บันทึกลงฐานข้อมูล
+              await docRef.update({ 
+                  cwfPoints: firebase.firestore.FieldValue.increment(pointsToGive), 
+                  lastCheckInDate: todayStr,
+                  checkInStreak: currentStreak
+              });
+
+              // อัปเดตหน้าจอทันที
+              renderStreakUI(currentStreak, todayStr);
+              checkMemberOnCloud(uid); // โหลดแต้มบนแดชบอร์ดใหม่
+              
+              Swal.fire({ icon: alertIcon, title: alertTitle, text: alertMsg, confirmButtonColor: '#10B981' });
+          }
+      } catch (error) { 
+          Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); 
+      }
+  }
+
+  // 🌟 ฟังก์ชันวาดสีวงกลม Streak (เรียกใช้ตอนโหลดหน้าแดชบอร์ด)
+  function renderStreakUI(streakCount, lastCheckInStr) {
+      const now = new Date();
+      const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+      const isCheckedInToday = (lastCheckInStr === todayStr);
+
+      for (let i = 1; i <= 7; i++) {
+          const circle = document.getElementById(`streak-${i}`);
+          if (!circle) continue;
+          
+          // ล้างคลาสเก่าก่อน
+          circle.classList.remove('active');
+          if (i === 7) circle.innerHTML = '<i class="fa-solid fa-gift"></i>';
+          else circle.innerHTML = i;
+
+          // ระบายสีวงกลมตามสถิติ
+          if (i <= streakCount) {
+              circle.classList.add('active');
+              if (i !== 7) circle.innerHTML = '<i class="fa-solid fa-check"></i>';
           }
       }
-    } catch (error) { Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); }
+
+      // เปลี่ยนปุ่มถ้าวันนี้เช็คอินไปแล้ว
+      const btn = document.getElementById('btnCheckIn');
+      if (isCheckedInToday) {
+          btn.classList.replace('btn-success', 'btn-secondary');
+          btn.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> เช็คอินแล้ว (รอกดใหม่พรุ่งนี้)';
+          btn.disabled = true;
+      } else {
+          btn.classList.replace('btn-secondary', 'btn-success');
+          btn.innerHTML = '<i class="fa-solid fa-calendar-check me-1"></i> กดเช็คอินรับแต้มวันนี้';
+          btn.disabled = false;
+      }
   }
 
   function openShareModal(mode) {
@@ -1076,6 +1292,156 @@
               updateTierOnScreen(updatedData.cwfPoints);
               Swal.fire('แชร์สำเร็จ', 'ได้รับ 10 แต้มจากการแชร์ข่าวสาร', 'success');
           }
+      }
+  }
+
+  // =========================================================
+  // 🌟 ฟังก์ชันสำหรับสมาชิก: สแกน QR Code เพื่อยืนยันจ่ายเงินให้แอดมิน
+  // =========================================================
+  async function scanToPayAdmin() {
+      if (!liff.isLoggedIn()) {
+          return Swal.fire('แจ้งเตือน', 'กรุณาเปิดแอปผ่าน LINE เพื่อใช้งานกล้องครับ', 'warning');
+      }
+
+      try {
+          if (!liff.scanCodeV2) {
+              return Swal.fire('ไม่รองรับ', 'แอป LINE ของคุณเวอร์ชันเก่า หรืออุปกรณ์ไม่รองรับการสแกนผ่าน LIFF', 'error');
+          }
+
+          // 1. เปิดกล้องสแกน
+          const result = await liff.scanCodeV2();
+          if (result.value) {
+              
+              // ตรวจสอบว่าโหลด Firebase หรือยัง
+              if (typeof showLoader === "function") showLoader(true, "กำลังดึงข้อมูลบิล...");
+              else Swal.fire({ title: 'กำลังดึงข้อมูลบิล...', didOpen: () => Swal.showLoading() });
+
+              let qrData;
+              try {
+                  qrData = JSON.parse(result.value);
+              } catch (e) {
+                  if (typeof showLoader === "function") showLoader(false); else Swal.close();
+                  return Swal.fire('ข้อมูลไม่ถูกต้อง', 'QR Code นี้ไม่ใช่บิลเรียกเก็บเงินของระบบ SmartWelf', 'error');
+              }
+
+              // 2. ตรวจสอบ Action ว่าเป็น QR จ่ายเงินใช่หรือไม่
+              if ((qrData.action === "member_pay" || qrData.action === "member_pay_bulk") && qrData.ref) {
+                  
+                  // ดึงข้อมูลบิลจากฐานข้อมูล
+                  const payRef = db.collection("pending_payments").doc(qrData.ref);
+                  const paySnap = await payRef.get();
+                  
+                  if (typeof showLoader === "function") showLoader(false); else Swal.close();
+
+                  // เช็คว่าบิลยังรอจ่ายอยู่ไหม
+                  if (!paySnap.exists || paySnap.data().status !== "waiting_member_scan") {
+                      return Swal.fire('หมดอายุ', 'รายการนี้ถูกยืนยันไปแล้ว หรือถูกยกเลิกโดยแอดมิน', 'error');
+                  }
+
+                  const payData = paySnap.data();
+
+                  // 3. ตรวจสอบว่าเป็นบิลของตัวเองหรือไม่ (ดึง UID ของคนสแกนจาก LINE)
+                  const profile = await liff.getProfile();
+                  const memberQuery = await db.collection("members").where("lineUid", "==", profile.userId).get();
+                  let currentMemberDocId = "";
+                  if (!memberQuery.empty) currentMemberDocId = memberQuery.docs[0].id;
+
+                  if (qrData.action === "member_pay" && payData.uid !== currentMemberDocId) {
+                      return Swal.fire('ผิดพลาด', 'QR Code นี้เป็นบิลของสมาชิกท่านอื่น คุณไม่สามารถกดยืนยันแทนได้ครับ', 'error');
+                  }
+
+                  // 4. แสดง Pop-up ให้สมาชิกกดยืนยันยอดเงิน
+                  Swal.fire({
+                      title: 'ยืนยันการจ่ายเงิน',
+                      html: `
+                          <div class="text-start" style="font-family:'Prompt';">
+                              <p class="mb-1 text-muted small">ผู้รับเงิน (แอดมิน):</p>
+                              <h6 class="fw-bold text-dark"><i class="fa-solid fa-user-shield text-info me-1"></i> ${payData.adminName}</h6>
+                              <hr>
+                              <p class="mb-1 text-muted small">ยอดเงินที่ต้องชำระ:</p>
+                              <h1 class="fw-bold text-success text-center mb-1">฿${payData.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</h1>
+                              ${qrData.action === "member_pay_bulk" ? `<p class="text-center text-primary small">ชำระแบบกลุ่ม จำนวน ${payData.bulkMembers.length} คน</p>` : ''}
+                              <p class="small text-danger text-center mt-3"><i class="fa-solid fa-triangle-exclamation"></i> เมื่อกดยืนยัน ถือว่าท่านได้มอบเงินสดให้แอดมินเรียบร้อยแล้ว</p>
+                          </div>
+                      `,
+                      showCancelButton: true,
+                      confirmButtonText: 'ยืนยันจ่ายเงิน',
+                      cancelButtonText: 'ยกเลิก',
+                      confirmButtonColor: '#10B981'
+                  }).then(async (res) => {
+                      if (res.isConfirmed) {
+                          if (typeof showLoader === "function") showLoader(true, "กำลังบันทึกรายการ...");
+                          else Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+
+                          try {
+                              const batch = db.batch();
+
+                              // ก. สร้างประวัติธุรกรรม (Transaction) มอบเงินให้แอดมิน
+                              const newTxRef = db.collection("transactions").doc();
+                              let txPayload = {
+                                  txId: payData.txId,
+                                  type: 'สมทบเงินกองทุน',
+                                  amount: payData.amount,
+                                  paymentMethod: 'เงินสด',
+                                  transactionDate: payData.date,
+                                  fullName: 'แอดมิน: ' + payData.adminName,
+                                  status: 'รอส่งมอบ', // เงินอยู่ในมือแอดมินที่สร้าง QR
+                                  currentHolder: payData.adminEmail,
+                                  note: payData.note,
+                                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                              };
+
+                              if (qrData.action === "member_pay_bulk") {
+                                  txPayload.uid = "BULK";
+                                  txPayload.bulkMembers = payData.bulkMembers;
+                              } else {
+                                  txPayload.uid = payData.uid;
+                              }
+                              
+                              batch.set(newTxRef, txPayload);
+
+                              // ข. เปลี่ยนสถานะบิลรอจ่ายเป็น "เสร็จสิ้น"
+                              batch.update(payRef, { 
+                                  status: "completed", 
+                                  scannedByUid: currentMemberDocId,
+                                  completedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                              });
+
+                              // ส่งคำสั่งขึ้น Database
+                              await batch.commit();
+                              
+                              if (typeof showLoader === "function") showLoader(false);
+
+                              // ค. แจ้งเตือนความสำเร็จ
+                              Swal.fire({
+                                  icon: 'success',
+                                  title: 'ชำระเงินสำเร็จ!',
+                                  text: 'ระบบได้บันทึกการส่งมอบเงินให้แอดมินเรียบร้อยแล้ว',
+                                  confirmButtonColor: '#10B981'
+                              }).then(() => {
+                                  // โหลดหน้าจอสมาชิกใหม่เพื่อรีเฟรชข้อมูล (ถ้ามีฟังก์ชัน)
+                                  if (typeof checkMemberOnCloud === "function") {
+                                      checkMemberOnCloud(currentMemberDocId);
+                                  } else {
+                                      window.location.reload();
+                                  }
+                              });
+
+                          } catch(err) {
+                              if (typeof showLoader === "function") showLoader(false);
+                              console.error("Payment Confirmation Error:", err);
+                              Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+                          }
+                      }
+                  });
+
+              } else {
+                  if (typeof showLoader === "function") showLoader(false); else Swal.close();
+                  Swal.fire('Error', 'QR Code ไม่ตรงกับรูปแบบการจ่ายเงิน', 'error');
+              }
+          }
+      } catch (err) {
+          console.warn("Scan cancelled or failed", err);
       }
   }
 </script>
