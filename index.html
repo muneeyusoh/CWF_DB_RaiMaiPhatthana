@@ -1046,51 +1046,57 @@
       }
   }
 
-  // -----------------------------------------------------------
+  // =========================================================
   // หมวดที่ 6: ระบบภารกิจและการแชร์รับแต้ม (Gamification & Transparency)
-  // -----------------------------------------------------------
+  // =========================================================
 
-  // 🌟 ฟังก์ชันโหลดกระดานโปร่งใส และคำนวณขั้นบันได (Dynamic Points)
+  // 🌟 1. ฟังก์ชันโหลดกระดานโปร่งใส (ดึงค่าจาก Tokenomics ใน Admin)
   async function loadTransparencyBoard() {
       const feed = document.getElementById('transparencyFeed');
       try {
-          // ดึงธุรกรรม 5 รายการล่าสุดที่อนุมัติแล้วมาโชว์บนกระดาน
-          const snap = await db.collection("transactions").where("status", "==", "อนุมัติแล้ว").orderBy("timestamp", "desc").limit(5).get();
+          // ดึง 20 รายการล่าสุด แล้วกรองด้วย JS เพื่อเลี่ยง Error ของ Firebase
+          const snap = await db.collection("transactions").orderBy("timestamp", "desc").limit(20).get();
           let html = "";
+          let validCount = 0;
+          
+          // โหลดค่า Tokenomics จากตัวแปร fundSettings (ที่แอดมินตั้งไว้)
+          let t1 = fundSettings.fomoTier1 || 5;
+          let t2 = fundSettings.fomoTier2 || 3;
+          let t3 = fundSettings.fomoTier3 || 1;
           
           snap.forEach(doc => {
               const d = doc.data();
-              const currentUserUid = document.getElementById('uid').value;
-              
-              // ตรวจสอบว่ามีคนกดกี่คนแล้ว
+              if (d.status !== "อนุมัติแล้ว" || validCount >= 5) return;
+              validCount++;
+
+              const currentUserUid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
               let verifiedByArray = d.verifiedBy || [];
               let verifiedCount = verifiedByArray.length;
               
-              // 🌟 กลไกแจกแต้มขั้นบันได (FOMO Effect)
-              let pointsToGive = 1;
+              let pointsToGive = t3;
               let badgeHtml = "";
               let btnColor = "btn-outline-secondary";
               let btnText = "รับทราบและร่วมยินดี";
               
+              // กำหนดแต้มแบบขั้นบันได
               if(verifiedCount < 10) { 
-                  pointsToGive = 5; 
-                  badgeHtml = `<span class="badge bg-danger rounded-pill blink-anim shadow-sm" style="font-size:0.65rem;">🔥 โควต้า 5 แต้ม (เหลือ ${10 - verifiedCount})</span>`; 
+                  pointsToGive = t1; 
+                  badgeHtml = `<span class="badge bg-danger rounded-pill blink-anim shadow-sm" style="font-size:0.65rem;">🔥 โควต้า ${t1} แต้ม (เหลือ ${10 - verifiedCount})</span>`; 
                   btnColor = "btn-success"; 
               } else if(verifiedCount < 30) { 
-                  pointsToGive = 3; 
-                  badgeHtml = `<span class="badge bg-warning text-dark rounded-pill shadow-sm" style="font-size:0.65rem;">⚡ โควต้า 3 แต้ม (เหลือ ${30 - verifiedCount})</span>`; 
+                  pointsToGive = t2; 
+                  badgeHtml = `<span class="badge bg-warning text-dark rounded-pill shadow-sm" style="font-size:0.65rem;">⚡ โควต้า ${t2} แต้ม (เหลือ ${30 - verifiedCount})</span>`; 
                   btnColor = "btn-warning text-dark"; 
               } else { 
-                  badgeHtml = `<span class="badge bg-light text-muted border rounded-pill" style="font-size:0.65rem;">✅ โควต้าแต้มพิเศษหมดแล้ว</span>`; 
+                  badgeHtml = `<span class="badge bg-light text-muted border rounded-pill" style="font-size:0.65rem;">✅ โควต้าพิเศษหมด (ได้ ${t3} แต้ม)</span>`; 
                   btnColor = "btn-outline-primary";
               }
 
               let alreadyVerified = verifiedByArray.includes(currentUserUid);
               
-              // ปุ่มกดรับแต้ม
               let btnHtml = alreadyVerified 
                   ? `<button class="btn btn-sm btn-light text-success w-100 rounded-pill fw-bold" disabled><i class="fa-solid fa-circle-check"></i> คุณตรวจสอบรายการนี้แล้ว</button>`
-                  : `<button class="btn btn-sm ${btnColor} w-100 rounded-pill fw-bold" onclick="verifyTransaction('${doc.id}', ${pointsToGive})"><i class="fa-solid fa-eye"></i> ${btnText} (+${pointsToGive} แต้ม)</button>`;
+                  : `<button class="btn btn-sm ${btnColor} w-100 rounded-pill fw-bold" onclick="verifyTransaction('${doc.id}', ${pointsToGive})"><i class="fa-solid fa-eye"></i> ${btnText} (+${pointsToGive})</button>`;
 
               let amtStr = parseFloat(d.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
               let dateStr = d.transactionDate || "ไม่ระบุวันที่";
@@ -1114,25 +1120,41 @@
           
           feed.innerHTML = html || '<div class="text-center text-muted small p-3 bg-white rounded-4">ยังไม่มีรายการสวัสดิการใหม่</div>';
       } catch(e) {
-          console.error(e); feed.innerHTML = '<div class="text-center text-danger small p-3">โหลดข้อมูลกระดานล้มเหลว</div>';
+          console.error("Board Error:", e); feed.innerHTML = '<div class="text-center text-danger small p-3">โหลดข้อมูลกระดานล้มเหลว</div>';
       }
   }
 
-  // 🌟 ฟังก์ชันเมื่อสมาชิกกดปุ่ม "รับทราบ" ในกระดาน
+  // 🌟 2. ฟังก์ชันกดรับทราบ (เช็คและหักแต้มจาก Global Pool ของส่วนกลาง)
   async function verifyTransaction(txId, pointsToGive) {
       if (typeof showLoader === "function") showLoader(true, "กำลังประมวลผล...");
       else Swal.fire({ title: 'กำลังประมวลผล...', didOpen: () => Swal.showLoading() });
       
       try {
-          const uid = document.getElementById('uid').value;
+          const uid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
+          if (!uid) throw new Error("ไม่พบข้อมูลผู้ใช้งาน");
+
+          const masterRef = db.collection("settings").doc("master");
           const txRef = db.collection("transactions").doc(txId);
           const memberRef = db.collection("members").doc(uid);
           
+          // ดึงยอดแต้มส่วนกลางล่าสุด
+          const masterSnap = await masterRef.get();
+          let currentPool = masterSnap.data().globalPointPool || 0;
+          
+          if (currentPool <= 0) {
+              if (typeof showLoader === "function") showLoader(false); else Swal.close();
+              return Swal.fire('โควต้าหมด', 'งบประมาณแต้มรวมประจำปีหมดแล้ว ขอขอบคุณที่ร่วมตรวจสอบครับ', 'info');
+          }
+          
+          // ถ้ายอดส่วนกลางเหลือน้อยกว่าแต้มที่จะแจก ให้แจกเท่าที่เหลือ
+          let actualGive = pointsToGive;
+          if (currentPool < pointsToGive) { actualGive = currentPool; }
+
           const batch = db.batch();
-          // เพิ่ม UID คนสแกนเข้าไปใน Array verifiedBy ของรายการนั้น
           batch.update(txRef, { verifiedBy: firebase.firestore.FieldValue.arrayUnion(uid) });
-          // เพิ่มแต้มให้สมาชิก
-          batch.update(memberRef, { cwfPoints: firebase.firestore.FieldValue.increment(pointsToGive) });
+          batch.update(memberRef, { cwfPoints: firebase.firestore.FieldValue.increment(actualGive) });
+          // หักแต้มออกจากกองกลาง
+          batch.update(masterRef, { globalPointPool: firebase.firestore.FieldValue.increment(-actualGive) });
           
           await batch.commit();
           
@@ -1140,29 +1162,39 @@
           
           Swal.fire({
               icon: 'success',
-              title: `ยอดเยี่ยม! รับ ${pointsToGive} แต้ม`,
-              text: 'ขอบคุณที่ร่วมตรวจสอบความโปร่งใสให้กองทุนของเราครับ',
+              title: `รับ ${actualGive} แต้ม`,
+              text: 'ขอบคุณที่ร่วมตรวจสอบความโปร่งใสให้ชุมชนครับ',
               confirmButtonColor: '#10B981'
           });
           
-          // โหลดกระดานใหม่เพื่ออัปเดตปุ่มและอัปเดตแต้ม
+          // อัปเดตตัวแปรและหน้าจอ
+          fundSettings.globalPointPool -= actualGive;
           loadTransparencyBoard();
-          checkMemberOnCloud(uid); // อัปเดตยอดแต้มมุมบนจอ
+          checkMemberOnCloud(uid, cachedUserData ? cachedUserData.pictureUrl : ""); 
           
       } catch(e) {
+          console.error(e);
           if (typeof showLoader === "function") showLoader(false); else Swal.close();
           Swal.fire('Error', 'เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
       }
   }
 
-  // 🌟 ฟังก์ชันเช็คอินรายวัน (แบบ 7 วัน Streak)
+  // 🌟 3. ฟังก์ชันเช็คอินรายวัน (เช็คและหักแต้มจาก Global Pool ของส่วนกลาง)
   async function processDailyCheckIn() {
       Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
       try {
-          const uid = document.getElementById('uid').value;
-          const docRef = db.collection("members").doc(uid);
-          const docSnap = await docRef.get();
+          const uid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
+          if (!uid) return Swal.fire('Error', 'ไม่พบข้อมูลผู้ใช้งาน', 'error');
 
+          const masterRef = db.collection("settings").doc("master");
+          const docRef = db.collection("members").doc(uid);
+          
+          // ดึงยอดแต้มส่วนกลางล่าสุด
+          const masterSnap = await masterRef.get();
+          let currentPool = masterSnap.data().globalPointPool || 0;
+          if (currentPool <= 0) return Swal.fire('โควต้าหมด', 'งบประมาณแต้มรวมประจำปีหมดแล้ว ไม่สามารถรับแต้มเช็คอินได้', 'info');
+
+          const docSnap = await docRef.get();
           if (docSnap.exists) {
               const d = docSnap.data();
               const lastCheckIn = d.lastCheckInDate;
@@ -1171,60 +1203,58 @@
               const now = new Date();
               const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
               
-              // เช็คว่าเช็คอินวันนี้ไปหรือยัง
               if (lastCheckIn === todayStr) {
                   return Swal.fire({ icon: 'info', title: 'คุณเช็คอินไปแล้ว', text: 'ไว้มาเช็คอินใหม่พรุ่งนี้นะครับ!', confirmButtonColor: '#2563EB' });
               }
 
-              // ตรวจสอบว่าเช็คอินต่อเนื่องไหม (ถ้าขาดเช็คอินไป 1 วัน ให้รีเซ็ตกลับเป็น 1)
               let isContinuous = false;
               if (lastCheckIn) {
                   const parts = lastCheckIn.split('/');
                   const lastDate = new Date(parts[2], parts[1]-1, parts[0]);
                   const diffTime = Math.abs(now - lastDate);
                   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays === 1) isContinuous = true; // เช็คอินติดกัน
+                  if (diffDays === 1) isContinuous = true;
               }
 
-              if (isContinuous) {
-                  currentStreak += 1;
-              } else {
-                  currentStreak = 1; // เริ่มนับ 1 ใหม่
-              }
+              if (isContinuous) currentStreak += 1; else currentStreak = 1;
 
-              // ถ้าครบ 7 วัน แจกโบนัสและรีเซ็ต!
-              let pointsToGive = 2; // แต้มพื้นฐานต่อวัน
-              let alertMsg = 'ได้รับ 2 คะแนนจากการเช็คอินวันนี้';
+              let pointsToGive = 2; // แต้มรายวัน
+              let alertMsg = 'ได้รับแต้มจากการเช็คอินวันนี้';
               let alertIcon = 'success';
               let alertTitle = 'ยอดเยี่ยม!';
 
               if (currentStreak >= 7) {
                   pointsToGive = 15; // แต้มโบนัสวันที่ 7
-                  currentStreak = 0; // รีเซ็ตวงกลมรอบใหม่
-                  alertMsg = 'คุณเช็คอินครบ 7 วันต่อเนื่อง! เปิดกล่องของขวัญรับ 15 คะแนนไปเลย!';
-                  alertIcon = 'success';
+                  currentStreak = 0;
+                  alertMsg = 'คุณเช็คอินครบ 7 วัน! เปิดกล่องของขวัญรับแต้มโบนัส!';
                   alertTitle = '🎉 แจ็คพอตแตก!';
               }
 
-              // บันทึกลงฐานข้อมูล
-              await docRef.update({ 
-                  cwfPoints: firebase.firestore.FieldValue.increment(pointsToGive), 
+              let actualGive = pointsToGive;
+              if (currentPool < pointsToGive) actualGive = currentPool;
+
+              const batch = db.batch();
+              batch.update(docRef, { 
+                  cwfPoints: firebase.firestore.FieldValue.increment(actualGive), 
                   lastCheckInDate: todayStr,
                   checkInStreak: currentStreak
               });
+              // หักแต้มออกจากกองกลาง
+              batch.update(masterRef, { globalPointPool: firebase.firestore.FieldValue.increment(-actualGive) });
+              await batch.commit();
 
-              // อัปเดตหน้าจอทันที
+              fundSettings.globalPointPool -= actualGive;
               renderStreakUI(currentStreak, todayStr);
-              checkMemberOnCloud(uid); // โหลดแต้มบนแดชบอร์ดใหม่
+              checkMemberOnCloud(uid, d.pictureUrl);
               
-              Swal.fire({ icon: alertIcon, title: alertTitle, text: alertMsg, confirmButtonColor: '#10B981' });
+              Swal.fire({ icon: alertIcon, title: alertTitle, text: `${alertMsg} (+${actualGive} แต้ม)`, confirmButtonColor: '#10B981' });
           }
       } catch (error) { 
-          Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); 
+          console.error(error); Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); 
       }
   }
 
-  // 🌟 ฟังก์ชันวาดสีวงกลม Streak (เรียกใช้ตอนโหลดหน้าแดชบอร์ด)
+  // 🌟 ฟังก์ชันวาดสีวงกลม Streak (ไม่เปลี่ยนแปลง)
   function renderStreakUI(streakCount, lastCheckInStr) {
       const now = new Date();
       const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
@@ -1234,19 +1264,16 @@
           const circle = document.getElementById(`streak-${i}`);
           if (!circle) continue;
           
-          // ล้างคลาสเก่าก่อน
           circle.classList.remove('active');
           if (i === 7) circle.innerHTML = '<i class="fa-solid fa-gift"></i>';
           else circle.innerHTML = i;
 
-          // ระบายสีวงกลมตามสถิติ
           if (i <= streakCount) {
               circle.classList.add('active');
               if (i !== 7) circle.innerHTML = '<i class="fa-solid fa-check"></i>';
           }
       }
 
-      // เปลี่ยนปุ่มถ้าวันนี้เช็คอินไปแล้ว
       const btn = document.getElementById('btnCheckIn');
       if (isCheckedInToday) {
           btn.classList.replace('btn-success', 'btn-secondary');
@@ -1259,6 +1286,7 @@
       }
   }
 
+  // 🌟 การแชร์รับแต้ม (ไม่เปลี่ยนแปลง)
   function openShareModal(mode) {
       currentShareMode = mode;
       document.getElementById('shareTitleText').innerText = mode === 'invite' ? 'ชวนเพื่อนสมัครสมาชิก' : 'แชร์ข่าวสารกองทุน';
