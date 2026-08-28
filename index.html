@@ -1050,23 +1050,26 @@
   // หมวดที่ 6: ระบบภารกิจและการแชร์รับแต้ม (Gamification & Transparency)
   // =========================================================
 
-  // 🌟 1. ฟังก์ชันโหลดกระดานโปร่งใส (ดึงค่าจาก Tokenomics ใน Admin)
+  // 🌟 1. ฟังก์ชันโหลดกระดานโปร่งใส (ปรับใหม่: แสดงเฉพาะรายการที่กรรมการยังไม่อนุมัติ)
   async function loadTransparencyBoard() {
       const feed = document.getElementById('transparencyFeed');
       try {
-          // ดึง 20 รายการล่าสุด แล้วกรองด้วย JS เพื่อเลี่ยง Error ของ Firebase
-          const snap = await db.collection("transactions").orderBy("timestamp", "desc").limit(20).get();
+          // ดึงข้อมูลล่าสุดมา 30 รายการ เพื่อนำมากรองด้วย JS
+          const snap = await db.collection("transactions").orderBy("timestamp", "desc").limit(30).get();
           let html = "";
-          let validCount = 0;
+          let validCount = 0; // ตัวนับรายการที่จะแสดงบนกระดาน
           
-          // โหลดค่า Tokenomics จากตัวแปร fundSettings (ที่แอดมินตั้งไว้)
+          // โหลดค่า Tokenomics จากตัวแปร fundSettings
           let t1 = fundSettings.fomoTier1 || 5;
           let t2 = fundSettings.fomoTier2 || 3;
           let t3 = fundSettings.fomoTier3 || 1;
           
           snap.forEach(doc => {
               const d = doc.data();
-              if (d.status !== "อนุมัติแล้ว" || validCount >= 5) return;
+              
+              // 🌟 ไฮไลท์การแก้ไข: ถ้าสถานะเป็น "อนุมัติแล้ว" ให้ตัดทิ้ง (ข้ามไปเลย) 
+              // จะแสดงเฉพาะบิลที่ "รอตรวจสอบ" หรือ "รอส่งมอบ" เท่านั้น (และโชว์สูงสุด 5 รายการต่อวัน)
+              if (d.status === "อนุมัติแล้ว" || validCount >= 5) return;
               validCount++;
 
               const currentUserUid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
@@ -1076,7 +1079,7 @@
               let pointsToGive = t3;
               let badgeHtml = "";
               let btnColor = "btn-outline-secondary";
-              let btnText = "รับทราบและร่วมยินดี";
+              let btnText = "ตรวจสอบและเป็นพยาน"; // ปรับคำให้ดูเป็นการ Audit 
               
               // กำหนดแต้มแบบขั้นบันได
               if(verifiedCount < 10) { 
@@ -1095,11 +1098,14 @@
               let alreadyVerified = verifiedByArray.includes(currentUserUid);
               
               let btnHtml = alreadyVerified 
-                  ? `<button class="btn btn-sm btn-light text-success w-100 rounded-pill fw-bold" disabled><i class="fa-solid fa-circle-check"></i> คุณตรวจสอบรายการนี้แล้ว</button>`
+                  ? `<button class="btn btn-sm btn-light text-success w-100 rounded-pill fw-bold" disabled><i class="fa-solid fa-circle-check"></i> คุณเป็นพยานรายการนี้แล้ว</button>`
                   : `<button class="btn btn-sm ${btnColor} w-100 rounded-pill fw-bold" onclick="verifyTransaction('${doc.id}', ${pointsToGive})"><i class="fa-solid fa-eye"></i> ${btnText} (+${pointsToGive})</button>`;
 
               let amtStr = parseFloat(d.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
               let dateStr = d.transactionDate || "ไม่ระบุวันที่";
+              
+              // 🌟 เพิ่มป้ายบอกสถานะปัจจุบัน ให้สมาชิกรู้ว่ารายการนี้อยู่ขั้นตอนไหน
+              let statusBadge = `<span class="badge bg-warning text-dark rounded-pill shadow-sm mt-1" style="font-size:0.65rem;">${d.status}</span>`;
 
               html += `
               <div class="transparency-card">
@@ -1108,7 +1114,10 @@
                           <h6 class="fw-bold text-dark mb-0" style="font-size:0.85rem;"><i class="fa-solid fa-file-invoice text-primary me-1"></i> ${d.type}</h6>
                           <small class="text-muted" style="font-size:0.75rem;">${d.note || d.fullName}</small>
                       </div>
-                      <h6 class="fw-bold text-success mb-0 bg-success bg-opacity-10 px-2 py-1 rounded-3">฿${amtStr}</h6>
+                      <div class="text-end">
+                          <h6 class="fw-bold text-success mb-0 bg-success bg-opacity-10 px-2 py-1 rounded-3">฿${amtStr}</h6>
+                          ${statusBadge}
+                      </div>
                   </div>
                   <div class="d-flex justify-content-between align-items-center mb-3 mt-3 border-top pt-2">
                       <small class="text-muted" style="font-size:0.7rem;"><i class="fa-regular fa-calendar"></i> ${dateStr}</small>
@@ -1118,7 +1127,7 @@
               </div>`;
           });
           
-          feed.innerHTML = html || '<div class="text-center text-muted small p-3 bg-white rounded-4">ยังไม่มีรายการสวัสดิการใหม่</div>';
+          feed.innerHTML = html || '<div class="text-center text-success fw-bold small p-4 bg-white rounded-4 border border-success border-opacity-25"><i class="fa-solid fa-shield-check fs-2 mb-2 d-block"></i> โปร่งใส 100%<br><span class="text-muted fw-normal">ขณะนี้ไม่มีรายการสวัสดิการที่รอตรวจสอบครับ</span></div>';
       } catch(e) {
           console.error("Board Error:", e); feed.innerHTML = '<div class="text-center text-danger small p-3">โหลดข้อมูลกระดานล้มเหลว</div>';
       }
