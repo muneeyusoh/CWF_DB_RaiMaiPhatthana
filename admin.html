@@ -79,6 +79,16 @@
     
     /* สไตล์ Checkbox พิเศษ */
     .member-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary-main); }
+
+    /* 🌟 สไตล์พิเศษสำหรับระบบ Gamification */
+    .streak-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); border: 2px solid rgba(255,255,255,0.2); transition: 0.3s; }
+    .streak-circle.active { background: #10B981; color: white; border-color: #34D399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
+    .streak-circle.gift { background: transparent; border-color: #F59E0B; color: #F59E0B; }
+    .streak-circle.gift.active { background: #F59E0B; color: white; border-color: #FBBF24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+    
+    .transparency-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid var(--card-border); }
+    @keyframes blinkWarning { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    .blink-anim { animation: blinkWarning 1.5s infinite; }
   </style>
 </head>
 <body>
@@ -461,9 +471,39 @@
         <div id="committeeContainer" class="d-flex flex-column gap-2"></div>
       </div>
 
+      <!-- 🌟 ส่วนที่ 4: ตั้งค่ากระเป๋าแต้มส่วนกลางและ Tokenomics -->
+      <div class="admin-card border-0 p-4 mb-3" style="background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid #334155;">
+        <div class="d-flex align-items-center mb-3 border-bottom pb-2" style="border-color: rgba(255,255,255,0.1) !important;">
+          <i class="fa-solid fa-coins text-warning me-2 fs-4" style="text-shadow: 0 0 10px rgba(245,158,11,0.5);"></i>
+          <h6 class="fw-bold text-white mb-0">4. เศรษฐศาสตร์แต้ม (Tokenomics)</h6>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+             <label class="small text-white-50 fw-bold mb-1">งบประมาณแต้มรวมรายปี (Global Point Pool)</label>
+             <input type="number" id="setGlobalPointPool" class="form-control form-control-lg text-warning fw-bold text-center border-0" style="background: rgba(255,255,255,0.1);" placeholder="เช่น 50000">
+             <small class="text-danger d-block mt-1"><i class="fa-solid fa-triangle-exclamation"></i> หากแต้มกองกลางหมด สมาชิกจะไม่ได้รับแต้มจากภารกิจใดๆ</small>
+          </div>
+          <div class="col-12 mt-4">
+             <label class="small text-white-50 fw-bold mb-1">การแจกแต้มตรวจสอบธุรกรรมแบบขั้นบันได (FOMO)</label>
+             <div class="d-flex gap-2 align-items-center mb-2">
+                <span class="text-white small w-50">กลุ่มที่ 1 (1-10 คนแรก) :</span>
+                <input type="number" id="setFomoTier1" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" value="5"> <span class="text-white-50 small">แต้ม</span>
+             </div>
+             <div class="d-flex gap-2 align-items-center mb-2">
+                <span class="text-white small w-50">กลุ่มที่ 2 (11-30 คนแรก) :</span>
+                <input type="number" id="setFomoTier2" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" value="3"> <span class="text-white-50 small">แต้ม</span>
+             </div>
+             <div class="d-flex gap-2 align-items-center">
+                <span class="text-white small w-50">กลุ่มที่ 3 (คนที่ 31 ขึ้นไป) :</span>
+                <input type="number" id="setFomoTier3" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" value="1"> <span class="text-white-50 small">แต้ม</span>
+             </div>
+          </div>
+        </div>
+      </div>
+
       <div class="admin-card border-0 p-4 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-            <div class="d-flex align-items-center"><i class="fa-solid fa-gamepad text-info me-2"></i><h6 class="fw-bold text-dark mb-0">4. ตั้งค่าภารกิจสะสมแต้ม</h6></div>
+            <div class="d-flex align-items-center"><i class="fa-solid fa-gamepad text-info me-2"></i><h6 class="fw-bold text-dark mb-0">5. ตั้งค่าภารกิจสะสมแต้ม (อื่นๆ)</h6></div>
             <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold" onclick="openMissionModal()">+ เพิ่มภารกิจ</button>
         </div>
         <div id="missionsContainer"><div class="text-center text-muted small p-3">กำลังโหลด...</div></div>
@@ -471,7 +511,7 @@
 
       <div class="admin-card border-0 p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-            <div class="d-flex align-items-center"><i class="fa-solid fa-gift text-danger me-2"></i><h6 class="fw-bold text-dark mb-0">5. ตั้งค่าของรางวัล</h6></div>
+            <div class="d-flex align-items-center"><i class="fa-solid fa-gift text-danger me-2"></i><h6 class="fw-bold text-dark mb-0">6. ตั้งค่าของรางวัล</h6></div>
             <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="openRewardModal()">+ เพิ่มรางวัล</button>
         </div>
         <div id="rewardsContainer"><div class="text-center text-muted small p-3">กำลังโหลด...</div></div>
@@ -2515,6 +2555,12 @@
               if(d.centers) uiSettingsCenters = d.centers;
               if(d.committee) uiSettingsCommittee = d.committee;
               
+              // 🌟 โหลดข้อมูลระบบแต้ม (Tokenomics)
+              if(d.globalPointPool !== undefined) document.getElementById('setGlobalPointPool').value = d.globalPointPool;
+              if(d.fomoTier1 !== undefined) document.getElementById('setFomoTier1').value = d.fomoTier1;
+              if(d.fomoTier2 !== undefined) document.getElementById('setFomoTier2').value = d.fomoTier2;
+              if(d.fomoTier3 !== undefined) document.getElementById('setFomoTier3').value = d.fomoTier3;
+
               fundMissions = d.missions || [];
               fundRewards = d.rewards || [];
 
@@ -2615,7 +2661,12 @@
           memberTypes: uiSettingsMemberTypes,
           inZoneVillages: uiSettingsVillages,
           centers: uiSettingsCenters,
-          committee: uiSettingsCommittee
+          committee: uiSettingsCommittee,
+          // 🌟 บันทึกข้อมูลระบบแต้ม (Tokenomics)
+          globalPointPool: parseInt(document.getElementById('setGlobalPointPool').value) || 0,
+          fomoTier1: parseInt(document.getElementById('setFomoTier1').value) || 0,
+          fomoTier2: parseInt(document.getElementById('setFomoTier2').value) || 0,
+          fomoTier3: parseInt(document.getElementById('setFomoTier3').value) || 0
       };
       
       showLoader(true, "กำลังบันทึกข้อมูลส่วนกลาง...");
