@@ -171,7 +171,14 @@
           <option value="" disabled selected>-- เลือกหมู่บ้านที่พักอาศัยปัจจุบัน --</option>
         </select>
       </div>
-
+      <!-- 🌟 เพิ่มช่องเลือกกรรมการผู้ดูแล ตรงนี้ -->
+      <div class="mb-4">
+        <select class="form-select text-dark border-primary" name="responsibleAdmin" id="regResponsibleAdmin" required>
+          <option value="" disabled selected>-- เลือกกรรมการผู้ดูแลคุณ --</option>
+          <option value="ไม่มีผู้ดูแล">ไม่มีผู้ดูแล (ส่วนกลาง)</option>
+        </select>
+        <small class="text-muted" style="font-size: 0.7rem;"><i class="fa-solid fa-circle-info"></i> เลือกกรรมการในพื้นที่เพื่อความสะดวกในการประสานงาน</small>
+      </div>
       <div class="pdpa-box mb-4">
         <div class="form-check">
           <input class="form-check-input mt-1" type="checkbox" name="pdpaConsent" id="pdpaCheck" value="true" required>
@@ -578,6 +585,17 @@
          (fundSettings.inZoneVillages || []).forEach(v => regVillage.add(new Option(v, v)));
       }
 
+      // 🌟 เพิ่มโค้ดดึงรายชื่อแอดมินที่นี่ เพื่อใส่ในช่องเลือกผู้ดูแล
+      const regAdmin = document.getElementById('regResponsibleAdmin');
+      if (regAdmin) {
+          const adminSnap = await db.collection("admins").where("status", "==", "ใช้งาน").get();
+          adminSnap.forEach(doc => {
+              const aName = doc.data().name;
+              regAdmin.add(new Option(aName, aName));
+          });
+      }
+      // 🌟 สิ้นสุดโค้ดดึงรายชื่อแอดมิน
+
       await liff.init({ liffId: LIFF_ID });
       const urlParams = new URLSearchParams(window.location.search);
       if(urlParams.get('ref')) document.getElementById('refCode').value = urlParams.get('ref');
@@ -626,10 +644,10 @@
   // หมวดที่ 3: ระบบสมัครสมาชิกและผูกบัญชี (Registration & Linking)
   // -----------------------------------------------------------
   
-  // 🌟 1. ฟังก์ชันสมัครสมาชิกใหม่ (ดึงรูปไปบันทึกด้วย)
+  // 🌟 1. ฟังก์ชันสมัครสมาชิกใหม่ (เพิ่มกันเลข ปชช ซ้ำ + บันทึกผู้ดูแล)
   async function handleRegister(e) {
     e.preventDefault(); 
-    const btn = document.getElementById('submitRegBtn'); btn.disabled = true; btn.innerHTML = 'กำลังบันทึก...';
+    const btn = document.getElementById('submitRegBtn'); btn.disabled = true; btn.innerHTML = 'กำลังตรวจสอบข้อมูล...';
     
     const formData = new FormData(e.target);
     const payload = Object.fromEntries(formData.entries()); 
@@ -639,50 +657,59 @@
     if (payload.nationalId.length !== 13) { Swal.fire('เตือน', 'เลข ปชช. ต้องมี 13 หลัก', 'warning'); btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก'; return; }
     
     const uid = document.getElementById('uid').value;
-    
-    // 🌟 ดึงรูปโปรไฟล์จาก LINE (ถ้าไม่เจอให้ใช้รูป Default)
-    let userPic = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg";
-    if (liff.isLoggedIn()) {
-        try {
-            const profile = await liff.getProfile();
-            userPic = profile.pictureUrl || userPic;
-        } catch(err) { console.warn("ดึงรูปโปรไฟล์ล้มเหลว", err); }
-    }
-    
-    let mType = 'สมาชิกสมทบ';
-    if((fundSettings.inZoneVillages || []).includes(payload.village)) { mType = 'สมาชิกสามัญ'; }
-    
-    const d = new Date();
-    const thaiYear = d.getFullYear() + 543;
-    const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${thaiYear}`;
-
-    const newMemberData = {
-        ...payload,
-        memberId: "CWF" + Date.now().toString().slice(-5), 
-        status: "รอตรวจสอบ",
-        memberType: mType, 
-        addressZoneType: mType === 'สมาชิกสามัญ' ? 'ในเขต' : 'นอกเขต', 
-        cwfPoints: 0, totalContribution: 0, totalWelfareReceived: 0,
-        outstandingBalance: fundSettings.annualFee || 365, 
-        welfareHistory: [], vulnerableData: [],
-        registerDateObj: d.toISOString(), 
-        timestamp: dateStr,
-        linkStatus: "linked",
-        lineUid: uid,
-        pictureUrl: userPic // 🌟 บันทึกรูปลงฐานข้อมูลตรงนี้
-    };
 
     try {
-      await db.collection("members").doc(uid).set(newMemberData);
-      
-      if(payload.refCode) {
-          const refSnap = await db.collection("members").where("memberId", "==", payload.refCode).get();
-          if(!refSnap.empty) { await db.collection("members").doc(refSnap.docs[0].id).update({ cwfPoints: firebase.firestore.FieldValue.increment(50) }); }
-      }
-      
-      document.getElementById('registerView').style.display = 'none';
-      document.getElementById('registrationSuccessView').style.display = 'block';
-      window.scrollTo(0, 0);
+        // 🌟 ไฮไลท์การแก้ไข: ตรวจสอบเลข ปชช. ซ้ำในระบบ
+        const existCheck = await db.collection("members").where("nationalId", "==", payload.nationalId).get();
+        if (!existCheck.empty) {
+            Swal.fire('ปฏิเสธการสมัคร', 'เลขบัตรประจำตัวประชาชนนี้ ถูกลงทะเบียนในระบบเรียบร้อยแล้ว ไม่สามารถสมัครซ้ำได้ครับ', 'error');
+            btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก';
+            return; // หยุดการทำงานทันที
+        }
+
+        // 🌟 ดึงรูปโปรไฟล์จาก LINE (ถ้าไม่เจอให้ใช้รูป Default)
+        let userPic = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg";
+        if (liff.isLoggedIn()) {
+            try {
+                const profile = await liff.getProfile();
+                userPic = profile.pictureUrl || userPic;
+            } catch(err) { console.warn("ดึงรูปโปรไฟล์ล้มเหลว", err); }
+        }
+        
+        let mType = 'สมาชิกสมทบ';
+        if((fundSettings.inZoneVillages || []).includes(payload.village)) { mType = 'สมาชิกสามัญ'; }
+        
+        const d = new Date();
+        const thaiYear = d.getFullYear() + 543;
+        const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${thaiYear}`;
+
+        const newMemberData = {
+            ...payload, // ข้อมูลนี้จะรวม responsibleAdmin ที่สมาชิกเลือกมาด้วย
+            memberId: "CWF" + Date.now().toString().slice(-5), 
+            status: "รอตรวจสอบ",
+            memberType: mType, 
+            addressZoneType: mType === 'สมาชิกสามัญ' ? 'ในเขต' : 'นอกเขต', 
+            cwfPoints: 0, totalContribution: 0, totalWelfareReceived: 0,
+            outstandingBalance: fundSettings.annualFee || 365, 
+            welfareHistory: [], vulnerableData: [],
+            registerDateObj: d.toISOString(), 
+            timestamp: dateStr,
+            linkStatus: "linked",
+            lineUid: uid,
+            pictureUrl: userPic
+        };
+
+        btn.innerHTML = 'กำลังบันทึก...';
+        await db.collection("members").doc(uid).set(newMemberData);
+        
+        if(payload.refCode) {
+            const refSnap = await db.collection("members").where("memberId", "==", payload.refCode).get();
+            if(!refSnap.empty) { await db.collection("members").doc(refSnap.docs[0].id).update({ cwfPoints: firebase.firestore.FieldValue.increment(50) }); }
+        }
+        
+        document.getElementById('registerView').style.display = 'none';
+        document.getElementById('registrationSuccessView').style.display = 'block';
+        window.scrollTo(0, 0);
 
     } catch (error) { 
       Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); 
