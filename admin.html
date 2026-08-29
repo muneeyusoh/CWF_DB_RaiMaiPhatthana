@@ -864,6 +864,17 @@
           if(navClaims) navClaims.style.display = 'block';
           switchAdminTab('admin-view-members', navMembers);
           if(typeof loadMembersData === 'function') loadMembersData();
+          if (r === 'Admin-ผู้ดูแล') {
+          if(navMembers) navMembers.style.display = 'block';
+          if(navLedger) navLedger.style.display = 'block'; // 🌟 เพิ่มสิทธิ์ให้เห็นแท็บการเงิน (เพื่อใช้ QR ส่งมอบเงิน)
+          if(navClaims) navClaims.style.display = 'block';
+          switchAdminTab('admin-view-members', navMembers);
+          if(typeof loadMembersData === 'function') loadMembersData();
+          
+          // 🌟 ซ่อนฟอร์มบันทึกรับ-จ่ายแบบอิสระ เพื่อให้ผู้ดูแลเห็นแค่ "กล่อง QR ส่งมอบเงิน" อย่างเดียว ไม่สับสน
+          const manualLedgerCard = document.querySelector('#admin-view-ledger .admin-card');
+          if(manualLedgerCard) manualLedgerCard.style.display = 'none';
+      }
       } 
       else if (r === 'Admin-ศูนย์ประสานงาน') {
           if(navOverview) navOverview.style.display = 'block';
