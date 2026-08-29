@@ -877,8 +877,11 @@
       else if (r === 'Admin-การเงิน') {
           if(navOverview) navOverview.style.display = 'block';
           if(navLedger) navLedger.style.display = 'block';
-          switchAdminTab('admin-view-overview', navOverview);
-          if(typeof loadDashboardOverview === 'function') loadDashboardOverview();
+          if(navMembers) navMembers.style.display = 'block'; // 🌟 เพิ่มสิทธิ์ให้เห็นทะเบียนสมาชิกเพื่อเช็คยอดรายบุคคลได้
+          
+          // 🌟 เปลี่ยนให้ "ฝ่ายการเงิน" เข้ามาเจอหน้า "บันทึกธุรกรรม/สแกนรับยอด" เป็นหน้าแรกทันที
+          switchAdminTab('admin-view-ledger', navLedger);
+          if(typeof loadLedgerData === 'function') loadLedgerData();
       } 
       else if (r === 'Admin-สวัสดิการ') {
           if(navClaims) navClaims.style.display = 'block';
@@ -1618,16 +1621,29 @@
       }
   }
 
-  // 🌟 2. ฟังก์ชันเก็บเงินกลุ่ม (Bulk Collect) แบบมีระบบสร้าง QR 
+  // 🌟 2. ฟังก์ชันเก็บเงินกลุ่ม (Bulk Collect) แบบระบุยอดแยกรายบุคคล
   async function bulkCollectContribution() {
       const checkboxes = document.querySelectorAll('.bulk-collect-check:checked');
       if(checkboxes.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาติ๊กเลือกสมาชิกที่ต้องการเก็บเงินก่อนครับ', 'warning');
 
       let selectedMembers = [];
-      let namesHtml = "";
-      checkboxes.forEach(cb => { 
-          selectedMembers.push({ id: cb.value, name: cb.getAttribute('data-name') }); 
-          namesHtml += `<span class="badge bg-primary bg-opacity-10 text-primary m-1">${cb.getAttribute('data-name')}</span>`;
+      let membersInputHtml = ""; // ตัวแปรสำหรับสร้างกล่องกรอกเงินรายบุคคล
+      
+      checkboxes.forEach((cb, index) => { 
+          let uid = cb.value;
+          let name = cb.getAttribute('data-name');
+          selectedMembers.push({ id: uid, name: name }); 
+          
+          // สร้างช่องกรอกเงินสำหรับสมาชิกแต่ละคนที่ถูกติ๊กเลือก
+          membersInputHtml += `
+              <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
+                  <span class="text-dark fw-bold text-truncate pe-2" style="font-size: 0.85rem;">${index + 1}. ${name}</span>
+                  <div class="input-group input-group-sm" style="width: 130px; flex-shrink: 0;">
+                      <input type="number" id="amt-${uid}" class="form-control text-success fw-bold text-center bulk-amt-input" placeholder="0" min="1" step="0.01" required>
+                      <span class="input-group-text bg-white text-muted border-start-0">฿</span>
+                  </div>
+              </div>
+          `;
       });
 
       const today = new Date().toISOString().split('T')[0];
@@ -1635,30 +1651,101 @@
           title: `เก็บเงินสมทบกลุ่ม (${checkboxes.length} คน)`,
           html: `
               <div class="text-start" style="font-family: 'Prompt', sans-serif;">
-                  <div class="mb-3 p-2 bg-light rounded" style="max-height: 100px; overflow-y: auto;">${namesHtml}</div>
+                  <label class="small text-muted fw-bold mb-2">ระบุยอดเงินของแต่ละบุคคล</label>
+                  <div class="mb-3 p-3 bg-light rounded-4 border" style="max-height: 250px; overflow-y: auto;">
+                      ${membersInputHtml}
+                  </div>
+                  
+                  <div class="d-flex justify-content-between align-items-center mb-4 px-2 py-2 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
+                      <strong class="text-success small"><i class="fa-solid fa-calculator me-1"></i> ยอดรวมทั้งหมด:</strong>
+                      <strong class="text-success fs-4 mb-0" id="bulkTotalDisplay" style="line-height:1;">฿0.00</strong>
+                  </div>
+
                   <label class="small text-muted fw-bold mb-1">วันที่รับเงิน</label>
                   <input type="date" id="bulkDate" class="form-control-modern w-100 mb-3" value="${today}" required>
-                  <label class="small text-muted fw-bold mb-1">จำนวนเงิน (บาท) / ต่อ 1 คน</label>
-                  <input type="number" id="bulkAmt" class="form-control-modern w-100 mb-3 text-success fw-bold fs-4" placeholder="เช่น 100" step="0.01" required>
                   <label class="small text-muted fw-bold mb-1">หมายเหตุ (ถ้ามี)</label>
                   <input type="text" id="bulkNote" class="form-control-modern w-100" placeholder="เช่น ประจำเดือน ส.ค.">
               </div>
           `,
           showDenyButton: true, showCancelButton: true,
-          confirmButtonText: 'บันทึกรับเงินสดกลุ่ม',
-          denyButtonText: '<i class="fa-solid fa-qrcode"></i> ให้ตัวแทนสมาชิกสแกน QR',
+          confirmButtonText: 'บันทึกรับเงินสด',
+          denyButtonText: '<i class="fa-solid fa-qrcode"></i> ให้สมาชิกสแกน QR',
           cancelButtonText: 'ยกเลิก',
           confirmButtonColor: '#10B981', denyButtonColor: '#2563EB',
+          didOpen: () => {
+              // 🌟 ฟังก์ชันคำนวณยอดรวมอัตโนมัติเมื่อพิมพ์ตัวเลข
+              const inputs = document.querySelectorAll('.bulk-amt-input');
+              const totalDisplay = document.getElementById('bulkTotalDisplay');
+              inputs.forEach(input => {
+                  input.addEventListener('input', () => {
+                      let sum = 0;
+                      inputs.forEach(inp => sum += parseFloat(inp.value) || 0);
+                      totalDisplay.innerText = '฿' + sum.toLocaleString('en-US', {minimumFractionDigits: 2});
+                  });
+              });
+          },
           preConfirm: () => {
-              const amt = document.getElementById('bulkAmt').value;
-              if(!amt || amt <= 0) { Swal.showValidationMessage('กรุณาระบุจำนวนเงินให้ถูกต้อง'); return false; }
-              return { amt: parseFloat(amt), date: document.getElementById('bulkDate').value, note: document.getElementById('bulkNote').value, isQR: false };
+              let memberAmounts = [];
+              let totalAmount = 0;
+              let hasError = false;
+
+              // กวาดเช็คข้อมูลแต่ละกล่องว่ากรอกเงินครบไหม
+              selectedMembers.forEach(m => {
+                  let amtInput = document.getElementById('amt-' + m.id).value;
+                  let amt = parseFloat(amtInput);
+                  if(!amt || amt <= 0) {
+                      hasError = true;
+                  } else {
+                      memberAmounts.push({ uid: m.id, name: m.name, amt: amt });
+                      totalAmount += amt;
+                  }
+              });
+
+              if(hasError) { 
+                  Swal.showValidationMessage('กรุณาระบุจำนวนเงินให้ครบทุกคน (ต้องมากกว่า 0 บาท)'); 
+                  return false; 
+              }
+              
+              return { 
+                  membersData: memberAmounts, 
+                  totalAmount: totalAmount,
+                  date: document.getElementById('bulkDate').value, 
+                  note: document.getElementById('bulkNote').value, 
+                  isQR: false 
+              };
           }
       }).then(result => {
           if (result.isDenied) {
-              const amt = document.getElementById('bulkAmt').value;
-              if(!amt || amt <= 0) return Swal.fire('Error', 'กรุณาระบุจำนวนเงินก่อนสร้าง QR', 'error');
-              return { isConfirmed: true, value: { amt: parseFloat(amt), date: document.getElementById('bulkDate').value, note: document.getElementById('bulkNote').value, isQR: true } };
+              // ดึงข้อมูลกรณีแอดมินกดปุ่มสร้าง QR
+              let memberAmounts = [];
+              let totalAmount = 0;
+              let hasError = false;
+
+              selectedMembers.forEach(m => {
+                  let amtInput = document.getElementById('amt-' + m.id).value;
+                  let amt = parseFloat(amtInput);
+                  if(!amt || amt <= 0) {
+                      hasError = true;
+                  } else {
+                      memberAmounts.push({ uid: m.id, name: m.name, amt: amt });
+                      totalAmount += amt;
+                  }
+              });
+
+              if(hasError) {
+                  return Swal.fire('Error', 'กรุณาระบุจำนวนเงินให้ครบทุกคนก่อนสร้าง QR', 'error');
+              }
+
+              return { 
+                  isConfirmed: true, 
+                  value: { 
+                      membersData: memberAmounts, 
+                      totalAmount: totalAmount,
+                      date: document.getElementById('bulkDate').value, 
+                      note: document.getElementById('bulkNote').value, 
+                      isQR: true 
+                  } 
+              };
           }
           return result;
       });
@@ -1667,15 +1754,15 @@
           try {
               const adminName = currentAdminData.name;
               const adminEmail = currentAdminData.email;
-              const totalAmount = formValues.amt * selectedMembers.length;
+              const totalAmount = formValues.totalAmount;
               let bulkTxId = "BLK" + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100).toString().padStart(2,'0'); 
               
               let bulkDataArr = [];
-              for (let member of selectedMembers) {
+              for (let member of formValues.membersData) {
                   let individualTxId = "TX" + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100).toString().padStart(2,'0'); 
-                  bulkDataArr.push({ uid: member.id, name: member.name, amt: formValues.amt, txId: individualTxId });
+                  bulkDataArr.push({ uid: member.uid, name: member.name, amt: member.amt, txId: individualTxId });
               }
-              const finalNote = formValues.note ? `เก็บเงินกลุ่ม ${selectedMembers.length} คน (${formValues.note})` : `เก็บเงินกลุ่ม ${selectedMembers.length} คน`;
+              const finalNote = formValues.note ? `เก็บเงินกลุ่ม ${formValues.membersData.length} คน (${formValues.note})` : `เก็บเงินกลุ่ม ${formValues.membersData.length} คน`;
 
               if (formValues.isQR) {
                   // 🌟 สร้าง QR Code กลุ่มให้สมาชิก 1 คนสแกนเพื่อยืนยันแทนทุกคน
@@ -1693,7 +1780,7 @@
                       Swal.fire({
                           title: 'ให้ตัวแทนสมาชิกสแกน QR นี้',
                           html: `
-                            <p class="small text-muted mb-2">ยอดรวม (${selectedMembers.length} คน): <strong class="text-primary fs-4">฿${totalAmount}</strong></p>
+                            <p class="small text-muted mb-2">ยอดรวม (${formValues.membersData.length} คน): <strong class="text-primary fs-4">฿${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></p>
                             <div id="memberQrContainer" class="d-flex justify-content-center bg-white p-3 rounded-4 shadow-sm mx-auto mb-3" style="width: 220px; height: 220px;"></div>
                           `,
                           didOpen: () => {
@@ -1714,16 +1801,17 @@
                   await db.collection("transactions").add({
                       txId: bulkTxId, type: 'สมทบเงินกองทุน', amount: totalAmount, paymentMethod: 'เงินสด',
                       transactionDate: formValues.date, fullName: 'แอดมิน: ' + adminName, 
-                      status: setStatus, currentHolder: holder, // 🌟 ฟิลด์ห่วงโซ่
+                      status: setStatus, currentHolder: holder,
                       note: finalNote, uid: "BULK", bulkMembers: bulkDataArr, 
                       timestamp: firebase.firestore.FieldValue.serverTimestamp()
                   });
 
                   if(setStatus === 'อนุมัติแล้ว') {
-                      for (let member of selectedMembers) {
-                          await db.collection("members").doc(member.id).update({
-                              totalContribution: firebase.firestore.FieldValue.increment(formValues.amt),
-                              outstandingBalance: firebase.firestore.FieldValue.increment(-formValues.amt) 
+                      // อัปเดตเงินในหน้าโปรไฟล์รายบุคคลตามยอดที่กรอก
+                      for (let member of formValues.membersData) {
+                          await db.collection("members").doc(member.uid).update({
+                              totalContribution: firebase.firestore.FieldValue.increment(member.amt),
+                              outstandingBalance: firebase.firestore.FieldValue.increment(-member.amt) 
                           });
                       }
                   }
