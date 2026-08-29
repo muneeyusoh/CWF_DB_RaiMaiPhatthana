@@ -1689,7 +1689,7 @@
                                   text: 'ระบบได้บันทึกการส่งมอบเงินให้แอดมินเรียบร้อยแล้ว',
                                   confirmButtonColor: '#10B981'
                               }).then(() => {
-                                  // โหลดหน้าจอสมาชิกใหม่เพื่อรีเฟรชข้อมูล (ถ้ามีฟังก์ชัน)
+                                  // โหลดหน้าจอสมาชิกใหม่เพื่อรีเฟรชข้อมูล
                                   if (typeof checkMemberOnCloud === "function") {
                                       checkMemberOnCloud(currentMemberDocId);
                                   } else {
