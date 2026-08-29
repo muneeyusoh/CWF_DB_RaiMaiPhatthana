@@ -515,8 +515,36 @@
       <div class="alert alert-info border-0 rounded-4 small p-3 mb-3 bg-primary bg-opacity-10 text-primary shadow-sm">
         <i class="fa-solid fa-circle-info me-1"></i> ร่วมตรวจสอบรับทราบการเบิกจ่ายสวัสดิการ เพื่อชิงแต้มโควต้าพิเศษรายวัน!
       </div>
+      
+      <!-- 🌟 เพิ่ม Style เฉพาะส่วนนี้เพื่อจัดการการเลื่อนแนวนอน (Horizontal Scroll) -->
+      <style>
+        #transparencyFeed {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory; /* ทำให้ปัดแล้วหยุดตรงกลางการ์ดพอดี (Snapping) */
+            -webkit-overflow-scrolling: touch; /* ให้การปัดบนมือถือลื่นไหล */
+            scrollbar-width: none; /* ซ่อนแถบ Scrollbar ใน Firefox */
+            padding-bottom: 5px; /* เผื่อพื้นที่เงาของการ์ด */
+        }
+        #transparencyFeed::-webkit-scrollbar {
+            display: none; /* ซ่อนแถบ Scrollbar ใน Chrome/Safari */
+        }
+        
+        /* บังคับขนาดการ์ดด้านในให้กว้าง 85% เพื่อให้เห็นขอบของการ์ดใบถัดไป (บอกใบ้ว่าปัดได้) */
+        #transparencyFeed .transparency-card {
+            flex: 0 0 85%;
+            scroll-snap-align: center;
+            margin-bottom: 0 !important; /* เอา margin ด้านล่างออก */
+            margin-right: 15px; /* เปลี่ยนมาเว้นระยะห่างด้านขวาแทน */
+        }
+        #transparencyFeed .transparency-card:last-child {
+            margin-right: 0; /* ใบสุดท้ายไม่ต้องเว้นขวา */
+        }
+      </style>
+
       <div id="transparencyFeed">
-         <div class="text-center text-muted small p-3"><div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดกระดานชุมชน...</div>
+         <!-- เพิ่ม w-100 เพื่อให้ข้อความโหลดอยู่กึ่งกลางหน้าจอเสมอ -->
+         <div class="text-center text-muted small p-3 w-100"><div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดกระดานชุมชน...</div>
       </div>
     </div>
 
