@@ -45,6 +45,14 @@
     .status-inactive { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; } 
     .badge-tier { padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     
+    /* 🌟 สไตล์ไทม์ไลน์ติดตามเงิน */
+    .timeline { border-left: 2px dashed #CBD5E1; padding-left: 20px; margin-left: 10px; position: relative; }
+    .timeline-item { margin-bottom: 20px; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -27px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #F8FAFC; border: 2px solid #CBD5E1; z-index: 2; }
+    .timeline-item.active::before { background: #10B981; border-color: #059669; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+    .timeline-item.warning::before { background: #F59E0B; border-color: #D97706; box-shadow: 0 0 8px rgba(245,158,11,0.5); }
+    .timeline-item.blue::before { background: #2563EB; border-color: #1D4ED8; }
+
     /* 📊 การ์ดสถิติ (Stat Cards) */
     .stat-card { border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; transition: transform 0.2s, box-shadow 0.2s; }
     .stat-card:active { transform: scale(0.98); }
@@ -108,14 +116,109 @@
     .transparency-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid var(--card-border); }
     @keyframes blinkWarning { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     .blink-anim { animation: blinkWarning 1.5s infinite; }
+
+    /* 🌟 แอนิเมชัน 3D โลโก้และเส้นพลังงาน (SmartWelf 5.0) */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .sw-logo-svg {
+        width: 180px; /* ปรับขนาดโลโก้ได้ที่นี่ */
+        height: auto;
+        /* เอฟเฟกต์ Drop Shadow ตามที่คุณระบุ */
+        filter: 
+            drop-shadow(0 14px 18px rgba(5,150,105,.14)) 
+            drop-shadow(0 4px 5px rgba(14,116,144,.10));
+    }
+
+    /* 1. เลเยอร์สร้างมิติ (3D Depth) */
+    .sw-depth path {
+        fill: #064E3B; /* สีเขียวเข้มมากเพื่อทำเป็นฐานของมิติ 3D */
+        transform: translate(3px, 6px); /* ดึงเลเยอร์นี้เยื้องลงมาด้านล่างขวาให้เกิดความหนา */
+    }
+
+    /* 2. เลเยอร์หน้า (Face) */
+    .sw-face path {
+        fill: url(#smartwelfGradient); /* ใช้สีหลักของโลโก้ */
+    }
+
+    /* 3. เลเยอร์เส้นพลังงานวิ่ง (Energy Line) */
+    .sw-energy-path {
+        fill: none;
+        stroke: #6EE7B7; /* สีของเส้นพลังงานวิ่ง (นีออนสว่าง) */
+        stroke-width: 5;
+        stroke-linecap: round;
+        /* แบ่งเส้นเป็นความยาว 72 เว้น 928 (อิงจาก pathLength 1000) */
+        stroke-dasharray: 72 928; 
+        stroke-dashoffset: 1000;
+        animation:
+            swEnergyIntro .55s ease-out .65s forwards,
+            swEnergyRun 2.15s linear 1.2s infinite;
+    }
+
+    @keyframes swEnergyIntro {
+        from { stroke-dashoffset: 1000; }
+        to { stroke-dashoffset: 928; }
+    }
+
+    @keyframes swEnergyRun {
+        0% { stroke-dashoffset: 928; }
+        100% { stroke-dashoffset: -72; }
+    }
+
+    /* แอนิเมชันตัวหนังสือ */
+    .loading-text-glow {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(90deg, #059669, #2563EB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: pulseTextGlow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseTextGlow {
+        0% { opacity: 0.6; transform: scale(0.98); }
+        50% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0.6; transform: scale(0.98); }
+    }
   </style>
 </head>
 <body>
 
 <!-- หน้าจอโหลดระบบ -->
 <div id="systemLoading">
-  <div class="spinner-border mb-3" style="width: 3rem; height: 3rem; color: var(--fintech-primary);" role="status"></div>
-  <p class="text-dark fw-bold">กำลังเชื่อมต่อฐานข้อมูล Firestore...</p>
+  <div class="loading-container">
+    
+    <!-- 🌟 โครงสร้าง SVG โลโก้ของคุณ -->
+    <svg class="svg-logo-loader" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+      
+      <!-- ใส่โค้ด Gradient ของคุณตรงนี้ (ถ้ามีแท็ก <defs>) -->
+      <defs>
+          <!-- โค้ด Gradient ของคุณ เช่น <linearGradient id="smartwelfMarkGradient"... -->
+      </defs>
+
+      <!-- สัญลักษณ์ SmartWelf -->
+      <path id="smartwelf-symbol"
+            d="..." 
+            fill="url(#smartwelfMarkGradient)"/>
+
+      <!-- ตัวอักษร SmartWelf -->
+      <path id="smartwelf-wordmark"
+            d="..." 
+            fill="url(#smartwelfTextGradient)"
+            fill-rule="evenodd"
+            clip-rule="evenodd"/>
+            
+    </svg>
+    
+    <p class="loading-text-glow m-0">SmartWelf 5.0</p>
+    <p class="text-muted fw-bold small mt-1" id="systemLoadingText">กำลังเชื่อมต่อฐานข้อมูล...</p>
+  </div>
 </div>
 
 <!-- ส่วนหัวของแอปพลิเคชัน -->
@@ -333,7 +436,13 @@
          <div class="text-center text-muted small p-3"><div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดกระดานชุมชน...</div>
       </div>
     </div>
-    
+
+    <!-- 🌟 เพิ่ม: กระดานติดตามสถานะเงินสมทบ (Timeline) -->
+      <div class="section-title px-1 mt-4"><i class="fa-solid fa-route text-muted me-2"></i> ติดตามเงินสมทบล่าสุด</div>
+      <div id="dashTxTimeline" class="bg-white p-3 rounded-4 shadow-sm border border-light mb-4">
+         <div class="text-center text-muted small py-2">กำลังดึงข้อมูล...</div>
+      </div>
+
     <!-- ข้อมูลส่วนตัว -->
     <div class="text-start mt-4">
       <div class="d-flex justify-content-between align-items-center mb-3 px-1">
@@ -525,6 +634,73 @@
   </div>
 </div>
 
+// 🌟 ฟังก์ชันดึงประวัติการส่งเงินมาทำเป็น Timeline ให้สมาชิกดู
+  async function loadMemberTransactionTimeline(uid) {
+      const container = document.getElementById('dashTxTimeline');
+      try {
+          const snap = await db.collection("transactions").orderBy("timestamp", "desc").limit(10).get();
+          let latestTx = null;
+          
+          // ค้นหาบิลล่าสุดที่เป็นของสมาชิกคนนี้
+          snap.forEach(doc => {
+              const d = doc.data();
+              if (d.uid === uid) { if(!latestTx) latestTx = d; } 
+              else if (d.uid === "BULK" && d.bulkMembers) {
+                  let found = d.bulkMembers.find(m => m.uid === uid);
+                  if (found && !latestTx) latestTx = d;
+              }
+          });
+
+          if (!latestTx) {
+              container.innerHTML = `<div class="text-center text-muted small py-2"><i class="fa-solid fa-inbox d-block fs-3 mb-2"></i>ยังไม่มีประวัติส่งเงินสมทบ</div>`;
+              return;
+          }
+
+          let amtStr = parseFloat(latestTx.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
+          let holder = latestTx.currentHolder || latestTx.fullName.replace('แอดมิน: ', '');
+          
+          // สร้างสถานะจำลองตาม Status ปัจจุบัน
+          let step1 = "active", step2 = "", step3 = "", step4 = "";
+          let step2Msg = "รอการส่งมอบเข้าศูนย์ฯ";
+          let step3Msg = "รอการเงินกองทุนรับยอด";
+          
+          if (latestTx.status === "รอส่งมอบ") {
+              step2 = "warning";
+              step2Msg = `เงินสดอยู่ที่: <strong>${holder}</strong>`;
+          } else if (latestTx.status === "รอตรวจสอบ") {
+              step2 = "active"; step3 = "warning";
+              step3Msg = `เงินสดอยู่ที่: <strong>${holder}</strong> (รอการเงินอนุมัติ)`;
+          } else if (latestTx.status === "อนุมัติแล้ว") {
+              step2 = "active"; step3 = "active"; step4 = "active";
+              step2Msg = "ส่งมอบผ่านศูนย์ประสานงาน";
+              step3Msg = "การเงินกองทุนรับยอด";
+          }
+
+          container.innerHTML = `
+              <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-receipt text-primary me-1"></i> ยอดล่าสุด: ฿${amtStr}</h6>
+              <div class="timeline">
+                  <div class="timeline-item ${step1}">
+                      <small class="fw-bold text-dark d-block">จ่ายเงินสำเร็จ</small>
+                      <span class="text-muted" style="font-size:0.7rem;">ผ่านช่องทาง: ${latestTx.paymentMethod}</span>
+                  </div>
+                  <div class="timeline-item ${step2}">
+                      <small class="fw-bold text-dark d-block">การส่งมอบ (Chain of Custody)</small>
+                      <span class="text-muted" style="font-size:0.7rem;">${step2Msg}</span>
+                  </div>
+                  <div class="timeline-item ${step3}">
+                      <small class="fw-bold text-dark d-block">ส่วนกลางตรวจสอบ</small>
+                      <span class="text-muted" style="font-size:0.7rem;">${step3Msg}</span>
+                  </div>
+                  <div class="timeline-item ${step4}">
+                      <small class="fw-bold text-success d-block">อนุมัติเข้าสมุดบัญชีหลัก</small>
+                      <span class="text-muted" style="font-size:0.7rem;">ยอดสะสมของคุณถูกอัปเดตแล้ว</span>
+                  </div>
+              </div>
+          `;
+      } catch (e) {
+          container.innerHTML = `<div class="text-center text-danger small py-2">โหลดข้อมูลไทม์ไลน์ล้มเหลว</div>`;
+      }
+  }
 <!-- ==========================================
      [3] ส่วนของ JavaScript (ตรรกะระบบทั้งหมด)
 =========================================== -->
