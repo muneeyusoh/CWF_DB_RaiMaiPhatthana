@@ -187,6 +187,56 @@
         50% { opacity: 1; transform: scale(1); }
         100% { opacity: 0.6; transform: scale(0.98); }
     }
+
+    /* ==========================================
+       🌟 FINTECH UI COMPONENTS (การ์ดกระเป๋าเงิน & เมนูด่วน)
+    ========================================== */
+    /* การ์ดกระเป๋าเงิน (Wallet Card) */
+    .wallet-card {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        border-radius: 24px;
+        padding: 24px;
+        color: white;
+        box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.4), 0 8px 10px -6px rgba(15, 23, 42, 0.2);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+        z-index: 1;
+    }
+    /* ลวดลายวงกลมตกแต่งบนการ์ด */
+    .wallet-card::before {
+        content: ''; position: absolute; top: -50px; right: -30px; width: 150px; height: 150px;
+        background: linear-gradient(135deg, rgba(37,99,235,0.4) 0%, rgba(16,185,129,0.4) 100%);
+        border-radius: 50%; filter: blur(30px); z-index: -1;
+    }
+    .wallet-card::after {
+        content: ''; position: absolute; bottom: -30px; left: -20px; width: 100px; height: 100px;
+        background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%);
+        border-radius: 50%; filter: blur(20px); z-index: -1;
+    }
+
+    /* เมนูด่วน (Quick Actions Grid) */
+    .quick-action-wrapper {
+        display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s;
+    }
+    .quick-action-wrapper:active { transform: scale(0.92); }
+    .quick-action-btn {
+        width: 56px; height: 56px; border-radius: 20px;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 1.5rem; margin-bottom: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .quick-action-text {
+        font-size: 0.75rem; font-weight: 600; color: #475569;
+    }
+
+    /* ปรับแต่ง Profile Header ให้เชื่อมกับแอป */
+    .fintech-profile-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: -70px; padding: 0 5px 20px 5px; position: relative; z-index: 10;
+    }
+    .fintech-profile-header .profile-img { margin-top: 0; border: 3px solid rgba(255,255,255,0.8); }
+    
   </style>
 </head>
 <body>
@@ -355,73 +405,83 @@
   </div>
 
   <!-- ==========================================
-       [หน้าต่าง 3] แดชบอร์ดหลักของสมาชิก
+       [หน้าต่าง 3] แดชบอร์ดหลักของสมาชิก (Fintech UX/UI)
   =========================================== -->
-  <div id="dashboardView" class="card-box text-center" style="display: none;">
-    <div class="profile-wrapper">
-      <img id="userAvatar" src="" class="profile-img" alt="Profile">
-    </div>
+  <div id="dashboardView" style="display: none;">
     
-    <div id="dashStatusBadge" class="badge-status">รอตรวจสอบ</div>
-    <h4 id="dashName" class="fw-bold mb-0 text-dark"></h4>
-    <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-1"></i><span id="dashCenterText"></span></p>
-    
-    <div id="dashTierBadge" class="badge-tier" style="display: none;"></div>
-
-    <!-- 🌟 เพิ่มปุ่มสแกนจ่ายเงิน สำหรับสมาชิก ตรงนี้! 🌟 -->
-    <div class="mt-4 mb-3 px-3">
-        <button onclick="scanToPayAdmin()" class="btn btn-success w-100 rounded-4 py-3 fw-bold shadow" style="font-size: 1.1rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border: none;">
-            <i class="fa-solid fa-qrcode me-2 fs-5"></i> สแกนเพื่อจ่ายเงินสมทบ
-        </button>
-        <p class="text-center text-muted small mt-2"><i class="fa-solid fa-camera me-1"></i> ให้สแกน QR Code จากเครื่องของกรรมการเพื่อชำระเงิน</p>
+    <!-- 1. ส่วนหัวโปรไฟล์แบบใหม่ (Fintech Profile Header) -->
+    <div class="fintech-profile-header">
+      <div class="text-start text-white">
+        <h5 id="dashName" class="fw-bold mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);"></h5>
+        <div class="d-flex align-items-center gap-2">
+            <span id="dashStatusBadge" class="badge-status shadow-sm mb-0 px-2 py-1" style="font-size: 0.7rem;">รอตรวจสอบ</span>
+            <div id="dashTierBadge" class="badge-tier shadow-sm mb-0 px-2 py-1" style="display: none; font-size: 0.7rem; margin-top: 0;"></div>
+        </div>
+      </div>
+      <img id="userAvatar" src="" class="profile-img shadow" style="width: 65px; height: 65px;" alt="Profile">
     </div>
 
-    <hr class="my-4" style="border-color: #E5E7EB;">
-    
-    <div class="d-flex flex-column gap-2 mb-4">
-      
-      <!-- 🎁 แต้มจิตอาสา -->
-      <div class="stat-card stat-card-points text-start m-0">
-        <div class="d-flex align-items-center gap-3">
-          <div class="icon-box"><i class="fa-solid fa-star"></i></div>
-          <div>
-            <small class="fw-bold d-block lh-1 mb-1" style="color: #92400E;">คะแนนอาสาสมัคร</small>
-            <h4 class="fw-bold mb-0 text-dark"><span id="dashCwfPoints">0</span> <small class="fs-6 fw-normal" style="color: #92400E;">แต้ม</small></h4>
-          </div>
-        </div>
-        <button onclick="openShareModal('invite')" class="btn-action-sm text-warning border border-warning"><i class="fa-solid fa-user-plus me-1"></i> ชวนเพื่อน</button>
+    <!-- 2. การ์ดกระเป๋าเงินสวัสดิการ (Wallet Card) -->
+    <div class="wallet-card mb-4 mx-1">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-white-50 small fw-bold"><i class="fa-solid fa-wallet me-1"></i> ยอดสมทบสะสม</span>
+        <small class="text-white-50" id="dashCenterText" style="font-size: 0.65rem;"></small>
       </div>
+      <h1 class="text-white fw-bold mb-1" style="font-size: 2.5rem;">฿<span id="dashTotalContrib">0</span></h1>
+      <p class="text-white-50 small mb-4">ยอดค้างชำระ: <span id="dashOutstanding" class="text-warning fw-bold">0</span> บาท</p>
 
-      <!-- 💰 ยอดเงินสมทบ -->
-      <div class="stat-card stat-card-contrib text-start m-0 position-relative">
-        <div class="d-flex align-items-center gap-3">
-          <div class="icon-box"><i class="fa-solid fa-coins"></i></div>
-          <div>
-            <small class="fw-bold d-block lh-1 mb-1" style="color: #065F46;">ยอดสมทบสะสม</small>
-            <h4 class="fw-bold mb-0 text-dark"><span id="dashTotalContrib">0</span> <small class="fs-6 fw-normal" style="color: #065F46;">฿</small></h4>
-            <small class="text-danger fw-bold d-block mt-1" style="font-size: 0.75rem;">
-              <i class="fa-solid fa-circle-exclamation"></i> ค้างสมทบ <span id="dashOutstanding">0</span> บาท
-            </small>
-          </div>
+      <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px solid rgba(255,255,255,0.15);">
+        <div>
+          <span class="text-white-50 d-block mb-1" style="font-size: 0.7rem;">คะแนนอาสาสมัคร</span>
+          <span class="text-warning fw-bold"><i class="fa-solid fa-star me-1"></i><span id="dashCwfPoints">0</span> แต้ม</span>
         </div>
-        <a href="contribution.html" class="btn-action-sm text-success border border-success text-decoration-none"><i class="fa-solid fa-plus me-1"></i> สมทบ</a>
-      </div>
-
-      <!-- 🏥 สวัสดิการที่เคยรับ -->
-      <div class="stat-card stat-card-welfare text-start m-0">
-        <div class="d-flex align-items-center gap-3">
-          <div class="icon-box"><i class="fa-solid fa-hand-holding-heart"></i></div>
-          <div>
-            <small class="fw-bold d-block lh-1 mb-1" style="color: #1E3A8A;">รับสวัสดิการรวม</small>
-            <h4 class="fw-bold mb-0 text-dark"><span id="dashTotalWelfare">0</span> <small class="fs-6 fw-normal" style="color: #1E3A8A;">฿</small></h4>
-          </div>
+        <div class="text-end">
+          <span class="text-white-50 d-block mb-1" style="font-size: 0.7rem;">รับสวัสดิการรวม</span>
+          <span class="text-info fw-bold">฿<span id="dashTotalWelfare">0</span></span>
         </div>
-        <a href="claim.html" class="btn-action-sm text-primary border border-primary text-decoration-none"><i class="fa-solid fa-file-medical me-1"></i> ขอเบิก</a>
       </div>
     </div>
 
-    <!-- 🎮 ศูนย์ภารกิจ & เช็คอิน (Gamification Hub) -->
-    <div class="mission-hub text-start mt-4">
+    <!-- 3. เมนูด่วน 4 ปุ่ม (Quick Actions) เหมือนแอปธนาคาร -->
+    <div class="row g-2 mb-4 px-2">
+      <!-- ปุ่มที่ 1: สแกนจ่าย (เน้นสีเขียวเด่น) -->
+      <div class="col-3">
+        <div class="quick-action-wrapper" onclick="scanToPayAdmin()">
+          <div class="quick-action-btn bg-success text-white shadow-sm" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);"><i class="fa-solid fa-qrcode"></i></div>
+          <span class="quick-action-text text-dark fw-bold">สแกนจ่าย</span>
+        </div>
+      </div>
+      <!-- ปุ่มที่ 2: สมทบ -->
+      <div class="col-3">
+        <a href="contribution.html" class="text-decoration-none w-100">
+          <div class="quick-action-wrapper">
+            <div class="quick-action-btn bg-white text-primary border"><i class="fa-solid fa-plus"></i></div>
+            <span class="quick-action-text">สมทบ</span>
+          </div>
+        </a>
+      </div>
+      <!-- ปุ่มที่ 3: ขอเบิก -->
+      <div class="col-3">
+        <a href="claim.html" class="text-decoration-none w-100">
+          <div class="quick-action-wrapper">
+            <div class="quick-action-btn bg-white text-danger border"><i class="fa-solid fa-file-medical"></i></div>
+            <span class="quick-action-text">ขอเบิก</span>
+          </div>
+        </a>
+      </div>
+      <!-- ปุ่มที่ 4: ชวนเพื่อน -->
+      <div class="col-3">
+        <div class="quick-action-wrapper" onclick="openShareModal('invite')">
+          <div class="quick-action-btn bg-white text-warning border"><i class="fa-solid fa-user-plus"></i></div>
+          <span class="quick-action-text">ชวนเพื่อน</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4 border-secondary border-opacity-25 mx-2">
+
+    <!-- 4. ศูนย์ภารกิจ & เช็คอิน (Gamification Hub) -->
+    <div class="mission-hub text-start mt-4 mx-1">
       <div class="d-flex align-items-center justify-content-between mb-3">
         <div class="d-flex align-items-center">
           <i class="fa-solid fa-fire text-warning fs-4 me-2" style="text-shadow: 0 0 10px rgba(245,158,11,0.5);"></i>
@@ -446,46 +506,46 @@
       </button>
     </div>
 
-    <!-- 👁️ กระดานตรวจสอบความโปร่งใสชุมชน (Transparency Board) -->
-    <div class="text-start mt-4">
+    <!-- 5. กระดานตรวจสอบความโปร่งใสชุมชน (Transparency Board) -->
+    <div class="text-start mt-4 mx-1">
       <div class="d-flex align-items-center mb-3 px-1">
         <i class="fa-solid fa-magnifying-glass-chart text-primary fs-4 me-2"></i>
         <h6 class="fw-bold text-dark mb-0 m-0">กระดานความโปร่งใสชุมชน</h6>
       </div>
-      <div class="alert alert-info border-0 rounded-4 small p-3 mb-3 bg-primary bg-opacity-10 text-primary">
+      <div class="alert alert-info border-0 rounded-4 small p-3 mb-3 bg-primary bg-opacity-10 text-primary shadow-sm">
         <i class="fa-solid fa-circle-info me-1"></i> ร่วมตรวจสอบรับทราบการเบิกจ่ายสวัสดิการ เพื่อชิงแต้มโควต้าพิเศษรายวัน!
       </div>
-      
       <div id="transparencyFeed">
-         <!-- ระบบจะดึงข้อมูลธุรกรรมล่าสุดมาแสดงผลที่นี่ -->
          <div class="text-center text-muted small p-3"><div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดกระดานชุมชน...</div>
       </div>
     </div>
 
-    <!-- 🌟 เพิ่ม: กระดานติดตามสถานะเงินสมทบ (Timeline) -->
-      <div class="section-title px-1 mt-4"><i class="fa-solid fa-route text-muted me-2"></i> ติดตามเงินสมทบล่าสุด</div>
-      <div id="dashTxTimeline" class="bg-white p-3 rounded-4 shadow-sm border border-light mb-4">
+    <!-- 6. กระดานติดตามสถานะเงินสมทบ (Timeline) -->
+    <div class="text-start mt-4 mx-1">
+      <div class="section-title px-1 mb-3"><i class="fa-solid fa-route text-muted me-2"></i> ติดตามเงินสมทบล่าสุด</div>
+      <div id="dashTxTimeline" class="bg-white p-4 rounded-4 shadow-sm border border-light mb-4">
          <div class="text-center text-muted small py-2">กำลังดึงข้อมูล...</div>
       </div>
+    </div>
 
-    <!-- ข้อมูลส่วนตัว -->
-    <div class="text-start mt-4">
-      <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+    <!-- 7. ข้อมูลส่วนตัว (Profile Data) -->
+    <div class="text-start mt-4 mx-1 bg-white p-4 rounded-4 shadow-sm border border-light">
+      <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="section-title m-0"><i class="fa-solid fa-id-card text-muted me-2"></i> ข้อมูลส่วนตัว</div>
-        <button onclick="openProfileEditor()" class="btn btn-light text-primary border-0 rounded-pill px-3 py-1 fw-bold" style="font-size: 0.8rem;"><i class="fa-solid fa-pen me-1"></i> แก้ไข</button>
+        <button onclick="openProfileEditor()" class="btn btn-light text-primary border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-pen me-1"></i> แก้ไข</button>
       </div>
       
-      <div class="info-list">
-        <div class="info-row"><span class="info-label">รหัสสมาชิก</span><span class="info-data text-primary fs-6" id="dashMemberId"></span></div>
-        <div class="info-row"><span class="info-label">ประเภทสมาชิก</span><span class="info-data"><div class="badge-type m-0" id="dashMemberTypeBadgeInfo">สมาชิกสามัญ</div></span></div>
-        <div class="info-row"><span class="info-label">เลข ปชช.</span><span class="info-data"><span id="dashNatIdMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('NatId')"></i></span></div>
-        <div class="info-row"><span class="info-label">เบอร์โทรศัพท์</span><span class="info-data"><span id="dashPhoneMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('Phone')"></i></span></div>
-        <div class="info-row"><span class="info-label">อายุสมาชิก</span><span class="info-data text-success" id="dashAgeYears"></span></div>
-        <div class="info-row"><span class="info-label">วันที่สมัคร</span><span class="info-data" id="dashDate"></span></div>
+      <div class="info-list shadow-none mb-0">
+        <div class="info-row px-0"><span class="info-label">รหัสสมาชิก</span><span class="info-data text-primary fs-6" id="dashMemberId"></span></div>
+        <div class="info-row px-0"><span class="info-label">ประเภทสมาชิก</span><span class="info-data"><div class="badge-type m-0" id="dashMemberTypeBadgeInfo">สมาชิกสามัญ</div></span></div>
+        <div class="info-row px-0"><span class="info-label">เลข ปชช.</span><span class="info-data"><span id="dashNatIdMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('NatId')"></i></span></div>
+        <div class="info-row px-0"><span class="info-label">เบอร์โทรศัพท์</span><span class="info-data"><span id="dashPhoneMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('Phone')"></i></span></div>
+        <div class="info-row px-0"><span class="info-label">อายุสมาชิก</span><span class="info-data text-success" id="dashAgeYears"></span></div>
+        <div class="info-row px-0 border-0"><span class="info-label">วันที่สมัคร</span><span class="info-data" id="dashDate"></span></div>
       </div>
 
-      <div class="section-title px-1 mt-4"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i> ประวัติรับสวัสดิการล่าสุด</div>
-      <div id="dashWelfareList" class="info-list mb-0"></div>
+      <div class="section-title mt-4 pt-3 border-top"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i> ประวัติรับสวัสดิการล่าสุด</div>
+      <div id="dashWelfareList" class="info-list shadow-none mb-0"></div>
     </div>
   </div>
 
