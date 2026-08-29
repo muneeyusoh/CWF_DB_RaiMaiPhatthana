@@ -223,6 +223,15 @@
           <div class="col-6"><div class="admin-card m-0 border-0"><div class="d-flex align-items-center mb-2"><span class="dot-yellow me-2"></span><small class="text-muted fw-bold" style="font-size: 0.75rem;">เงินสดในมือ</small></div><h5 class="fw-bold text-warning mb-0 text-truncate" id="liq-cash">฿0.00</h5></div></div>
       </div>
 
+      <!-- 🌟 เพิ่ม: เรดาร์ติดตามเงินค้างส่ง (Pending Radar) -->
+      <div class="d-flex align-items-center mb-3 mt-4 ps-1">
+        <i class="fa-solid fa-radar text-danger fs-5 me-2"></i>
+        <h6 class="fw-bold text-dark mb-0">เรดาร์เงินค้างส่ง (อยู่ที่ใครบ้าง?)</h6>
+      </div>
+      <div id="holderRadarContainer" class="row g-2 mb-4">
+        <!-- ข้อมูลเรดาร์จะถูกดึงมาแสดงที่นี่ -->
+
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-3 mt-4 ps-1">
         <h6 class="fw-bold text-dark mb-0">ข้อมูลฐานสมาชิก</h6>
       </div>
@@ -920,13 +929,16 @@
 
   async function loadDashboardOverview() {
     if(currentAdminData.role === 'Admin-ผู้ดูแล' || currentAdminData.role === 'Admin-สวัสดิการ') {
-        loadMembersData(); return; // ข้ามการโหลดหน้าแดชบอร์ดถ้าไม่มีสิทธิ์
+        loadMembersData(); return; 
     }
     showLoader(true, "อัปเดตภาพรวม...");
     try {
       let mCount = 0, pCount = 0, sumIn = 0, sumOut = 0, bankBal = 0, cashBal = 0;
       let chartData = { member: 0, codi: 0, local: 0, privateStore: 0, donate: 0, interest: 0, profit: 0, other: 0 };
       let pendingTxCount = 0; let pendingClaimCount = 0; 
+      
+      // 🌟 ตัวแปรเก็บข้อมูลเรดาร์เงินค้าง
+      let holderBalances = {};
       
       const mSnap = await db.collection("members").get(); mCount = mSnap.size;
       mSnap.forEach(doc => { if(doc.data().status === 'รอตรวจสอบ') pCount++; });
@@ -935,6 +947,15 @@
       tSnap.forEach(doc => {
           const d = doc.data(); 
           if(d.status === 'รอตรวจสอบ') { pCount++; pendingTxCount++; }
+          
+          // 🌟 คำนวณเรดาร์: หาว่าตอนนี้มีเงินรอส่งมอบอยู่ที่ใครบ้าง
+          if(d.status === 'รอส่งมอบ' || d.status === 'รอตรวจสอบ') {
+              let holder = d.currentHolder || d.fullName.replace('แอดมิน: ', '');
+              if(!holderBalances[holder]) holderBalances[holder] = { count: 0, amount: 0 };
+              holderBalances[holder].count++;
+              holderBalances[holder].amount += parseFloat(d.amount);
+          }
+
           if(d.status === 'อนุมัติแล้ว') {
               let amt = parseFloat(d.amount) || 0;
               if(d.type.includes('รับ') || d.type === 'สมทบเงินกองทุน') {
@@ -960,6 +981,26 @@
           if(doc.data().status === 'รอตรวจสอบ') { pCount++; pendingClaimCount++; } 
           if(doc.data().status === 'อนุมัติแล้ว') { sumOut += parseFloat(doc.data().claimAmount); cashBal -= parseFloat(doc.data().claimAmount); } 
       });
+
+      // 🌟 นำข้อมูลเรดาร์มาแสดงผลบนหน้าจอ
+      const radarContainer = document.getElementById('holderRadarContainer');
+      let radarHtml = "";
+      if (Object.keys(holderBalances).length === 0) {
+          radarHtml = `<div class="col-12"><div class="admin-card text-center m-0 border-0 border-success border-opacity-25 bg-success bg-opacity-10"><small class="text-success fw-bold"><i class="fa-solid fa-check-circle"></i> ไม่มีเงินค้างอยู่กับกรรมการ</small></div></div>`;
+      } else {
+          for (const [holder, data] of Object.entries(holderBalances)) {
+              let hAmt = data.amount.toLocaleString('en-US', {minimumFractionDigits: 2});
+              radarHtml += `
+              <div class="col-6">
+                <div class="admin-card m-0 border-0 border-top border-4 border-warning bg-warning bg-opacity-10">
+                  <small class="text-dark fw-bold d-block mb-1 text-truncate" style="font-size:0.7rem;"><i class="fa-solid fa-user-tie me-1"></i> ${holder}</small>
+                  <h5 class="text-warning mb-0 fw-bold">฿${hAmt}</h5>
+                  <div class="badge bg-white text-muted mt-2 border shadow-sm" style="font-size:0.6rem;">${data.count} บิล</div>
+                </div>
+              </div>`;
+          }
+      }
+      if(radarContainer) radarContainer.innerHTML = radarHtml;
 
       document.getElementById('eq-population').innerText = (townPopulation/1000).toFixed(1) + "k";
       document.getElementById('eq-active').innerText = mCount.toLocaleString(); 
@@ -2360,6 +2401,13 @@
         let safeType = d.type ? d.type.replace(/'/g, "\\'") : ""; let safeNote = d.note ? d.note.replace(/'/g, "\\'") : "";
         let safeUid = d.uid ? d.uid : ""; let displayTxId = d.txId ? d.txId : "-";
 
+        // 🌟 ป้ายบอกตำแหน่งเงินค้าง
+        let holderBadge = "";
+        if(d.status === "รอส่งมอบ" || d.status === "รอตรวจสอบ") {
+            let holderName = d.currentHolder || d.fullName.replace('แอดมิน: ', '');
+            holderBadge = `<span class="badge bg-warning text-dark border border-warning shadow-sm mt-1 mb-2 d-inline-block"><i class="fa-solid fa-location-dot text-danger"></i> อยู่ที่: ${holderName}</span>`;
+        }
+        
         let actionBtns = "";
         if (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน') {
             actionBtns = `
@@ -2404,6 +2452,7 @@
                 <div class="icon-box ${iconClass} m-0 flex-shrink-0"><i class="fa-solid ${icon}"></i></div>
                 <div style="min-width: 0;">
                     <h6 class="mb-1 fw-bold text-dark text-truncate" style="font-size:0.9rem;">${d.type}</h6>
+                    ${holderBadge} <!-- แทรกตรงนี้ -->
                     <small class="text-muted d-block" style="font-size: 0.7rem;"><i class="fa-regular fa-calendar me-1"></i>${txDateDisplay}</small>
                 </div>
             </div>
