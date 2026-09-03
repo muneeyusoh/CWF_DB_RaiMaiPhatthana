@@ -398,26 +398,52 @@
                     <i class="fa-solid fa-filter"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end p-3 border-0 shadow-lg rounded-3" style="min-width: 260px;">
-                    <h6 class="fw-bold text-dark mb-3">ตัวกรองข้อมูลสมาชิก</h6>
-                    <div class="mb-2">
-                        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-building me-1"></i> ศูนย์ประสานงาน</label>
-                        <select id="filterCenter" class="form-select form-select-sm shadow-none" onchange="filterMembersLocally()">
-                            <option value="">ทั้งหมด</option>
-                        </select>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-user-tie me-1"></i> ผู้ดูแล</label>
-                        <select id="filterAdmin" class="form-select form-select-sm shadow-none" onchange="filterMembersLocally()">
-                            <option value="">ทั้งหมด</option>
-                        </select>
-                    </div>
-                    <div class="mb-1">
-                        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-id-card me-1"></i> ประเภทสมาชิก</label>
-                        <select id="filterType" class="form-select form-select-sm shadow-none" onchange="filterMembersLocally()">
-                            <option value="">ทั้งหมด</option>
-                        </select>
-                    </div>
-                </div>
+    <h6 class="fw-bold text-dark mb-3">ตัวกรองข้อมูลสมาชิก</h6>
+    
+    <!-- (ของเดิม) ศูนย์ประสานงาน -->
+    <div class="mb-2">
+        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-building me-1"></i> ศูนย์ประสานงาน</label>
+        <select id="filterCenter" class="form-select form-select-sm shadow-none" onchange="filterMembersLocally()">
+            <option value="">ทั้งหมด</option>
+        </select>
+    </div>
+    
+    <!-- (ของเดิม) ผู้ดูแล -->
+    <div class="mb-2">
+        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-user-tie me-1"></i> ผู้ดูแล</label>
+        <select id="filterAdmin" class="form-select form-select-sm shadow-none" onchange="filterMembersLocally()">
+            <option value="">ทั้งหมด</option>
+        </select>
+    </div>
+    
+    <!-- (ของเดิม) ประเภทสมาชิก -->
+    <div class="mb-2">
+        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-id-card me-1"></i> ประเภทสมาชิก</label>
+        <select id="filterType" class="form-select form-select-sm shadow-none" onchange="filterMembersLocally()">
+            <option value="">ทั้งหมด</option>
+        </select>
+    </div>
+
+    <!-- 🌟 (เพิ่มใหม่) อายุการเป็นสมาชิก -->
+    <div class="mb-2">
+        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-clock-rotate-left me-1"></i> อายุสมาชิก</label>
+        <select id="filterAge" class="form-select form-select-sm shadow-none border-primary" onchange="filterMembersLocally()">
+            <option value="">ทั้งหมด</option>
+            <option value="over1year">ครบ 1 ปีขึ้นไป</option>
+            <option value="under1year">ไม่ถึง 1 ปี</option>
+        </select>
+    </div>
+
+    <!-- 🌟 (เพิ่มใหม่) ความเปราะบาง -->
+    <div class="mb-1">
+        <label class="form-label small text-muted mb-1"><i class="fa-solid fa-wheelchair me-1"></i> กลุ่มเปราะบาง</label>
+        <select id="filterVulnerable" class="form-select form-select-sm shadow-none border-danger border-opacity-50" onchange="filterMembersLocally()">
+            <option value="">ทั้งหมด</option>
+            <option value="ปกติ">ไม่มีความเปราะบาง (ปกติ)</option>
+            <!-- ตัวเลือกอื่นๆ จะถูกดึงมาจากฐานข้อมูลอัตโนมัติ -->
+        </select>
+    </div>
+</div>
             </div>
         </div>
       </div>
@@ -609,67 +635,88 @@
       <div class="admin-card border-0 p-4 mb-3">
         <div class="d-flex align-items-center mb-3 border-bottom pb-2"><i class="fa-solid fa-sitemap text-primary me-2"></i><h6 class="fw-bold text-dark mb-0">1. ข้อมูลองค์กรและการติดต่อ</h6></div>
         <div class="row g-2 mb-3">
-            <div class="col-12"><label class="small fw-bold text-muted mb-1">ชื่อกองทุนสวัสดิการ</label><input type="text" id="setFundName" class="form-control-modern w-100 fw-bold text-primary"></div>
+            <div class="col-8"><label class="small fw-bold text-muted mb-1">ชื่อกองทุนสวัสดิการ</label><input type="text" id="setFundName" class="form-control-modern w-100 fw-bold text-primary"></div>
+            <!-- 🌟 เพิ่ม รหัสจัดตั้งกองทุน -->
+            <div class="col-4"><label class="small fw-bold text-muted mb-1">รหัสจัดตั้งกองทุน</label><input type="text" id="setFundCode" class="form-control-modern w-100 text-center" placeholder="เช่น 100241803"></div>
+            
             <div class="col-4"><label class="small fw-bold text-muted mb-1">ที่อยู่เลขที่</label><input type="text" id="setAddressNo" class="form-control-modern w-100"></div>
             <div class="col-4"><label class="small fw-bold text-muted mb-1">หมู่ที่</label><input type="text" id="setAddressMoo" class="form-control-modern w-100"></div>
             <div class="col-4"><label class="small fw-bold text-muted mb-1">ตำบล</label><input type="text" id="setAddressSub" class="form-control-modern w-100"></div>
             <div class="col-4"><label class="small fw-bold text-muted mb-1">อำเภอ</label><input type="text" id="setAddressDist" class="form-control-modern w-100"></div>
             <div class="col-4"><label class="small fw-bold text-muted mb-1">จังหวัด</label><input type="text" id="setAddressProv" class="form-control-modern w-100"></div>
             <div class="col-4"><label class="small fw-bold text-muted mb-1">รหัสไปรษณีย์</label><input type="text" id="setAddressZip" class="form-control-modern w-100"></div>
+            
+            <!-- 🌟 เพิ่ม พิกัดกองทุน -->
+<div class="col-6">
+    <label class="small fw-bold text-muted mb-1">ละติจูด (Latitude)</label>
+    <input type="text" id="setFundLat" class="form-control-modern w-100" placeholder="เช่น 5.92159">
+</div>
+<div class="col-6">
+    <label class="small fw-bold text-muted mb-1">ลองจิจูด (Longitude)</label>
+    <div class="input-group">
+        <input type="text" id="setFundLng" class="form-control-modern flex-grow-1" placeholder="เช่น 101.76996">
+        <button type="button" class="btn btn-danger px-3 rounded-end-4 ms-1 shadow-sm" onclick="getCurrentLocation()" title="ดึงพิกัดตำแหน่งปัจจุบัน">
+            <i class="fa-solid fa-map-location-dot"></i>
+        </button>
+    </div>
+</div>
+            
             <div class="col-6"><label class="small fw-bold text-muted mb-1">เบอร์ติดต่อกองทุน</label><input type="tel" id="setFundPhone" class="form-control-modern w-100"></div>
             <div class="col-6"><label class="small fw-bold text-muted mb-1">อีเมลกองทุน</label><input type="email" id="setFundEmail" class="form-control-modern w-100"></div>
             <div class="col-12"><label class="small fw-bold text-muted mb-1">เพจ Facebook / เว็บไซต์</label><input type="text" id="setFundFb" class="form-control-modern w-100"></div>
         </div>
-        <div class="p-3 bg-light rounded-4 border">
-            <h6 class="small fw-bold text-dark mb-2"><i class="fa-solid fa-user-tie text-secondary me-1"></i> ข้อมูลประธานกองทุน</h6>
+
+        <!-- 🌟 อัปเดต ข้อมูลประธานกองทุน -->
+        <div class="p-3 bg-light rounded-4 border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="small fw-bold text-dark mb-0"><i class="fa-solid fa-user-tie text-secondary me-1"></i> ข้อมูลประธานกองทุน</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" onclick="openMemberSearchModal('president')"><i class="fa-solid fa-search me-1"></i> ดึงจากทะเบียนสมาชิก</button>
+            </div>
             <div class="row g-2">
                 <div class="col-12"><input type="text" id="setPresidentName" class="form-control-modern w-100" placeholder="ชื่อ-สกุล ประธาน"></div>
+                <div class="col-12"><input type="text" id="setPresidentAddress" class="form-control-modern w-100 text-muted" placeholder="ที่อยู่ (เลขที่, หมู่, อปท., ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์)"></div>
                 <div class="col-6"><input type="tel" id="setPresidentPhone" class="form-control-modern w-100" placeholder="เบอร์โทรศัพท์"></div>
                 <div class="col-6"><input type="email" id="setPresidentEmail" class="form-control-modern w-100" placeholder="อีเมลประธาน"></div>
             </div>
         </div>
-      </div>
 
-      <!-- ตัวแปรจัดการฐานข้อมูล -->
-      <div class="admin-card border-0 p-4 mb-3">
-        <div class="d-flex align-items-center mb-3 border-bottom pb-2"><i class="fa-solid fa-sliders text-success me-2"></i><h6 class="fw-bold text-dark mb-0">2. ตัวแปรจัดการฐานข้อมูล</h6></div>
-        <label class="small fw-bold text-muted mb-1">เงินสมทบเป้าหมายต่อปี (บาท)</label><input type="number" id="setAnnualFee" class="form-control-modern w-100 mb-4 text-success fw-bold" value="365" step="0.01">
-        
-        <label class="small fw-bold text-muted mb-1">ประเภทสมาชิก</label>
-        <div class="input-group mb-2"><input type="text" id="newMemberTypeInput" class="form-control-modern flex-grow-1" placeholder="เช่น สมาชิกสามัญ..." onkeypress="if(event.key === 'Enter') addMemberTypeBadge();"><button type="button" class="btn btn-dark px-3 rounded-end-4 ms-1" onclick="addMemberTypeBadge()"><i class="fa-solid fa-plus"></i></button></div>
-        <div id="memberTypesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
-
-        <label class="small fw-bold text-muted mb-1">หมู่บ้านในเขตพื้นที่</label>
-        <div class="input-group mb-2"><input type="text" id="newVillageInput" class="form-control-modern flex-grow-1" placeholder="พิมพ์ชื่อหมู่บ้าน..." onkeypress="if(event.key === 'Enter') addVillageBadge();"><button type="button" class="btn btn-success px-3 rounded-end-4 ms-1" onclick="addVillageBadge()"><i class="fa-solid fa-plus"></i></button></div>
-        <div id="villagesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
-        
-        <label class="small fw-bold text-muted mb-1">รายชื่อศูนย์ประสานงาน</label>
-        <div class="input-group mb-2"><input type="text" id="newCenterInput" class="form-control-modern flex-grow-1" placeholder="พิมพ์ชื่อศูนย์ประสานงาน..." onkeypress="if(event.key === 'Enter') addCenterBadge();"><button type="button" class="btn btn-primary px-3 rounded-end-4 ms-1" onclick="addCenterBadge()"><i class="fa-solid fa-plus"></i></button></div>
-        <div id="centersContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
-      </div>
-
-      <!-- โครงสร้างคณะกรรมการ -->
-      <div class="admin-card border-0 p-4 mb-3">
-        <div class="d-flex align-items-center mb-3 border-bottom pb-2"><i class="fa-solid fa-users-gear text-warning me-2"></i><h6 class="fw-bold text-dark mb-0">3. โครงสร้างคณะกรรมการ</h6></div>
-        <div class="bg-warning bg-opacity-10 p-3 rounded-4 mb-4 border border-warning">
-            <h6 class="small fw-bold text-dark mb-2">เพิ่มรายชื่อกรรมการ</h6>
+        <!-- 🌟 เพิ่ม ข้อมูลผู้ประสานงาน -->
+        <div class="p-3 bg-light rounded-4 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="small fw-bold text-dark mb-0"><i class="fa-solid fa-headset text-secondary me-1"></i> ข้อมูลผู้ประสานงาน</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" onclick="openMemberSearchModal('coordinator')"><i class="fa-solid fa-search me-1"></i> ดึงจากทะเบียนสมาชิก</button>
+            </div>
             <div class="row g-2">
-                <div class="col-12"><input type="text" id="comName" class="form-control-modern w-100 form-control-sm" placeholder="ชื่อ-นามสกุล"></div>
-                <div class="col-6"><input type="text" id="comPos" class="form-control-modern w-100 form-control-sm" placeholder="ตำแหน่ง"></div>
-                <div class="col-6"><input type="text" id="comRole" class="form-control-modern w-100 form-control-sm" placeholder="หน้าที่"></div>
-                <div class="col-6"><input type="tel" id="comPhone" class="form-control-modern w-100 form-control-sm" placeholder="เบอร์ติดต่อ"></div>
-                <div class="col-6"><input type="email" id="comEmail" class="form-control-modern w-100 form-control-sm" placeholder="อีเมล"></div>
-                <div class="col-12 mt-2"><button onclick="addCommitteeMember()" class="btn btn-sm btn-warning w-100 fw-bold rounded-pill shadow-sm"><i class="fa-solid fa-plus"></i> เพิ่มกรรมการ</button></div>
+                <div class="col-12"><input type="text" id="setCoordinatorName" class="form-control-modern w-100" placeholder="ชื่อ-สกุล ผู้ประสานงาน"></div>
+                <div class="col-12"><input type="text" id="setCoordinatorAddress" class="form-control-modern w-100 text-muted" placeholder="ที่อยู่ (เลขที่, หมู่, อปท., ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์)"></div>
+                <div class="col-6"><input type="tel" id="setCoordinatorPhone" class="form-control-modern w-100" placeholder="เบอร์โทรศัพท์"></div>
+                <div class="col-6"><input type="email" id="setCoordinatorEmail" class="form-control-modern w-100" placeholder="อีเมลผู้ประสานงาน"></div>
             </div>
         </div>
-        <div id="committeeContainer" class="d-flex flex-column gap-2"></div>
       </div>
 
-      <!-- เศรษฐศาสตร์แต้ม (Tokenomics) -->
+      <!-- 🌟 เพิ่ม ประวัติการก่อตั้งและวัตถุประสงค์ -->
+      <div class="admin-card border-0 p-4 mb-3">
+        <div class="d-flex align-items-center mb-3 border-bottom pb-2"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i><h6 class="fw-bold text-dark mb-0">2. ประวัติการก่อตั้งและวัตถุประสงค์</h6></div>
+        <div class="row g-2 mb-3">
+            <div class="col-6"><label class="small fw-bold text-muted mb-1">วันที่ก่อตั้งกองทุน</label><input type="date" id="setEstablishDate" class="form-control-modern w-100"></div>
+            <div class="col-6"><label class="small fw-bold text-muted mb-1">องค์กรที่สนับสนุน</label><input type="text" id="setSupportOrg" class="form-control-modern w-100" placeholder="เช่น สถาบันพัฒนาองค์กรชุมชน (พอช.)"></div>
+        </div>
+        
+        <label class="small fw-bold text-muted mb-1">วัตถุประสงค์ของการจัดตั้งกองทุน</label>
+        <div class="input-group mb-2">
+            <input type="text" id="newObjectiveInput" class="form-control-modern flex-grow-1" placeholder="พิมพ์วัตถุประสงค์..." onkeypress="if(event.key === 'Enter') addObjectiveItem();">
+            <button type="button" class="btn btn-info px-3 rounded-end-4 ms-1 text-white" onclick="addObjectiveItem()"><i class="fa-solid fa-plus"></i> เพิ่ม</button>
+        </div>
+        <div id="objectivesContainer" class="d-flex flex-column gap-2 mb-2"></div>
+      </div>
+     
+
+      <!-- เศรษฐศาสตร์แต้ม (Tokenomics) (ของเดิม) -->
       <div class="admin-card border-0 p-4 mb-3" style="background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid #334155;">
         <div class="d-flex align-items-center mb-3 border-bottom pb-2" style="border-color: rgba(255,255,255,0.1) !important;">
           <i class="fa-solid fa-coins text-warning me-2 fs-4"></i>
-          <h6 class="fw-bold text-white mb-0">4. เศรษฐศาสตร์แต้ม (Tokenomics)</h6>
+          <h6 class="fw-bold text-white mb-0">5. เศรษฐศาสตร์แต้ม (Tokenomics)</h6>
         </div>
         <div class="row g-3">
           <div class="col-12">
@@ -694,17 +741,17 @@
         </div>
       </div>
 
-      <!-- ภารกิจและของรางวัล -->
+      <!-- ภารกิจและของรางวัล (ของเดิม) -->
       <div class="admin-card border-0 p-4 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-            <div class="d-flex align-items-center"><i class="fa-solid fa-gamepad text-info me-2"></i><h6 class="fw-bold text-dark mb-0">5. ตั้งค่าภารกิจสะสมแต้ม</h6></div>
+            <div class="d-flex align-items-center"><i class="fa-solid fa-gamepad text-info me-2"></i><h6 class="fw-bold text-dark mb-0">6. ตั้งค่าภารกิจสะสมแต้ม</h6></div>
             <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold" onclick="openMissionModal()">+ เพิ่ม</button>
         </div>
         <div id="missionsContainer"></div>
       </div>
       <div class="admin-card border-0 p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-            <div class="d-flex align-items-center"><i class="fa-solid fa-gift text-danger me-2"></i><h6 class="fw-bold text-dark mb-0">6. ตั้งค่าของรางวัล</h6></div>
+            <div class="d-flex align-items-center"><i class="fa-solid fa-gift text-danger me-2"></i><h6 class="fw-bold text-dark mb-0">7. ตั้งค่าของรางวัล</h6></div>
             <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="openRewardModal()">+ เพิ่ม</button>
         </div>
         <div id="rewardsContainer"></div>
@@ -731,13 +778,117 @@
       </div>
     </div>
 
-    <!-- ⚖️ ADMIN TAB: ระเบียบกองทุน -->
+    <!-- ⚖️ ADMIN TAB: ระเบียบกองทุน และ โครงสร้าง -->
     <div class="admin-tab-pane d-none" id="admin-view-rules">
-      <div class="d-flex justify-content-between align-items-center mb-4 px-1">
-        <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-scale-balanced text-warning me-2"></i> ระเบียบสวัสดิการ</h5>
-        <button class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="openAddRuleModal()">+ เพิ่มระเบียบ</button>
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4 px-1 sticky-top pt-2" style="background: var(--bg-light); z-index: 100;">
+        <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-scale-balanced text-warning me-2"></i> ระเบียบและโครงสร้างกองทุน</h5>
+        </div>
+
+      <!-- ตัวแปรจัดการฐานข้อมูล (ย้ายมาจากตั้งค่าระบบ) -->
+      <div class="admin-card border-0 p-4 mb-3">
+        <div class="d-flex align-items-center mb-3 border-bottom pb-2"><i class="fa-solid fa-sliders text-success me-2"></i><h6 class="fw-bold text-dark mb-0">ตัวแปรจัดการฐานข้อมูล</h6></div>
+        <label class="small fw-bold text-muted mb-1">เงินสมทบเป้าหมายต่อปี (บาท)</label><input type="number" id="setAnnualFee" class="form-control-modern w-100 mb-4 text-success fw-bold" value="365" step="0.01">
+        
+        <label class="small fw-bold text-muted mb-1">ประเภทสมาชิก</label>
+        <div class="input-group mb-2"><input type="text" id="newMemberTypeInput" class="form-control-modern flex-grow-1" placeholder="เช่น สมาชิกสามัญ..." onkeypress="if(event.key === 'Enter') addMemberTypeBadge();"><button type="button" class="btn btn-dark px-3 rounded-end-4 ms-1" onclick="addMemberTypeBadge()"><i class="fa-solid fa-plus"></i></button></div>
+        <div id="memberTypesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+        <label class="small fw-bold text-muted mb-1">หมู่บ้านในเขตพื้นที่</label>
+        <div class="input-group mb-2"><input type="text" id="newVillageInput" class="form-control-modern flex-grow-1" placeholder="พิมพ์ชื่อหมู่บ้าน..." onkeypress="if(event.key === 'Enter') addVillageBadge();"><button type="button" class="btn btn-success px-3 rounded-end-4 ms-1" onclick="addVillageBadge()"><i class="fa-solid fa-plus"></i></button></div>
+        <div id="villagesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
+        
+        <label class="small fw-bold text-muted mb-1">รายชื่อศูนย์ประสานงาน</label>
+        <div class="input-group mb-2"><input type="text" id="newCenterInput" class="form-control-modern flex-grow-1" placeholder="พิมพ์ชื่อศูนย์ประสานงาน..." onkeypress="if(event.key === 'Enter') addCenterBadge();"><button type="button" class="btn btn-primary px-3 rounded-end-4 ms-1" onclick="addCenterBadge()"><i class="fa-solid fa-plus"></i></button></div>
+        <div id="centersContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
       </div>
-      <div id="list-rules">กำลังโหลด...</div>
+
+      <!-- โครงสร้างคณะกรรมการ -->
+      <div class="admin-card border-0 p-4 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-users-gear text-warning me-2"></i>
+                <h6 class="fw-bold text-dark mb-0">โครงสร้างคณะกรรมการ</h6>
+            </div>
+            <!-- ปุ่มกดเพื่อกางฟอร์ม -->
+            <button class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCommitteeForm" aria-expanded="false" aria-controls="collapseCommitteeForm">
+                <i class="fa-solid fa-plus"></i> เพิ่ม
+            </button>
+        </div>
+
+        <!-- ฟอร์มเพิ่มกรรมการ (ถูกซ่อนไว้โดยค่าเริ่มต้น) -->
+        <div class="collapse mb-3" id="collapseCommitteeForm">
+            <div class="bg-warning bg-opacity-10 p-3 rounded-4 border border-warning shadow-sm">
+                <h6 class="small fw-bold text-dark mb-2">กรอกข้อมูลกรรมการ</h6>
+                <div class="row g-2">
+                    <div class="col-12"><input type="text" id="comName" class="form-control-modern w-100 form-control-sm" placeholder="ชื่อ-นามสกุล"></div>
+                    <div class="col-6"><input type="text" id="comPos" class="form-control-modern w-100 form-control-sm" placeholder="ตำแหน่ง"></div>
+                    <div class="col-6"><input type="text" id="comRole" class="form-control-modern w-100 form-control-sm" placeholder="หน้าที่"></div>
+                    <div class="col-6"><input type="tel" id="comPhone" class="form-control-modern w-100 form-control-sm" placeholder="เบอร์ติดต่อ"></div>
+                    <div class="col-6"><input type="email" id="comEmail" class="form-control-modern w-100 form-control-sm" placeholder="อีเมล"></div>
+                    <div class="col-12 mt-2">
+                        <button type="button" onclick="addCommitteeMember()" class="btn btn-sm btn-warning w-100 fw-bold rounded-pill shadow-sm">
+                            <i class="fa-solid fa-save"></i> บันทึกกรรมการ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- พื้นที่แสดงรายชื่อที่บันทึกแล้ว (จะถูกสร้างจาก JavaScript) -->
+        <div id="committeeContainer" class="d-flex flex-column gap-2"></div>
+      </div>>
+
+      <!-- รายการระเบียบสวัสดิการ -->
+      <div class="admin-card border-0 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-list-check text-primary me-2"></i>
+                <h6 class="fw-bold text-dark mb-0">รายการระเบียบสวัสดิการ</h6>
+            </div>
+            <!-- ปุ่มกดเพื่อกางฟอร์มเพิ่มระเบียบ -->
+            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRuleForm" aria-expanded="false" aria-controls="collapseRuleForm">
+                <i class="fa-solid fa-plus"></i> เพิ่มระเบียบ
+            </button>
+        </div>
+
+        <!-- ฟอร์มเพิ่มระเบียบและเงื่อนไข (ถูกซ่อนไว้โดยค่าเริ่มต้น) -->
+        <div class="collapse mb-3" id="collapseRuleForm">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-4 border border-primary shadow-sm">
+                <h6 class="small fw-bold text-primary mb-2">กำหนดระเบียบและเงื่อนไขการจ่าย</h6>
+                
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="small text-muted fw-bold mb-1">ชื่อประเภทสวัสดิการ</label>
+                        <input type="text" id="ruleName" class="form-control-modern w-100 form-control-sm" placeholder="เช่น สวัสดิการเจ็บป่วย/รักษาพยาบาล">
+                    </div>
+                </div>
+                
+                <!-- กล่องสำหรับเพิ่มเงื่อนไขแบบไดนามิก -->
+                <div class="p-2 bg-white rounded-3 border mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-1">
+                        <small class="fw-bold text-dark"><i class="fa-solid fa-filter text-secondary me-1"></i> เงื่อนไขการรับสิทธิ์</small>
+                        <button type="button" class="btn btn-sm btn-light text-primary py-0 px-2 rounded-pill border shadow-sm" onclick="addRuleConditionRow()" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-plus"></i> เพิ่มเงื่อนไข
+                        </button>
+                    </div>
+                    <!-- พื้นที่แสดงเงื่อนไขที่ถูกเพิ่ม -->
+                    <div id="ruleConditionsContainer" class="d-flex flex-column gap-2">
+                        <!-- แถวเงื่อนไขจะถูกเพิ่มด้วย JavaScript ที่นี่ -->
+                    </div>
+                </div>
+
+                <div class="col-12 mt-2 text-end">
+                    <button type="button" onclick="saveWelfareRule()" class="btn btn-sm btn-primary w-100 fw-bold rounded-pill shadow-sm">
+                        <i class="fa-solid fa-save"></i> บันทึกระเบียบ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- พื้นที่แสดงระเบียบที่บันทึกแล้วแบบย่อ-ขยาย -->
+        <div id="list-rules" class="d-flex flex-column gap-2">กำลังโหลด...</div>
+      </div>
     </div>
 
     <!-- 🛡️ ADMIN TAB: ผู้ดูแลระบบ -->
@@ -841,6 +992,8 @@
   let uiSettingsMemberTypes = [];
   let uiSettingsVillages = [];
   let uiSettingsCenters = [];
+  let uiSettingsCommittee = [];
+  let uiSettingsRules = [];
 
   async function loadGlobalSettings() {
       showLoader(true, "กำลังโหลดการตั้งค่า...");
@@ -965,6 +1118,280 @@
           
       } catch(e) { showLoader(false); console.error(e); Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
   }
+  // ฟังก์ชันวาดรายชื่อคณะกรรมการลงหน้าจอ
+function renderCommitteeList() {
+    const container = document.getElementById('committeeContainer');
+    container.innerHTML = "";
+    
+    uiSettingsCommittee.forEach((com, index) => {
+        container.innerHTML += `
+        <div class="bg-light border rounded-3 p-2 shadow-sm transition">
+            <!-- ส่วนที่แสดงผลแบบย่อ (ชื่อ ตำแหน่ง เบอร์) -->
+            <div class="d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleCommitteeDetail(${index})">
+                <div class="w-100">
+                    <strong class="text-dark d-block" style="font-size: 0.85rem;">${com.name}</strong>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-warning text-dark border border-warning shadow-sm" style="font-size: 0.65rem;">${com.pos}</span> 
+                        <span class="text-muted" style="font-size: 0.7rem;"><i class="fa-solid fa-phone me-1"></i>${com.phone || '-'}</span>
+                    </div>
+                </div>
+                <div class="text-muted ms-2 p-1">
+                    <i class="fa-solid fa-chevron-down transition" id="com-arrow-${index}"></i>
+                </div>
+            </div>
+            
+            <!-- ส่วนขยาย (ซ่อนหน้าที่ และ อีเมล ไว้) -->
+            <div class="collapse mt-2 pt-2 border-top" id="com-detail-${index}">
+                <div class="row g-1 mb-2" style="font-size: 0.75rem;">
+                    <div class="col-12"><span class="text-muted">หน้าที่:</span> <strong class="text-dark">${com.role || '-'}</strong></div>
+                    <div class="col-12"><span class="text-muted">อีเมล:</span> <strong class="text-dark">${com.email || '-'}</strong></div>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" style="font-size: 0.7rem;" onclick="removeCommitteeMember(${index})">
+                        <i class="fa-solid fa-trash"></i> ลบออก
+                    </button>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+}
+
+// ฟังก์ชันกาง/หุบ ส่วนแสดงรายละเอียดของกรรมการแต่ละคน
+function toggleCommitteeDetail(index) {
+    const detailObj = document.getElementById(`com-detail-${index}`);
+    const arrowObj = document.getElementById(`com-arrow-${index}`);
+    
+    if (detailObj.classList.contains('show')) {
+        detailObj.classList.remove('show');
+        arrowObj.classList.remove('fa-rotate-180');
+    } else {
+        detailObj.classList.add('show');
+        arrowObj.classList.add('fa-rotate-180');
+    }
+}
+
+// ฟังก์ชันบันทึกข้อมูลจากฟอร์ม
+function addCommitteeMember() {
+    const name = document.getElementById('comName').value.trim();
+    const pos = document.getElementById('comPos').value.trim();
+    const role = document.getElementById('comRole').value.trim();
+    const phone = document.getElementById('comPhone').value.trim();
+    const email = document.getElementById('comEmail').value.trim();
+
+    if (!name || !pos) return Swal.fire('แจ้งเตือน', 'กรุณากรอกชื่อและตำแหน่งให้ครบถ้วน', 'warning');
+
+    // บันทึกลง Array
+    uiSettingsCommittee.push({ name, pos, role, phone, email });
+    
+    // ล้างค่าฟอร์ม
+    document.getElementById('comName').value = "";
+    document.getElementById('comPos').value = "";
+    document.getElementById('comRole').value = "";
+    document.getElementById('comPhone').value = "";
+    document.getElementById('comEmail').value = "";
+
+    // สั่งปิดฟอร์มอัตโนมัติ (หุบกล่องเก็บ)
+    const formCollapse = document.getElementById('collapseCommitteeForm');
+    if(formCollapse && typeof bootstrap !== 'undefined') {
+        const bsCollapse = bootstrap.Collapse.getInstance(formCollapse);
+        if (bsCollapse) bsCollapse.hide();
+        else formCollapse.classList.remove('show');
+    }
+
+    // วาดข้อมูลใหม่
+    renderCommitteeList();
+}
+
+// ฟังก์ชันลบข้อมูล
+function removeCommitteeMember(index) {
+    uiSettingsCommittee.splice(index, 1);
+    renderCommitteeList();
+}
+
+// ========================================================
+// ฟังก์ชันสำหรับจัดการ "ฟอร์มเพิ่มเงื่อนไข"
+// ========================================================
+
+// 1. กดปุ่มเพื่อเพิ่มแถวเงื่อนไข
+function addRuleConditionRow() {
+    const container = document.getElementById('ruleConditionsContainer');
+    const rowId = 'cond-' + Date.now();
+    
+    // สร้าง HTML สำหรับแถวเงื่อนไข (มี Dropdown ให้เลือกรูปแบบเงื่อนไขที่เชื่อมโยงกัน)
+    const html = `
+    <div class="row g-1 align-items-center condition-row" id="${rowId}">
+        <div class="col-4">
+            <select class="form-select-modern w-100 form-select-sm cond-type" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+                <option value="อายุสมาชิก">อายุสมาชิก</option>
+                <option value="วงเงินจ่ายสูงสุด">วงเงินจ่ายสูงสุด</option>
+                <option value="จำกัดจำนวนครั้ง">จำกัดจำนวนครั้ง</option>
+                <option value="เงื่อนไขทั่วไป">เงื่อนไขทั่วไป (ข้อความ)</option>
+            </select>
+        </div>
+        <div class="col-4">
+            <input type="text" class="form-control-modern w-100 form-control-sm cond-value" placeholder="ระบุจำนวน/รายละเอียด" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+        </div>
+        <div class="col-3">
+            <select class="form-select-modern w-100 form-select-sm cond-unit" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+                <option value="วัน">วัน</option>
+                <option value="เดือน">เดือน</option>
+                <option value="ปี">ปี</option>
+                <option value="บาท/ครั้ง">บาท/ครั้ง</option>
+                <option value="บาท/ปี">บาท/ปี</option>
+                <option value="บาท/ตลอดชีพ">บาท/ตลอดชีพ</option>
+                <option value="ครั้ง/ปี">ครั้ง/ปี</option>
+                <option value="">-</option>
+            </select>
+        </div>
+        <div class="col-1 text-center">
+            <button type="button" class="btn btn-sm text-danger p-0" onclick="document.getElementById('${rowId}').remove()">
+                <i class="fa-solid fa-circle-minus"></i>
+            </button>
+        </div>
+    </div>`;
+    
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+// 2. บันทึกระเบียบทั้งหมดจากฟอร์ม
+function saveWelfareRule() {
+    const ruleName = document.getElementById('ruleName').value.trim();
+    if (!ruleName) return Swal.fire('แจ้งเตือน', 'กรุณาระบุชื่อสวัสดิการ', 'warning');
+
+    const conditionRows = document.querySelectorAll('.condition-row');
+    let conditions = [];
+    
+    // ดึงค่าจากแถวเงื่อนไขทั้งหมดมารวมเป็น Array ภายใต้สวัสดิการนี้
+    conditionRows.forEach(row => {
+        const type = row.querySelector('.cond-type').value;
+        const value = row.querySelector('.cond-value').value.trim();
+        const unit = row.querySelector('.cond-unit').value;
+        
+        if (value) { // เก็บเฉพาะแถวที่มีการกรอกข้อมูล
+            conditions.push({ type, value, unit });
+        }
+    });
+
+    if (conditions.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเพิ่มเงื่อนไขอย่างน้อย 1 ข้อ', 'warning');
+
+    // นำไปใส่ใน Array หลัก
+    uiSettingsRules.push({ name: ruleName, conditions: conditions });
+    
+    // ล้างฟอร์ม
+    document.getElementById('ruleName').value = '';
+    document.getElementById('ruleConditionsContainer').innerHTML = '';
+    
+    // ปิดหน้าต่างการตั้งค่า
+    const formCollapse = document.getElementById('collapseRuleForm');
+    if(formCollapse && typeof bootstrap !== 'undefined') {
+        const bsCollapse = bootstrap.Collapse.getInstance(formCollapse) || new bootstrap.Collapse(formCollapse, {toggle: false});
+        bsCollapse.hide();
+    }
+
+    // วาดรายการใหม่
+    renderRulesList();
+    Swal.fire('สำเร็จ', 'เพิ่มระเบียบสวัสดิการแล้ว', 'success');
+}
+
+// ========================================================
+// ฟังก์ชันสำหรับ "แสดงผลแบบย่อ-ขยาย" (คล้ายโครงสร้างกรรมการ)
+// ========================================================
+
+function renderRulesList() {
+    const container = document.getElementById('list-rules');
+    container.innerHTML = "";
+    
+    if(uiSettingsRules.length === 0) {
+        container.innerHTML = "<div class='text-center text-muted small p-2 bg-light rounded-4 border'>ยังไม่มีการตั้งระเบียบ</div>";
+        return;
+    }
+
+    uiSettingsRules.forEach((rule, index) => {
+        // สร้าง HTML สำหรับเงื่อนไขย่อยแต่ละข้อ
+        let condHtml = "";
+        rule.conditions.forEach((c) => {
+            let badgeClass = "bg-secondary";
+            if(c.type === 'อายุสมาชิก') badgeClass = "bg-info text-dark";
+            else if(c.type === 'วงเงินจ่ายสูงสุด') badgeClass = "bg-success";
+            else if(c.type === 'จำกัดจำนวนครั้ง') badgeClass = "bg-warning text-dark";
+
+            condHtml += `
+            <div class="d-flex justify-content-between border-bottom py-1 border-opacity-50" style="font-size: 0.75rem;">
+                <div class="text-dark">
+                    <span class="badge ${badgeClass} me-1" style="font-size: 0.6rem; min-width: 80px;">${c.type}</span> 
+                    <span class="fw-bold">${c.value}</span> <span class="text-muted">${c.unit}</span>
+                </div>
+            </div>`;
+        });
+
+        // สร้าง HTML สำหรับตัวการ์ดระเบียบ (ย่อ-ขยายได้)
+        container.innerHTML += `
+        <div class="bg-light border rounded-3 p-2 shadow-sm transition">
+            <!-- ส่วนที่แสดงผลแบบย่อ -->
+            <div class="d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleRuleDetail(${index})">
+                <div class="w-100">
+                    <strong class="text-primary d-block" style="font-size: 0.85rem;"><i class="fa-solid fa-file-contract me-1 text-secondary"></i> ${rule.name}</strong>
+                    <div class="text-muted mt-1" style="font-size: 0.7rem;"><span class="text-success"><i class="fa-solid fa-check-circle"></i> กำหนดไว้ ${rule.conditions.length} เงื่อนไข</span></div>
+                </div>
+                <div class="text-muted ms-2 p-1">
+                    <i class="fa-solid fa-chevron-down transition" id="rule-arrow-${index}"></i>
+                </div>
+            </div>
+            
+            <!-- ส่วนขยาย (แสดงเงื่อนไข) -->
+            <div class="collapse mt-2 pt-2 border-top border-primary border-opacity-25" id="rule-detail-${index}">
+                <div class="mb-2 p-2 bg-white rounded-3 shadow-sm border">
+                    <strong class="small text-dark d-block pb-1 mb-1"><i class="fa-solid fa-filter text-muted"></i> เงื่อนไขการจ่ายสวัสดิการ:</strong>
+                    ${condHtml}
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" style="font-size: 0.7rem;" onclick="removeWelfareRule(${index})">
+                        <i class="fa-solid fa-trash"></i> ลบระเบียบ
+                    </button>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+}
+
+function toggleRuleDetail(index) {
+    const detailObj = document.getElementById(`rule-detail-${index}`);
+    const arrowObj = document.getElementById(`rule-arrow-${index}`);
+    if (detailObj.classList.contains('show')) {
+        detailObj.classList.remove('show');
+        arrowObj.classList.remove('fa-rotate-180');
+    } else {
+        detailObj.classList.add('show');
+        arrowObj.classList.add('fa-rotate-180');
+    }
+}
+
+function removeWelfareRule(index) {
+    Swal.fire({
+        title: 'ยืนยันการลบ?',
+        text: "คุณต้องการลบระเบียบสวัสดิการนี้ใช่หรือไม่",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        confirmButtonText: 'ลบข้อมูล',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            uiSettingsRules.splice(index, 1);
+            renderRulesList();
+        }
+    });
+}
+
+// สร้างแถวเงื่อนไขเปล่า 1 แถวให้ทันทีเมื่อโหลดหน้าเว็บ 
+document.addEventListener("DOMContentLoaded", () => {
+    // หน่วงเวลาเล็กน้อยเพื่อให้ DOM เตรียมความพร้อม
+    setTimeout(() => {
+        addRuleConditionRow();
+    }, 1000);
+});
 
   // =========================================================
   // หมวดที่ 2: ตรวจสอบสิทธิ์ (Initialization & Auth)
@@ -1397,44 +1824,60 @@
   async function loadMembersData() {
     document.getElementById('list-members').innerHTML = '<div class="text-center mt-4"><div class="spinner-border text-primary"></div></div>';
     try {
-      const snap = await db.collection("members").orderBy("timestamp", "desc").get();
-      allMembersCache = []; let pendingLinks = 0;
-      
-      const centersSet = new Set();
-      const adminsSet = new Set();
-      const typesSet = new Set();
+        const snap = await db.collection("members").orderBy("timestamp", "desc").get();
+        allMembersCache = []; let pendingLinks = 0;
+        
+        const centersSet = new Set();
+        const adminsSet = new Set();
+        const typesSet = new Set();
+        const vulnSet = new Set(); // 🌟 เตรียมเก็บรายชื่อกลุ่มเปราะบาง
 
-      snap.forEach(doc => { 
-          let d = doc.data(); 
-          let allowPush = false;
-          if (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน' || currentAdminData.role === 'Admin-สวัสดิการ') allowPush = true;
-          else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) allowPush = true;
-          else if (currentAdminData.role === 'Admin-ผู้ดูแล' && d.responsibleAdmin === currentAdminData.name) allowPush = true;
+        snap.forEach(doc => { 
+            let d = doc.data(); 
+            let allowPush = false;
+            if (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน' || currentAdminData.role === 'Admin-สวัสดิการ') allowPush = true;
+            else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) allowPush = true;
+            else if (currentAdminData.role === 'Admin-ผู้ดูแล' && d.responsibleAdmin === currentAdminData.name) allowPush = true;
 
-          if(allowPush) {
-              if(d.linkStatus === 'pending') pendingLinks++;
-              allMembersCache.push({ id: doc.id, ...d }); 
-              if (d.center) centersSet.add(d.center);
-              if (d.responsibleAdmin) adminsSet.add(d.responsibleAdmin);
-              if (d.memberType) typesSet.add(d.memberType);
-          }
-      });
-      
-      const alertBox = document.getElementById('pendingLinkAlert');
-      if(alertBox) {
-          if(pendingLinks > 0 && currentAdminData.role !== 'Admin-ผู้ดูแล') { 
-              alertBox.classList.remove('d-none'); document.getElementById('linkRequestCount').innerText = pendingLinks; 
-          } else { alertBox.classList.add('d-none'); }
-      }
-      if(currentAdminData.role === 'Admin-ผู้ดูแล' && document.getElementById('btn-add-member')) { document.getElementById('btn-add-member').style.display = 'none'; }
+            if(allowPush) {
+                if(d.linkStatus === 'pending') pendingLinks++;
+                allMembersCache.push({ id: doc.id, ...d }); 
+                
+                if (d.center) centersSet.add(d.center);
+                if (d.responsibleAdmin) adminsSet.add(d.responsibleAdmin);
+                if (d.memberType) typesSet.add(d.memberType);
+                
+                // 🌟 เก็บข้อมูลกลุ่มเปราะบางลง Dropdown (ข้ามค่าว่าง หรือ "ปกติ")
+                if (d.vulnerability && d.vulnerability !== "" && d.vulnerability !== "ปกติ") {
+                    vulnSet.add(d.vulnerability);
+                }
+            }
+        });
+        
+        const alertBox = document.getElementById('pendingLinkAlert');
+        if(alertBox) {
+            if(pendingLinks > 0 && currentAdminData.role !== 'Admin-ผู้ดูแล') { 
+                alertBox.classList.remove('d-none'); document.getElementById('linkRequestCount').innerText = pendingLinks; 
+            } else { alertBox.classList.add('d-none'); }
+        }
+        if(currentAdminData.role === 'Admin-ผู้ดูแล' && document.getElementById('btn-add-member')) { document.getElementById('btn-add-member').style.display = 'none'; }
 
-      populateDropdown("filterCenter", Array.from(centersSet));
-      populateDropdown("filterAdmin", Array.from(adminsSet));
-      populateDropdown("filterType", Array.from(typesSet));
+        populateDropdown("filterCenter", Array.from(centersSet));
+        populateDropdown("filterAdmin", Array.from(adminsSet));
+        populateDropdown("filterType", Array.from(typesSet));
+        
+        // 🌟 ยัดตัวเลือกเปราะบางลง Dropdown แต่เก็บ Option "ทั้งหมด" และ "ปกติ" เอาไว้ด้านบน
+        const vulnSelect = document.getElementById("filterVulnerable");
+        if (vulnSelect) {
+            vulnSelect.innerHTML = '<option value="">ทั้งหมด</option><option value="ปกติ">ไม่มีความเปราะบาง (ปกติ)</option>';
+            Array.from(vulnSet).sort().forEach(item => {
+                vulnSelect.innerHTML += `<option value="${item}">${item}</option>`;
+            });
+        }
 
-      renderMembersList(allMembersCache);
+        renderMembersList(allMembersCache);
     } catch(e) { console.error(e); }
-  }
+}
 
   function populateDropdown(selectId, dataArray) {
       const select = document.getElementById(selectId);
@@ -1448,43 +1891,87 @@
   }
 
   function filterMembersLocally() {
-      const searchText = document.getElementById("searchMemberInput").value.toLowerCase();
-      const filterCenter = document.getElementById("filterCenter") ? document.getElementById("filterCenter").value : "";
-      const filterAdmin = document.getElementById("filterAdmin") ? document.getElementById("filterAdmin").value : "";
-      const filterType = document.getElementById("filterType") ? document.getElementById("filterType").value : "";
+    const searchText = document.getElementById("searchMemberInput").value.toLowerCase();
+    const filterCenter = document.getElementById("filterCenter") ? document.getElementById("filterCenter").value : "";
+    const filterAdmin = document.getElementById("filterAdmin") ? document.getElementById("filterAdmin").value : "";
+    const filterType = document.getElementById("filterType") ? document.getElementById("filterType").value : "";
+    
+    // 🌟 ดึงค่าตัวกรองใหม่ 2 ตัว
+    const filterAge = document.getElementById("filterAge") ? document.getElementById("filterAge").value : "";
+    const filterVulnerable = document.getElementById("filterVulnerable") ? document.getElementById("filterVulnerable").value : "";
 
-      const filteredData = allMembersCache.filter(m => {
-          const matchSearch = !searchText || 
-              (m.fullName && m.fullName.toLowerCase().includes(searchText)) ||
-              (m.memberId && m.memberId.toLowerCase().includes(searchText)) ||
-              (m.nationalId && m.nationalId.includes(searchText));
-          const matchCenter = !filterCenter || m.center === filterCenter;
-          const matchAdmin  = !filterAdmin || m.responsibleAdmin === filterAdmin;
-          const matchType   = !filterType || m.memberType === filterType;
-          return matchSearch && matchCenter && matchAdmin && matchType;
-      });
-      renderMembersList(filteredData);
-  }
+    const now = new Date();
+
+    const filteredData = allMembersCache.filter(m => {
+        const matchSearch = !searchText || 
+            (m.fullName && m.fullName.toLowerCase().includes(searchText)) ||
+            (m.memberId && m.memberId.toLowerCase().includes(searchText)) ||
+            (m.nationalId && m.nationalId.includes(searchText));
+            
+        const matchCenter = !filterCenter || m.center === filterCenter;
+        const matchAdmin  = !filterAdmin || m.responsibleAdmin === filterAdmin;
+        const matchType   = !filterType || m.memberType === filterType;
+
+        // 🌟 1. ตรวจสอบความเปราะบาง
+        // สมมติว่า field ใน DB ชื่อ 'vulnerability' หากคนปกติไม่มีข้อมูล (undefined) จะให้ถือว่าเป็น "ปกติ"
+        let memberVuln = m.vulnerability || "ปกติ";
+        const matchVulnerable = !filterVulnerable || memberVuln === filterVulnerable;
+
+        // 🌟 2. ตรวจสอบอายุสมาชิก (คำนวณแบบเป๊ะถึงระดับวัน)
+        let matchAge = true;
+        if (filterAge && m.registerDateObj) {
+            const regDate = new Date(m.registerDateObj);
+            
+            let years = now.getFullYear() - regDate.getFullYear();
+            let months = now.getMonth() - regDate.getMonth();
+            let days = now.getDate() - regDate.getDate();
+            
+            if (days < 0) months--;
+            if (months < 0) years--;
+
+            if (filterAge === 'over1year') {
+                matchAge = years >= 1; // 1 ปีขึ้นไป
+            } else if (filterAge === 'under1year') {
+                matchAge = years < 1;  // น้อยกว่า 1 ปี
+            }
+        } else if (filterAge && !m.registerDateObj) {
+            // ถ้ากรองอายุแต่ระบบหาข้อมูลวันสมัครไม่พบ ให้ถือว่าไม่ตรงเงื่อนไข
+            matchAge = false; 
+        }
+
+        return matchSearch && matchCenter && matchAdmin && matchType && matchVulnerable && matchAge;
+    });
+    
+    renderMembersList(filteredData);
+}
 
   function renderMemberItem(d) {
     const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-    let canEditStatus = (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-ศูนย์ประสานงาน');
     
-    let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
-    let lineBadge = d.lineUid ? `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-brands fa-line me-1"></i> ผูกแล้ว</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-solid fa-link-slash me-1"></i> ยังไม่ผูก LINE</span>`;
-    
-    let canEditProfile = false;
+    // ---------------------------------------------------------
+    // 🛡️ 1. ระบบตรวจสอบสิทธิ์ (RBAC) สำหรับการแก้ไขข้อมูลรายบุคคล
+    // ---------------------------------------------------------
+    let canEditProfile = false; // สิทธิ์แก้ไขเบอร์โทร และ ประวัติพื้นฐาน
     if (currentAdminData.role === 'Admin-Master') canEditProfile = true;
     else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) canEditProfile = true;
     else if (currentAdminData.role === 'Admin-ผู้ดูแล' && d.responsibleAdmin === currentAdminData.name) canEditProfile = true;
 
+    let canEditStatus = false; // สิทธิ์เปลี่ยนสถานะ, แก้ไขวันสมัคร, ผูก LINE และ เปลี่ยนผู้ดูแลสาย
+    if (currentAdminData.role === 'Admin-Master') canEditStatus = true;
+    else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) canEditStatus = true;
+
+    let canAssignCenter = (currentAdminData.role === 'Admin-Master'); // เฉพาะ Master ย้ายศูนย์ได้
+
+    // ---------------------------------------------------------
+
+    let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
+    let lineBadge = d.lineUid ? `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-brands fa-line me-1"></i> ผูกแล้ว</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-solid fa-link-slash me-1"></i> ยังไม่ผูก LINE</span>`;
+    
     let qrButton = (!d.lineUid && canEditStatus) ? `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-bold" style="font-size:0.75rem;" onclick="generateLinkQR('${d.id}', '${d.fullName}')"><i class="fa-solid fa-qrcode me-1"></i> ผูกบัญชี</button>` : ``;
     let statusBtn = canEditStatus ? `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-bold" onclick="changeMemberStatus('${d.id}', '${d.status}')" style="font-size:0.75rem;">เปลี่ยนสถานะ</button>` : ``;
     let editProfileBtn = canEditProfile ? `<button class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm fw-bold" onclick="editMemberProfile('${d.id}')" style="font-size:0.75rem;"><i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข</button>` : ``;
     
-    // 1. เพิ่ม Action สำหรับกดแก้ไข ศูนย์ประสานงาน
-    let assignCenterAction = canEditStatus ? `onclick="assignCenterToMember('${d.id}', '${d.center || ''}')" class="badge bg-light text-dark border border-secondary shadow-sm py-2 cursor-pointer"` : `class="badge bg-light text-dark border border-secondary shadow-sm py-2"`;
-    // 2. Action สำหรับกดแก้ไข กรรมการผู้ดูแล
+    let assignCenterAction = canAssignCenter ? `onclick="assignCenterToMember('${d.id}', '${d.center || ''}')" class="badge bg-light text-dark border border-secondary shadow-sm py-2 cursor-pointer"` : `class="badge bg-light text-muted border border-secondary shadow-sm py-2"`;
     let assignAction = canEditStatus ? `onclick="assignAdminToMember('${d.id}', '${d.responsibleAdmin || ''}')" class="badge bg-info bg-opacity-10 text-info shadow-sm py-2 cursor-pointer border border-info"` : `class="badge bg-light text-muted border border-secondary shadow-sm py-2"`;
     
     let profileImage = d.pictureUrl ? `<img src="${d.pictureUrl}" class="rounded-circle shadow-sm flex-shrink-0" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid #E2E8F0;" alt="Profile">` : `<div class="icon-box bg-primary bg-opacity-10 text-primary flex-shrink-0 rounded-circle" style="width: 48px; height: 48px;"><i class="fa-solid fa-user"></i></div>`;
@@ -1505,12 +1992,21 @@
         }
     }
 
+    // 🌟 สร้าง HTML UI ที่กดแก้ไขได้ตามสิทธิ์
+    let phoneHtml = canEditProfile 
+        ? `<strong class="text-dark cursor-pointer border-bottom border-secondary border-opacity-50 pb-1" style="font-size:0.85rem;" onclick="editMemberPhone('${d.id}', '${phone}')" title="แก้ไขเบอร์โทร">${phone} <i class="fa-solid fa-pen text-muted" style="font-size:0.6rem;"></i></strong>` 
+        : `<strong class="text-dark" style="font-size:0.85rem;">${phone}</strong>`;
+        
+    let regDateHtml = canEditStatus 
+        ? `<strong class="text-primary cursor-pointer border-bottom border-primary border-opacity-50 pb-1" style="font-size:0.85rem;" onclick="editMemberRegDate('${d.id}', '${d.registerDateObj || ''}')" title="แก้วันสมัคร">${ageStr} <i class="fa-solid fa-pen text-primary" style="font-size:0.6rem;"></i></strong>`
+        : `<strong class="text-primary" style="font-size:0.85rem;">${ageStr}</strong>`;
+
     let annualFee = parseFloat(fundSettings?.annualFee || 360); let monthlyRate = annualFee / 12;
     let expectedTotal = monthsAsMember * monthlyRate;
     let outstanding = expectedTotal - totalContrib; if (outstanding < 0) outstanding = 0; 
 
     let monthsOwed = Math.floor(outstanding / monthlyRate);
-    let arrearsBadge = getArrearsStatus(monthsOwed); // ต้องแน่ใจว่ามีฟังก์ชันนี้
+    let arrearsBadge = getArrearsStatus(monthsOwed);
     
     let formatOutstanding = outstanding.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     let formatTotalContrib = totalContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -1524,8 +2020,7 @@
 
     let welfareHtml = ""; let currentYearThai = new Date().getFullYear() + 543;
     if (d.welfareHistory && d.welfareHistory.length > 0) {
-        // ... โค้ดส่วนคำนวณ welfare คงเดิม ...
-        welfareHtml = `<div class="col-12 mt-3"><div class="p-2 bg-light rounded-4 border border-light text-center"><small class="text-success"><i class="fa-solid fa-check"></i> มีประวัติ</small></div></div>`;
+        welfareHtml = `<div class="col-12 mt-3"><div class="p-2 bg-light rounded-4 border border-light text-center"><small class="text-success"><i class="fa-solid fa-check"></i> มีประวัติสวัสดิการ</small></div></div>`;
     } else { 
         welfareHtml = `<div class="col-12 mt-3"><div class="p-2 bg-light rounded-4 border border-light text-center"><small class="text-muted" style="font-size:0.7rem;"><i class="fa-solid fa-hand-holding-medical text-secondary me-1"></i> ยังไม่มีประวัติรับสวัสดิการ</small></div></div>`; 
     }
@@ -1553,7 +2048,6 @@
               <div class="input-group input-group-sm w-auto shadow-sm rounded-pill overflow-hidden">
                   <span class="input-group-text bg-white border-0 text-muted">฿</span>
                   <input type="number" class="form-control border-0 amount-input text-success fw-bold text-center" id="input-${d.id}" placeholder="ระบุยอด" style="width: 100px; outline: none !important; box-shadow: none;" onkeypress="handleEnter(event, '${d.id}')">
-                  <!-- 3. ส่ง d.status เข้าไปตรวจสอบเพื่อปรับอัตโนมัติ -->
                   <button class="btn btn-primary px-3 fw-bold" onclick="confirmAmount('${d.id}', '${d.status}')">ตกลง</button>
               </div>
            </div>
@@ -1569,21 +2063,19 @@
       
       <div class="collapse mt-3 pt-3" id="collapse-member-${d.id}" style="border-top: 1px dashed #E2E8F0;">
         <div class="row g-2 mb-3 px-2">
-            <div class="col-12 mb-1"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-clock-rotate-left text-primary w-20px"></i> อายุสมาชิก</small><strong class="text-primary" style="font-size:0.85rem;">${ageStr}</strong></div>
+            <div class="col-12 mb-1"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-clock-rotate-left text-primary w-20px"></i> อายุสมาชิก / วันเริ่มสมัคร</small>${regDateHtml}</div>
             <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-address-card text-secondary w-20px"></i> เลข ปชช.</small><strong class="text-dark" style="font-size:0.85rem;">${natId}</strong></div>
-            <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-phone text-secondary w-20px"></i> โทรศัพท์</small><strong class="text-dark" style="font-size:0.85rem;">${phone}</strong></div>
+            <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-phone text-secondary w-20px"></i> โทรศัพท์</small>${phoneHtml}</div>
             <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-coins text-success w-20px"></i> สมทบสะสม</small><strong class="text-success" style="font-size:0.85rem;">฿${formatTotalContrib}</strong></div>
             <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-circle-exclamation text-danger w-20px"></i> ค้างสมทบ</small><strong class="text-danger" style="font-size:0.85rem;">฿${formatOutstanding}</strong></div>
             
             <div class="col-12 mt-2">
                 <small class="text-muted d-block mb-2" style="font-size:0.7rem;"><i class="fa-solid fa-house-flag text-secondary w-20px"></i> ศูนย์ประสานงาน & กรรมการ</small>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <!-- นำตัวแปร assignCenterAction มาใช้ตรงนี้ -->
-                    <span ${assignCenterAction} title="ศูนย์ประสานงาน">
-                        <i class="fa-solid fa-building me-1 text-muted"></i> ${centerInfo} ${canEditStatus ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}
+                    <span ${assignCenterAction} title="${canAssignCenter ? 'คลิกเพื่อย้ายศูนย์' : ''}">
+                        <i class="fa-solid fa-building me-1 text-muted"></i> ${centerInfo} ${canAssignCenter ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}
                     </span>
-                    <!-- นำตัวแปร assignAction มาใช้ตรงนี้ -->
-                    <span ${assignAction} title="กรรมการผู้ดูแลสาย">
+                    <span ${assignAction} title="${canEditStatus ? 'คลิกเพื่อเปลี่ยนผู้ดูแลสาย' : ''}">
                         <i class="fa-solid fa-user-tie me-1"></i> ${responsibleAdmin} ${canEditStatus ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}
                     </span>
                 </div>
@@ -1600,46 +2092,46 @@
     </div>`;
 }
 
-// 1. ฟังก์ชันเปลี่ยนศูนย์ประสานงาน (แบบดึงข้อมูล Dynamic จาก Database)
+// ฟังก์ชันเปลี่ยนศูนย์ประสานงาน (แก้ไขตามโครงสร้าง settings/master)
 async function assignCenterToMember(memberId, currentCenter) {
     try {
-        // [UX] แสดง Loading ก่อนดึงข้อมูล เผื่ออินเทอร์เน็ตช้า
         Swal.fire({
             title: 'กำลังดึงข้อมูลศูนย์...',
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => { Swal.showLoading(); }
         });
 
-        // 1. ดึงข้อมูลจาก Collection 'centers' 
-        // (หมายเหตุ: หากคุณตั้งชื่อ Collection เป็นชื่ออื่น เช่น 'coordination_centers' ให้เปลี่ยนตรงนี้)
-        const snapshot = await db.collection('centers').get();
-        let centerOptions = {};
+        // 1. ชี้เป้าหมายไปที่ Collection: 'settings', Document: 'master'
+        const docRef = await db.collection('settings').doc('master').get();
         
-        // 2. วนลูปข้อมูลสร้างเป็น Object ให้ SweetAlert 
-        // รูปแบบที่ SweetAlert ต้องการคือ { 'ชื่อศูนย์': 'ชื่อศูนย์' }
-        snapshot.forEach(doc => {
-            // สมมติว่าใน Document เก็บชื่อศูนย์ไว้ที่ Field 'name' 
-            // หรือถ้าใช้ Document ID เป็นชื่อศูนย์เลย ก็ใช้ doc.id ได้
-            const centerName = doc.data().name || doc.id; 
-            centerOptions[centerName] = centerName;
-        });
-
-        // ปิด Loading
-        Swal.close();
-
-        // ตรวจสอบความปลอดภัย: กรณีไม่มีศูนย์ในระบบเลย
-        if (Object.keys(centerOptions).length === 0) {
-            Swal.fire('แจ้งเตือน', 'ยังไม่มีการเพิ่มรายชื่อศูนย์ประสานงานในระบบ', 'warning');
+        if (!docRef.exists) {
+            Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูลตั้งค่า (settings/master)', 'warning');
             return;
         }
 
-        // 3. แสดงหน้าต่างเลือกศูนย์ประสานงาน
+        const data = docRef.data();
+        
+        // 2. ดึงข้อมูลฟิลด์ 'centers' ที่เป็น Array ออกมา
+        const centersArray = data.centers || []; 
+
+        if (centersArray.length === 0) {
+            Swal.fire('แจ้งเตือน', 'ไม่มีข้อมูลศูนย์ประสานงานในระบบ', 'warning');
+            return;
+        }
+
+        // 3. แปลง Array ให้เป็น Object สำหรับ SweetAlert2 { 'ชุมชนปารีย์': 'ชุมชนปารีย์' }
+        let centerOptions = {};
+        centersArray.forEach(centerName => {
+            centerOptions[centerName] = centerName; // ค่าที่เก็บเป็น String ตามในภาพ
+        });
+
+        Swal.close();
+
+        // 4. แสดง Popup เลือกศูนย์
         const { value: newCenter } = await Swal.fire({
             title: 'เปลี่ยนศูนย์ประสานงาน',
             input: 'select',
-            inputOptions: centerOptions, // โยนตัวแปรที่ดึงจาก DB เข้าไปตรงนี้
+            inputOptions: centerOptions, 
             inputValue: currentCenter !== 'ไม่ระบุศูนย์' ? currentCenter : '',
             inputPlaceholder: '--- กรุณาเลือกศูนย์ ---',
             showCancelButton: true,
@@ -1647,19 +2139,23 @@ async function assignCenterToMember(memberId, currentCenter) {
             cancelButtonText: 'ยกเลิก'
         });
 
-        // 4. บันทึกข้อมูลลงฐานข้อมูลเมื่อมีการเลือกใหม่
+        // 5. บันทึกลงฐานข้อมูล users
         if (newCenter && newCenter !== currentCenter) {
             await db.collection('users').doc(memberId).update({
                 center: newCenter,
-                updatedAt: new Date() // อัปเดตเวลาล่าสุด
+                updatedAt: new Date()
             });
             Swal.fire('สำเร็จ', 'อัปเดตศูนย์ประสานงานแล้ว', 'success');
-            loadMembersData(); // โหลดหน้าจอใหม่เพื่อแสดงค่าที่เปลี่ยนไป
+            loadMembersData(); // โหลดหน้าจอใหม่
         }
 
     } catch (error) {
         console.error("Error fetching centers:", error);
-        Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'ดึงข้อมูลล้มเหลว',
+            text: error.message
+        });
     }
 }
 
@@ -2120,6 +2616,152 @@ async function confirmAmount(memberId, currentStatus) {
       `;
       document.head.appendChild(style);
   });
+
+  // -------------------------------------------------------------
+// สคริปต์สำหรับรองรับการแก้ไขข้อมูลรายบุคคล (เบอร์โทร, วันสมัคร, สถานะ)
+// -------------------------------------------------------------
+
+// ฟังก์ชันแก้ไขเบอร์โทรศัพท์
+async function editMemberPhone(memberId, currentPhone) {
+    const { value: newPhone } = await Swal.fire({
+        title: 'แก้ไขเบอร์โทรศัพท์',
+        input: 'tel',
+        inputValue: currentPhone !== '-' ? currentPhone : '',
+        showCancelButton: true,
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก',
+        inputValidator: (value) => {
+            if (!value) return 'กรุณากรอกเบอร์โทรศัพท์';
+            if (value.length < 9) return 'เบอร์โทรศัพท์ไม่ถูกต้อง';
+        }
+    });
+
+    if (newPhone && newPhone !== currentPhone) {
+        try {
+            await db.collection('members').doc(memberId).update({
+                phone: newPhone,
+                updatedAt: new Date()
+            });
+            Swal.fire('สำเร็จ', 'อัปเดตเบอร์โทรศัพท์แล้ว', 'success');
+            loadMembersData(); 
+        } catch (error) {
+            Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        }
+    }
+}
+
+// ฟังก์ชันแก้ไขวัน/เดือน/ปี ที่สมัคร (อายุสมาชิก)
+async function editMemberRegDate(memberId, currentISODate) {
+    // แปลงวันที่เดิมให้อยู่ในฟอร์แมต YYYY-MM-DD เพื่อแสดงใน Input Type Date
+    let displayDate = "";
+    if (currentISODate) {
+        const dObj = new Date(currentISODate);
+        if (!isNaN(dObj)) displayDate = dObj.toISOString().split('T')[0];
+    }
+
+    const { value: newDate } = await Swal.fire({
+        title: 'แก้ไขวันที่เริ่มเป็นสมาชิก',
+        html: '<p class="small text-muted mb-2">จะมีผลกับการคำนวณเงินค้างสมทบทันที</p>',
+        input: 'date',
+        inputValue: displayDate,
+        showCancelButton: true,
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก'
+    });
+
+    if (newDate) {
+        try {
+            // บันทึกเป็น ISO String กลับลงไปที่ฐานข้อมูล
+            const newIsoString = new Date(newDate).toISOString();
+            await db.collection('members').doc(memberId).update({
+                registerDateObj: newIsoString,
+                updatedAt: new Date()
+            });
+            Swal.fire('สำเร็จ', 'อัปเดตวันสมัครเรียบร้อยแล้ว', 'success');
+            loadMembersData(); 
+        } catch (error) {
+            Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        }
+    }
+}
+
+// ฟังก์ชันเปลี่ยนสถานะสมาชิก
+async function changeMemberStatus(memberId, currentStatus) {
+    const inputOptions = {
+        'เป็นสมาชิก': 'เป็นสมาชิก (สถานะปกติ)',
+        'รอตรวจสอบ': 'รอตรวจสอบ (ระงับชั่วคราว)',
+        'พ้นสภาพสมาชิก': 'พ้นสภาพสมาชิก',
+        'เสียชีวิต': 'เสียชีวิต'
+    };
+
+    const { value: newStatus } = await Swal.fire({
+        title: 'เปลี่ยนสถานะสมาชิก',
+        input: 'select',
+        inputOptions: inputOptions,
+        inputValue: currentStatus,
+        showCancelButton: true,
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก'
+    });
+
+    if (newStatus && newStatus !== currentStatus) {
+        try {
+            await db.collection('members').doc(memberId).update({
+                status: newStatus,
+                updatedAt: new Date()
+            });
+            
+            // Audit Log อัตโนมัติ เพื่อความโปร่งใส
+            if(typeof createAuditLog === 'function') {
+                createAuditLog('CHANGE_STATUS', `เปลี่ยนสถานะสมาชิก ID: ${memberId} จาก ${currentStatus} เป็น ${newStatus}`);
+            }
+
+            Swal.fire('สำเร็จ', 'อัปเดตสถานะสมาชิกแล้ว', 'success');
+            loadMembersData(); 
+        } catch (error) {
+            Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// 📍 ฟังก์ชันดึงพิกัดตำแหน่งปัจจุบัน (GPS)
+// -------------------------------------------------------------
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        Swal.fire({
+            title: 'กำลังดึงพิกัด...',
+            text: 'กรุณากด "อนุญาต (Allow)" หากเบราว์เซอร์ร้องขอการเข้าถึงตำแหน่ง',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // เติมข้อมูลลงช่อง Input พร้อมกำหนดทศนิยม 5 ตำแหน่ง
+                document.getElementById('setFundLat').value = position.coords.latitude.toFixed(5);
+                document.getElementById('setFundLng').value = position.coords.longitude.toFixed(5);
+                
+                Swal.close();
+                Swal.fire({
+                    icon: 'success', 
+                    title: 'ดึงพิกัดสำเร็จ', 
+                    showConfirmButton: false, 
+                    timer: 1000
+                });
+            },
+            (error) => {
+                Swal.close();
+                Swal.fire('ดึงพิกัดล้มเหลว', 'กรุณาอนุญาตให้ระบบเข้าถึงตำแหน่ง (Location) ในเบราว์เซอร์ของคุณ', 'error');
+            },
+            { enableHighAccuracy: true } // ขอความแม่นยำสูงสุด
+        );
+    } else {
+        Swal.fire('ไม่รองรับ', 'เบราว์เซอร์หรืออุปกรณ์ของคุณไม่รองรับการดึงพิกัด GPS', 'warning');
+    }
+}
+
+
 </script>
 </body>
 </html>
