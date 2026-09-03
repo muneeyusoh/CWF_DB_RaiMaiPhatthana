@@ -1016,7 +1016,17 @@
               uiSettingsVillages = d.inZoneVillages || [];
               uiSettingsCenters = d.centers || [];
 
-              renderMemberTypeBadges(); renderVillageBadges(); renderCenterBadges();
+              // 🌟 [เพิ่มคำสั่งนี้] โหลดข้อมูลกรรมการและระเบียบสวัสดิการจาก Firebase
+              uiSettingsCommittee = d.committee || [];
+              uiSettingsRules = d.welfareRules || [];
+
+              renderMemberTypeBadges(); 
+              renderVillageBadges(); 
+              renderCenterBadges();
+
+              // 🌟 [เพิ่มคำสั่งนี้] สั่งให้วาดโครงสร้างกรรมการและระเบียบลงบนหน้าจอ
+              if(typeof renderCommitteeList === 'function') renderCommitteeList();
+              if(typeof renderRulesList === 'function') renderRulesList();
           }
           showLoader(false);
       } catch(e) { 
@@ -1024,7 +1034,6 @@
           Swal.fire('Error', 'ไม่สามารถดึงข้อมูลตั้งค่าได้', 'error'); 
       }
   }
-
   function renderMemberTypeBadges() {
       const container = document.getElementById('memberTypesContainer'); container.innerHTML = "";
       uiSettingsMemberTypes.forEach((type, index) => {
@@ -1171,8 +1180,12 @@ function toggleCommitteeDetail(index) {
     }
 }
 
-// ฟังก์ชันบันทึกข้อมูลจากฟอร์ม
-function addCommitteeMember() {
+// 🌟 ฟังก์ชันบันทึกข้อมูลกรรมการลง Firebase อัตโนมัติ
+async function addCommitteeMember() {
+    if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
+        return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่แก้ไขโครงสร้างได้', 'error');
+    }
+
     const name = document.getElementById('comName').value.trim();
     const pos = document.getElementById('comPos').value.trim();
     const role = document.getElementById('comRole').value.trim();
@@ -1181,32 +1194,54 @@ function addCommitteeMember() {
 
     if (!name || !pos) return Swal.fire('แจ้งเตือน', 'กรุณากรอกชื่อและตำแหน่งให้ครบถ้วน', 'warning');
 
-    // บันทึกลง Array
+    showLoader(true, "กำลังบันทึกข้อมูล...");
     uiSettingsCommittee.push({ name, pos, role, phone, email });
     
-    // ล้างค่าฟอร์ม
-    document.getElementById('comName').value = "";
-    document.getElementById('comPos').value = "";
-    document.getElementById('comRole').value = "";
-    document.getElementById('comPhone').value = "";
-    document.getElementById('comEmail').value = "";
+    try {
+        // บันทึกลงฐานข้อมูล
+        await db.collection("settings").doc("master").set({ 
+            committee: uiSettingsCommittee 
+        }, { merge: true });
 
-    // สั่งปิดฟอร์มอัตโนมัติ (หุบกล่องเก็บ)
-    const formCollapse = document.getElementById('collapseCommitteeForm');
-    if(formCollapse && typeof bootstrap !== 'undefined') {
-        const bsCollapse = bootstrap.Collapse.getInstance(formCollapse);
-        if (bsCollapse) bsCollapse.hide();
-        else formCollapse.classList.remove('show');
+        // ล้างฟอร์มและย่อกล่อง
+        document.getElementById('comName').value = ""; document.getElementById('comPos').value = "";
+        document.getElementById('comRole').value = ""; document.getElementById('comPhone').value = ""; document.getElementById('comEmail').value = "";
+
+        const formCollapse = document.getElementById('collapseCommitteeForm');
+        if(formCollapse && typeof bootstrap !== 'undefined') bootstrap.Collapse.getInstance(formCollapse)?.hide();
+
+        renderCommitteeList();
+        showLoader(false);
+        Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1000});
+    } catch(e) {
+        uiSettingsCommittee.pop(); // หากผิดพลาดให้ดึงข้อมูลที่พึ่งใส่ออก
+        showLoader(false);
+        Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
     }
-
-    // วาดข้อมูลใหม่
-    renderCommitteeList();
 }
 
-// ฟังก์ชันลบข้อมูล
-function removeCommitteeMember(index) {
-    uiSettingsCommittee.splice(index, 1);
-    renderCommitteeList();
+// 🌟 ฟังก์ชันลบข้อมูลกรรมการออกจาก Firebase
+async function removeCommitteeMember(index) {
+    if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
+        return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้น', 'error');
+    }
+
+    Swal.fire({ title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'ลบข้อมูล' })
+    .then(async (result) => {
+        if (result.isConfirmed) {
+            const backup = [...uiSettingsCommittee];
+            uiSettingsCommittee.splice(index, 1);
+            
+            showLoader(true, "กำลังลบข้อมูล...");
+            try {
+                await db.collection("settings").doc("master").set({ committee: uiSettingsCommittee }, { merge: true });
+                renderCommitteeList(); showLoader(false);
+            } catch(e) {
+                uiSettingsCommittee = backup; // ดึงกลับหากลบไม่สำเร็จ
+                showLoader(false); Swal.fire('Error', 'ลบไม่สำเร็จ', 'error');
+            }
+        }
+    });
 }
 
 // ========================================================
@@ -1254,46 +1289,53 @@ function addRuleConditionRow() {
     container.insertAdjacentHTML('beforeend', html);
 }
 
-// 2. บันทึกระเบียบทั้งหมดจากฟอร์ม
-function saveWelfareRule() {
+// 🌟 ฟังก์ชันบันทึกระเบียบสวัสดิการลง Firebase
+async function saveWelfareRule() {
+    if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
+        return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้น', 'error');
+    }
+
     const ruleName = document.getElementById('ruleName').value.trim();
     if (!ruleName) return Swal.fire('แจ้งเตือน', 'กรุณาระบุชื่อสวัสดิการ', 'warning');
 
     const conditionRows = document.querySelectorAll('.condition-row');
     let conditions = [];
     
-    // ดึงค่าจากแถวเงื่อนไขทั้งหมดมารวมเป็น Array ภายใต้สวัสดิการนี้
     conditionRows.forEach(row => {
         const type = row.querySelector('.cond-type').value;
         const value = row.querySelector('.cond-value').value.trim();
         const unit = row.querySelector('.cond-unit').value;
-        
-        if (value) { // เก็บเฉพาะแถวที่มีการกรอกข้อมูล
-            conditions.push({ type, value, unit });
-        }
+        if (value) conditions.push({ type, value, unit });
     });
 
     if (conditions.length === 0) return Swal.fire('แจ้งเตือน', 'กรุณาเพิ่มเงื่อนไขอย่างน้อย 1 ข้อ', 'warning');
 
-    // นำไปใส่ใน Array หลัก
+    showLoader(true, "กำลังบันทึกระเบียบ...");
     uiSettingsRules.push({ name: ruleName, conditions: conditions });
     
-    // ล้างฟอร์ม
-    document.getElementById('ruleName').value = '';
-    document.getElementById('ruleConditionsContainer').innerHTML = '';
-    
-    // ปิดหน้าต่างการตั้งค่า
-    const formCollapse = document.getElementById('collapseRuleForm');
-    if(formCollapse && typeof bootstrap !== 'undefined') {
-        const bsCollapse = bootstrap.Collapse.getInstance(formCollapse) || new bootstrap.Collapse(formCollapse, {toggle: false});
-        bsCollapse.hide();
+    try {
+        // บันทึกลงฐานข้อมูล
+        await db.collection("settings").doc("master").set({ 
+            welfareRules: uiSettingsRules 
+        }, { merge: true });
+
+        // ล้างฟอร์ม
+        document.getElementById('ruleName').value = '';
+        document.getElementById('ruleConditionsContainer').innerHTML = '';
+        addRuleConditionRow(); // สร้างแถวว่าง 1 แถวเสมอ
+        
+        const formCollapse = document.getElementById('collapseRuleForm');
+        if(formCollapse && typeof bootstrap !== 'undefined') bootstrap.Collapse.getInstance(formCollapse)?.hide();
+
+        renderRulesList();
+        showLoader(false);
+        Swal.fire('สำเร็จ', 'เพิ่มระเบียบสวัสดิการแล้ว', 'success');
+    } catch(e) {
+        uiSettingsRules.pop();
+        showLoader(false);
+        Swal.fire('Error', 'บันทึกระเบียบไม่สำเร็จ', 'error');
     }
-
-    // วาดรายการใหม่
-    renderRulesList();
-    Swal.fire('สำเร็จ', 'เพิ่มระเบียบสวัสดิการแล้ว', 'success');
 }
-
 // ========================================================
 // ฟังก์ชันสำหรับ "แสดงผลแบบย่อ-ขยาย" (คล้ายโครงสร้างกรรมการ)
 // ========================================================
@@ -1368,19 +1410,27 @@ function toggleRuleDetail(index) {
     }
 }
 
-function removeWelfareRule(index) {
+// 🌟 ฟังก์ชันลบระเบียบออกจาก Firebase
+async function removeWelfareRule(index) {
+    if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
+        return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้น', 'error');
+    }
+
     Swal.fire({
-        title: 'ยืนยันการลบ?',
-        text: "คุณต้องการลบระเบียบสวัสดิการนี้ใช่หรือไม่",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#EF4444',
-        confirmButtonText: 'ลบข้อมูล',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
+        title: 'ยืนยันการลบ?', text: "คุณต้องการลบระเบียบสวัสดิการนี้ใช่หรือไม่", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'ลบข้อมูล', cancelButtonText: 'ยกเลิก'
+    }).then(async (result) => {
         if (result.isConfirmed) {
+            const backup = [...uiSettingsRules];
             uiSettingsRules.splice(index, 1);
-            renderRulesList();
+
+            showLoader(true, "กำลังลบ...");
+            try {
+                await db.collection("settings").doc("master").set({ welfareRules: uiSettingsRules }, { merge: true });
+                renderRulesList(); showLoader(false);
+            } catch(e) {
+                uiSettingsRules = backup; showLoader(false); Swal.fire('Error', 'ลบข้อมูลไม่สำเร็จ', 'error');
+            }
         }
     });
 }
