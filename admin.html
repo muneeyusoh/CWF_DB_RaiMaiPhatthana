@@ -6,9 +6,6 @@
   <meta name="theme-color" content="#0F172A">
   <title>SmartWelf 5.0 | ศูนย์จัดการกองทุนส่วนกลาง (แอดมิน)</title>
   
-  <!-- ==========================================
-       [1] โหลด FONTS & LIBRARIES (ลบตัวซ้ำออกแล้ว)
-  =========================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -26,9 +23,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
   
-  <!-- ==========================================
-       [2] CSS STYLESHEET (Fintech UI)
-  =========================================== -->
   <style>
     :root { 
         --primary-dark: #0F172A; --primary-main: #2563EB; --success-main: #10B981; 
@@ -41,7 +35,6 @@
     .form-control-modern, .form-select-modern { background-color: #F1F5F9; border: 2px solid transparent; border-radius: 16px; padding: 0.75rem 1.2rem; font-weight: 500; color: #334155; transition: 0.3s; }
     .form-control-modern:focus, .form-select-modern:focus { background-color: #ffffff; border-color: var(--primary-main); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important; }
     
-    /* Login Gate & Admin Header */
     #loginGate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-dark); color: white; z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto;}
     .login-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
     .login-tabs { display: flex; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
@@ -55,24 +48,20 @@
     .app-header-admin { background: var(--primary-dark); background-image: radial-gradient(circle at top right, #1E293B 0%, transparent 60%); color: white; position: fixed; top: 0; width: 100%; height: 68px; z-index: 1030; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     #adminApp { padding-top: 70px; padding-bottom: 95px; }
     
-    /* Bottom Nav */
     .bottom-nav { position: fixed; bottom: 0; width: 100%; height: var(--bottom-nav-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -4px 25px rgba(0,0,0,0.06); z-index: 1030; border-top-left-radius: 24px; border-top-right-radius: 24px; }
     .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 0.65rem; font-weight: 600; background: none; border: none; position: relative; transition: 0.3s; }
     .nav-item.active { color: var(--primary-main); transform: translateY(-3px); }
     .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 4px; }
     .nav-badge { position: absolute; top: 2px; left: calc(50% + 5px); width: 12px; height: 12px; background-color: var(--danger-main); border-radius: 50%; border: 2px solid white; display: none; }
     
-    /* Cards */
     .admin-card { background: white; border-radius: 20px; padding: 1.2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--card-border); margin-bottom: 12px; transition: transform 0.2s; }
     .admin-card-hover:active { transform: scale(0.98); }
     .cursor-pointer { cursor: pointer; }
     
-    /* 🌟 Fintech Wallet Card */
     .wallet-card { background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); border-radius: 24px; padding: 24px; color: white; box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.4), 0 8px 10px -6px rgba(15, 23, 42, 0.2); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); z-index: 1; margin-bottom: 1.5rem;}
     .wallet-card::before { content: ''; position: absolute; top: -50px; right: -30px; width: 150px; height: 150px; background: linear-gradient(135deg, rgba(37,99,235,0.4) 0%, rgba(16,185,129,0.4) 100%); border-radius: 50%; filter: blur(30px); z-index: -1; }
     .wallet-card::after { content: ''; position: absolute; bottom: -30px; left: -20px; width: 100px; height: 100px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%); border-radius: 50%; filter: blur(20px); z-index: -1; }
 
-    /* 🌟 แอนิเมชันหน้าโหลด 3D */
     #systemLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
     .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
     .sw-logo-svg { width: 180px; height: auto; filter: drop-shadow(0 14px 18px rgba(5,150,105,.14)); }
@@ -83,22 +72,18 @@
     .loading-text-glow { font-size: 1.5rem; font-weight: 700; margin: 0; background: linear-gradient(90deg, #059669, #2563EB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulseTextGlow 1.5s ease-in-out infinite; }
     @keyframes pulseTextGlow { 0% { opacity: 0.6; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0.6; transform: scale(0.98); } }
 
-    /* UI สมาชิกและการสไลด์เก็บเงิน */
     .member-row { position: relative; overflow: hidden; transition: all 0.2s ease; }
     .member-checkbox-wrapper, .member-avatar-wrapper { position: relative; z-index: 10; }
     .input-overlay { position: absolute; top: 0; right: -100%; bottom: 0; width: calc(100% - 90px); background: linear-gradient(90deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,1) 15%); backdrop-filter: blur(2px); z-index: 5; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .member-row.show-input .input-overlay { right: 0; }
     .amount-badge-wrapper { cursor: pointer; }
 
-    /* แท็บสลับหน้าการเงิน */
     .tab-btn-ledger { width: 50%; padding: 0.7rem; text-align: center; border-radius: 1rem; border: none; background: transparent; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.85rem; }
     .tab-btn-ledger.active { background: white; color: var(--primary-main); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     
-    /* จัดการ Scrollbar แนวนอน */
     #receiptHistoryContainer::-webkit-scrollbar { display: none; }
     #receiptHistoryContainer { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* แอนิเมชันกะพริบ */
     @keyframes blinkWarning { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     .blink-anim { animation: blinkWarning 1.5s infinite; }
   </style>
@@ -836,6 +821,137 @@
   }
 
   // =========================================================
+  // ⚙️ หมวดตั้งค่าระบบ (Global Settings Management)
+  // =========================================================
+  let uiSettingsMemberTypes = [];
+  let uiSettingsVillages = [];
+  let uiSettingsCenters = [];
+
+  async function loadGlobalSettings() {
+      showLoader(true, "กำลังโหลดการตั้งค่า...");
+      try {
+          const snap = await db.collection("settings").doc("master").get();
+          if(snap.exists) {
+              const d = snap.data();
+              
+              // ข้อมูลองค์กร
+              const textFields = ['fundName','addressNo','addressMoo','addressSub','addressDist','addressProv','addressZip','fundPhone','fundEmail','fundFb','presidentName','presidentPhone','presidentEmail'];
+              textFields.forEach(f => {
+                  const el = document.getElementById('set' + f.charAt(0).toUpperCase() + f.slice(1));
+                  if(el) el.value = d[f] || "";
+              });
+              
+              // ข้อมูลการเงินและ Array
+              if(document.getElementById('setAnnualFee')) document.getElementById('setAnnualFee').value = d.annualFee || 365;
+              
+              uiSettingsMemberTypes = d.memberTypes || ['สมาชิกสามัญ', 'สมาชิกสมทบ'];
+              uiSettingsVillages = d.inZoneVillages || [];
+              uiSettingsCenters = d.centers || [];
+
+              renderMemberTypeBadges(); renderVillageBadges(); renderCenterBadges();
+          }
+          showLoader(false);
+      } catch(e) { 
+          showLoader(false); console.error(e); 
+          Swal.fire('Error', 'ไม่สามารถดึงข้อมูลตั้งค่าได้', 'error'); 
+      }
+  }
+
+  function renderMemberTypeBadges() {
+      const container = document.getElementById('memberTypesContainer'); container.innerHTML = "";
+      uiSettingsMemberTypes.forEach((type, index) => {
+          container.innerHTML += `<span class="badge bg-dark bg-opacity-10 text-dark border border-secondary d-flex align-items-center py-2 px-3 shadow-sm" style="font-size: 0.8rem; border-radius: 12px;">${type} <i class="fa-solid fa-xmark ms-2 text-danger cursor-pointer" onclick="removeMemberTypeBadge(${index})"></i></span>`;
+      });
+  }
+  function addMemberTypeBadge() {
+      const val = document.getElementById('newMemberTypeInput').value.trim();
+      if(!val) return; 
+      if(uiSettingsMemberTypes.includes(val)) return Swal.fire('เตือน', 'มีประเภทสมาชิกนี้ในระบบแล้ว', 'warning');
+      uiSettingsMemberTypes.push(val); 
+      document.getElementById('newMemberTypeInput').value = ""; 
+      renderMemberTypeBadges();
+  }
+  function removeMemberTypeBadge(index) { uiSettingsMemberTypes.splice(index, 1); renderMemberTypeBadges(); }
+
+  function renderVillageBadges() {
+      const container = document.getElementById('villagesContainer'); container.innerHTML = "";
+      uiSettingsVillages.forEach((village, index) => {
+          container.innerHTML += `<span class="badge bg-success bg-opacity-10 text-success border border-success d-flex align-items-center py-2 px-3 shadow-sm" style="font-size: 0.8rem; border-radius: 12px;">${village} <i class="fa-solid fa-xmark ms-2 text-danger cursor-pointer" onclick="removeVillageBadge(${index})"></i></span>`;
+      });
+  }
+  function addVillageBadge() {
+      const val = document.getElementById('newVillageInput').value.trim();
+      if(!val) return; 
+      if(uiSettingsVillages.includes(val)) return Swal.fire('เตือน', 'มีหมู่บ้านนี้ในระบบแล้ว', 'warning');
+      uiSettingsVillages.push(val); 
+      document.getElementById('newVillageInput').value = ""; 
+      renderVillageBadges();
+  }
+  function removeVillageBadge(index) { uiSettingsVillages.splice(index, 1); renderVillageBadges(); }
+
+  function renderCenterBadges() {
+      const container = document.getElementById('centersContainer'); container.innerHTML = "";
+      uiSettingsCenters.forEach((center, index) => {
+          container.innerHTML += `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary d-flex align-items-center py-2 px-3 shadow-sm" style="font-size: 0.8rem; border-radius: 12px;">${center} <i class="fa-solid fa-xmark ms-2 text-danger cursor-pointer" onclick="removeCenterBadge(${index})"></i></span>`;
+      });
+  }
+  function addCenterBadge() {
+      const val = document.getElementById('newCenterInput').value.trim();
+      if(!val) return; 
+      if(uiSettingsCenters.includes(val)) return Swal.fire('เตือน', 'มีศูนย์ประสานงานนี้ในระบบแล้ว', 'warning');
+      uiSettingsCenters.push(val); 
+      document.getElementById('newCenterInput').value = ""; 
+      renderCenterBadges();
+  }
+  function removeCenterBadge(index) { uiSettingsCenters.splice(index, 1); renderCenterBadges(); }
+
+  async function saveGlobalSettings() {
+      if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
+          return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่สามารถเปลี่ยนการตั้งค่าระบบได้', 'error');
+      }
+      
+      const payload = {
+          fundName: document.getElementById('setFundName').value.trim(),
+          addressNo: document.getElementById('setAddressNo').value.trim(),
+          addressMoo: document.getElementById('setAddressMoo').value.trim(),
+          addressSub: document.getElementById('setAddressSub').value.trim(),
+          addressDist: document.getElementById('setAddressDist').value.trim(),
+          addressProv: document.getElementById('setAddressProv').value.trim(),
+          addressZip: document.getElementById('setAddressZip').value.trim(),
+          fundPhone: document.getElementById('setFundPhone').value.trim(),
+          fundEmail: document.getElementById('setFundEmail').value.trim(),
+          fundFb: document.getElementById('setFundFb').value.trim(),
+          presidentName: document.getElementById('setPresidentName').value.trim(),
+          presidentPhone: document.getElementById('setPresidentPhone').value.trim(),
+          presidentEmail: document.getElementById('setPresidentEmail').value.trim(),
+          annualFee: parseFloat(document.getElementById('setAnnualFee').value) || 365,
+          
+          memberTypes: uiSettingsMemberTypes,
+          inZoneVillages: uiSettingsVillages,
+          centers: uiSettingsCenters
+      };
+      
+      showLoader(true, "กำลังอัปเดตระบบส่วนกลาง...");
+      try {
+          await db.collection("settings").doc("master").set(payload, { merge: true });
+          fundSettings = { ...fundSettings, ...payload };
+          
+          if(document.getElementById('headerFundName')) {
+              document.getElementById('headerFundName').innerText = payload.fundName;
+          }
+          
+          if(typeof populateDropdown === "function") {
+              populateDropdown("filterCenter", uiSettingsCenters);
+              populateDropdown("filterType", uiSettingsMemberTypes);
+          }
+
+          showLoader(false); 
+          Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', text: 'ข้อมูลเชื่อมโยงทั่วทั้งระบบแล้ว Dropdown ต่างๆ จะถูกอัปเดตทันที', showConfirmButton: false, timer: 2000 });
+          
+      } catch(e) { showLoader(false); console.error(e); Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
+  }
+
+  // =========================================================
   // หมวดที่ 2: ตรวจสอบสิทธิ์ (Initialization & Auth)
   // =========================================================
   document.addEventListener("DOMContentLoaded", async () => { 
@@ -1256,7 +1372,6 @@
   // =========================================================
   // หมวดที่ 5: ทะเบียนสมาชิก และ Filtering
   // =========================================================
-  // 🌟 ฟังก์ชันคำนวณสถานะความเสี่ยงจากการค้างชำระ
   function getArrearsStatus(monthsOwed) {
     if (monthsOwed <= 0) return `<span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="fa-solid fa-circle-check"></i> ปกติ</span>`;
     if (monthsOwed === 1) return `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning"><i class="fa-solid fa-triangle-exclamation"></i> ค้าง 1 เดือน</span>`;
@@ -1372,7 +1487,6 @@
         let expectedTotal = monthsAsMember * monthlyRate;
         let outstanding = expectedTotal - totalContrib; if (outstanding < 0) outstanding = 0; 
 
-        // 🌟 คำนวณเดือนที่ค้างและดึงป้ายสถานะ
         let monthsOwed = Math.floor(outstanding / monthlyRate);
         let arrearsBadge = getArrearsStatus(monthsOwed);
         
@@ -1428,11 +1542,9 @@
                   </div>
                   ${dotsHtml}
                </div>
-               <!-- ป้ายแสดงยอดเงิน (สไลด์หุบ) -->
                <div class="amount-badge-wrapper ms-2" style="display: none; z-index: 10;" onclick="reopenInput('${d.id}')">
                   <span class="badge bg-success rounded-pill px-3 py-2 fs-6 shadow-sm">+<span class="display-amount">0</span> ฿</span>
                </div>
-               <!-- กล่องสไลด์สำหรับกรอกเงิน -->
                <div class="input-overlay d-flex align-items-center justify-content-end pe-3">
                   <div class="input-group input-group-sm w-auto shadow-sm rounded-pill overflow-hidden">
                       <span class="input-group-text bg-white border-0 text-muted">฿</span>
@@ -1489,7 +1601,6 @@
   }
   function renderMembersList(dataArr) { displayMemberList(dataArr); }
 
-  // 🌟 ฟังก์ชันการสไลด์เก็บเงินกลุ่ม
   function toggleContributionInput(checkbox, memberId) {
       const row = document.getElementById(`row-${memberId}`); const input = document.getElementById(`input-${memberId}`); const badgeWrapper = row.querySelector('.amount-badge-wrapper');
       if (checkbox.checked) { row.classList.add('show-input'); badgeWrapper.style.display = 'none'; setTimeout(() => input.focus(), 300); } 
@@ -1632,7 +1743,6 @@
       } catch (error) { showLoader(false); Swal.fire('Error', 'ไม่สามารถโอนเงินได้', 'error'); }
   }
 
-  // 🌟 ประวัติการรับเงินสไลด์
   async function loadReceiptHistory() {
       const container = document.getElementById('receiptHistoryContainer');
       const countBadge = document.getElementById('receiptCountBadge');
@@ -1710,7 +1820,6 @@
       return html;
   }
 
-  // 🌟 ส่งมอบเงิน
   async function generateTransferAdminQR() {
       showLoader(true, "รวบรวมยอดเงิน...");
       try {
@@ -1821,42 +1930,24 @@
           if(btnBox) btnBox.style.display = 'block';
       }
   }
-  // =========================================================
-  // ฟังก์ชันควบคุมการเปิด-ปิด ฟอร์มบันทึกรับ-จ่าย และโอนย้าย (UX แบบ Fintech)
-  // =========================================================
   function toggleLedgerActionForm(type) {
       const container = document.getElementById('ledgerActionContainer');
       const formIE = document.getElementById('form-ie');
       const formTF = document.getElementById('form-tf');
       const title = document.getElementById('ledgerActionTitle');
 
-      // ถ้ากดปุ่มปิด (กากบาท)
-      if (type === 'close') {
-          container.style.display = 'none';
-          return;
-      }
-
-      // แสดงกรอบ Container
-      container.style.display = 'block';
-      
-      // ล้างฟอร์มและใส่วันที่ปัจจุบันเสมอ
-      setTodayDate();
-
+      if (type === 'close') { container.style.display = 'none'; return; }
+      container.style.display = 'block'; setTodayDate();
       if (type === 'ie') {
           title.innerHTML = '<i class="fa-solid fa-money-bill-wave text-success me-2"></i> บันทึกรับ-จ่าย';
-          formIE.style.display = 'block';
-          formTF.style.display = 'none';
+          formIE.style.display = 'block'; formTF.style.display = 'none';
       } else if (type === 'tf') {
           title.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left text-warning me-2"></i> โอนย้ายบัญชี';
-          formIE.style.display = 'none';
-          formTF.style.display = 'block';
+          formIE.style.display = 'none'; formTF.style.display = 'block';
       }
-
-      // เลื่อนหน้าจอลงมาที่ฟอร์มเพื่อให้ผู้ใช้โฟกัส
       container.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  // 🌟 (อัปเดตเพิ่มเติม) ฟังก์ชันซ่อน Scrollbar สำหรับเมนูด่วนและประวัติรับเงิน QR
   document.addEventListener("DOMContentLoaded", () => {
       const style = document.createElement('style');
       style.innerHTML = `
@@ -1867,7 +1958,6 @@
       `;
       document.head.appendChild(style);
   });
-
 </script>
 </body>
 </html>
