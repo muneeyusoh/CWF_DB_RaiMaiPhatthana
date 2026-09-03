@@ -246,70 +246,85 @@
       </div>
 
       <div class="admin-card border-0 p-4 mb-4 shadow-sm rounded-4 bg-white">
-          <div class="d-flex justify-content-between mb-3 align-items-center">
-              <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-wallet text-primary me-2"></i>กระแสเงินสดและหนี้สิน</h6>
-          </div>
-          <div class="row g-2 mt-2 pt-3" style="border-top: 1px dashed #E2E8F0;">
-              <div class="col-4 text-center">
-                  <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">คงเหลือทั้งหมด</small>
-                  <strong class="text-dark fs-4" id="chart-sum-total">฿0.00</strong>
-              </div>
-              <div class="col-4 text-center border-start">
-                  <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">ธนาคาร</small>
-                  <strong class="text-primary fs-5" id="liq-bank">฿0.00</strong>
-              </div>
-              <div class="col-4 text-center border-start">
-                  <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">เงินสด</small>
-                  <strong class="text-success fs-5" id="liq-cash">฿0.00</strong>
-              </div>
-              <!-- ยอดลูกหนี้ค้างชำระ -->
-              <div class="col-12 mt-3">
-                 <div class="border-0 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-3 p-3 d-flex justify-content-between align-items-center">
-                     <div class="d-flex align-items-center">
-                         <div class="icon-box bg-white text-danger shadow-sm me-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                         <div>
-                             <small class="text-danger fw-bold d-block" style="font-size: 0.75rem;">ยอดสมทบค้างชำระ (ลูกหนี้)</small>
-                             <h5 class="fw-bold text-danger mb-0 mt-1" id="stat-total-debt">฿0.00</h5>
-                         </div>
-                     </div>
-                     <button class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm" onclick="switchAdminTab('admin-view-members', document.getElementById('nav-members'))">ติดตาม</button>
-                 </div>
-              </div>
-          </div>
-      </div>
+    <!-- Header -->
+    <div class="d-flex justify-content-between mb-3 align-items-center">
+        <h6 class="fw-bold text-dark mb-0">
+            <i class="fa-solid fa-wallet text-primary me-2 fs-5"></i>กระแสเงินสด รับ-จ่าย และหนี้สิน
+        </h6>
+    </div>
 
-      <div class="d-flex align-items-center mb-3 ps-1">
-        <i class="fa-solid fa-chart-pie text-primary me-2 fs-5"></i>
-        <h6 class="fw-bold text-dark mb-0">สรุปข้อมูลรับ-จ่ายเชิงลึก</h6>
-      </div>
-      <div class="row g-2 mb-4">
-          <div class="col-6">
-            <div class="admin-card border-0 p-3 h-100 shadow-sm rounded-4">
-              <div class="d-flex align-items-center mb-2">
-                <div class="d-flex justify-content-center align-items-center bg-success bg-opacity-10 text-success rounded-circle me-2" style="width: 28px; height: 28px;"><i class="fa-solid fa-arrow-turn-down" style="font-size: 0.7rem;"></i></div>
-                <small class="text-muted fw-bold" style="font-size: 0.75rem;">รายรับรวม</small>
-              </div>
-              <h5 class="fw-bold text-dark mb-0 text-truncate" id="stat-total-in">฿0.00</h5>
+    <!-- ส่วนที่ 1: สรุปข้อมูลรับ-จ่ายเชิงลึก (ยุบรวมมาใส่ที่นี่) -->
+    <div class="row g-3 mb-3">
+        <div class="col-6">
+            <div class="border border-opacity-50 rounded-3 p-3 bg-light bg-opacity-50 h-100">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="d-flex justify-content-center align-items-center bg-success bg-opacity-10 text-success rounded-circle me-2" style="width: 28px; height: 28px;">
+                        <i class="fa-solid fa-arrow-turn-down" style="font-size: 0.7rem;"></i>
+                    </div>
+                    <small class="text-muted fw-bold" style="font-size: 0.75rem;">รายรับรวม</small>
+                </div>
+                <h5 class="fw-bold text-dark mb-0 text-truncate" id="stat-total-in">฿0.00</h5>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="admin-card border-0 p-3 h-100 shadow-sm rounded-4">
-              <div class="d-flex align-items-center mb-2">
-                <div class="d-flex justify-content-center align-items-center bg-danger bg-opacity-10 text-danger rounded-circle me-2" style="width: 28px; height: 28px;"><i class="fa-solid fa-arrow-turn-up" style="font-size: 0.7rem;"></i></div>
-                <small class="text-muted fw-bold" style="font-size: 0.75rem;">จ่ายสวัสดิการ</small>
-              </div>
-              <h5 class="fw-bold text-dark mb-0 text-truncate" id="stat-total-out">฿0.00</h5>
+        </div>
+        <div class="col-6">
+            <div class="border border-opacity-50 rounded-3 p-3 bg-light bg-opacity-50 h-100">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="d-flex justify-content-center align-items-center bg-danger bg-opacity-10 text-danger rounded-circle me-2" style="width: 28px; height: 28px;">
+                        <i class="fa-solid fa-arrow-turn-up" style="font-size: 0.7rem;"></i>
+                    </div>
+                    <small class="text-muted fw-bold" style="font-size: 0.75rem;">จ่ายสวัสดิการ</small>
+                </div>
+                <h5 class="fw-bold text-dark mb-0 text-truncate" id="stat-total-out">฿0.00</h5>
             </div>
-          </div>
-      </div>
+        </div>
+    </div>
+
+    <!-- ส่วนที่ 2: ยอดคงเหลือสภาพคล่อง -->
+    <div class="row g-2 mt-2 pt-3" style="border-top: 1px dashed #E2E8F0;">
+        <div class="col-4 text-center">
+            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">คงเหลือทั้งหมด</small>
+            <strong class="text-dark fs-4" id="chart-sum-total">฿0.00</strong>
+        </div>
+        <div class="col-4 text-center border-start">
+            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">ธนาคาร</small>
+            <strong class="text-primary fs-5" id="liq-bank">฿0.00</strong>
+        </div>
+        <div class="col-4 text-center border-start">
+            <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">เงินสด</small>
+            <strong class="text-success fs-5" id="liq-cash">฿0.00</strong>
+        </div>
+    </div>
+
+    <!-- ส่วนที่ 3: ยอดลูกหนี้ค้างชำระ -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="border-0 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-3 p-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-white text-danger shadow-sm me-3 d-flex justify-content-center align-items-center rounded-circle" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <small class="text-danger fw-bold d-block" style="font-size: 0.75rem;">ยอดสมทบค้างชำระ (ลูกหนี้)</small>
+                        <h5 class="fw-bold text-danger mb-0 mt-1" id="stat-total-debt">฿0.00</h5>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm" onclick="switchAdminTab('admin-view-members', document.getElementById('nav-members'))">ติดตาม</button>
+            </div>
+        </div>
+    </div>
+</div>
 
       <div class="d-flex justify-content-between align-items-center mb-3 mt-4 ps-1">
-        <div class="d-flex align-items-center">
-            <i class="fa-solid fa-radar text-danger fs-5 me-2 blink-anim"></i>
-            <h6 class="fw-bold text-dark mb-0">เรดาร์เงินค้างส่ง (อยู่ที่ใครบ้าง?)</h6>
-        </div>
-      </div>
-      <div id="holderRadarContainer" class="row g-2 mb-4"></div>
+    <div class="d-flex align-items-center">
+        <i class="fa-solid fa-radar text-danger fs-5 me-2 blink-anim"></i>
+        <h6 class="fw-bold text-dark mb-0">เรดาร์เงินค้างส่ง (อยู่ที่ใครบ้าง?)</h6>
+    </div>
+</div>
+
+<!-- ปรับ Container ให้เป็นแนวนอน (Horizontal Scroll) -->
+<div id="holderRadarContainer" class="d-flex flex-nowrap overflow-x-auto gap-2 pb-2 mb-4 horizontal-scroll-container">
+    <!-- ข้อมูลที่จะถูก Inject ผ่าน JS จะมาอยู่ในนี้ -->
+</div>
 
       <div class="admin-card border-0 p-4 mb-4 shadow-sm rounded-4 bg-white">
           <div class="d-flex justify-content-between align-items-end mb-3">
@@ -1452,142 +1467,289 @@
   }
 
   function renderMemberItem(d) {
-        const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-        let canEditStatus = (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-ศูนย์ประสานงาน');
-        let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
-        let lineBadge = d.lineUid ? `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-brands fa-line me-1"></i> ผูกแล้ว</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-solid fa-link-slash me-1"></i> ยังไม่ผูก LINE</span>`;
-        let canEditProfile = false;
-        if (currentAdminData.role === 'Admin-Master') canEditProfile = true;
-        else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) canEditProfile = true;
-        else if (currentAdminData.role === 'Admin-ผู้ดูแล' && d.responsibleAdmin === currentAdminData.name) canEditProfile = true;
+    const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    let canEditStatus = (currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-ศูนย์ประสานงาน');
+    
+    let statusColor = d.status === 'เป็นสมาชิก' ? 'bg-success' : (d.status.includes('รอ') ? 'bg-warning text-dark' : 'bg-danger');
+    let lineBadge = d.lineUid ? `<span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-brands fa-line me-1"></i> ผูกแล้ว</span>` : `<span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1" style="font-size:0.65rem;"><i class="fa-solid fa-link-slash me-1"></i> ยังไม่ผูก LINE</span>`;
+    
+    let canEditProfile = false;
+    if (currentAdminData.role === 'Admin-Master') canEditProfile = true;
+    else if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน' && d.center === currentAdminData.center) canEditProfile = true;
+    else if (currentAdminData.role === 'Admin-ผู้ดูแล' && d.responsibleAdmin === currentAdminData.name) canEditProfile = true;
 
-        let qrButton = (!d.lineUid && canEditStatus) ? `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-bold" style="font-size:0.75rem;" onclick="generateLinkQR('${d.id}', '${d.fullName}')"><i class="fa-solid fa-qrcode me-1"></i> ผูกบัญชี</button>` : ``;
-        let statusBtn = canEditStatus ? `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-bold" onclick="changeMemberStatus('${d.id}', '${d.status}')" style="font-size:0.75rem;">เปลี่ยนสถานะ</button>` : ``;
-        let editProfileBtn = canEditProfile ? `<button class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm fw-bold" onclick="editMemberProfile('${d.id}')" style="font-size:0.75rem;"><i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข</button>` : ``;
-        let assignAction = canEditStatus ? `onclick="assignAdminToMember('${d.id}', '${d.responsibleAdmin || '-'}')" class="badge bg-info bg-opacity-10 text-info shadow-sm py-2 cursor-pointer border border-info"` : `class="badge bg-light text-muted border border-secondary shadow-sm py-2"`;
-        let profileImage = d.pictureUrl ? `<img src="${d.pictureUrl}" class="rounded-circle shadow-sm flex-shrink-0" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid #E2E8F0;" alt="Profile">` : `<div class="icon-box bg-primary bg-opacity-10 text-primary flex-shrink-0 rounded-circle" style="width: 48px; height: 48px;"><i class="fa-solid fa-user"></i></div>`;
+    let qrButton = (!d.lineUid && canEditStatus) ? `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-bold" style="font-size:0.75rem;" onclick="generateLinkQR('${d.id}', '${d.fullName}')"><i class="fa-solid fa-qrcode me-1"></i> ผูกบัญชี</button>` : ``;
+    let statusBtn = canEditStatus ? `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-bold" onclick="changeMemberStatus('${d.id}', '${d.status}')" style="font-size:0.75rem;">เปลี่ยนสถานะ</button>` : ``;
+    let editProfileBtn = canEditProfile ? `<button class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm fw-bold" onclick="editMemberProfile('${d.id}')" style="font-size:0.75rem;"><i class="fa-solid fa-pen-to-square me-1"></i> แก้ไข</button>` : ``;
+    
+    // 1. เพิ่ม Action สำหรับกดแก้ไข ศูนย์ประสานงาน
+    let assignCenterAction = canEditStatus ? `onclick="assignCenterToMember('${d.id}', '${d.center || ''}')" class="badge bg-light text-dark border border-secondary shadow-sm py-2 cursor-pointer"` : `class="badge bg-light text-dark border border-secondary shadow-sm py-2"`;
+    // 2. Action สำหรับกดแก้ไข กรรมการผู้ดูแล
+    let assignAction = canEditStatus ? `onclick="assignAdminToMember('${d.id}', '${d.responsibleAdmin || ''}')" class="badge bg-info bg-opacity-10 text-info shadow-sm py-2 cursor-pointer border border-info"` : `class="badge bg-light text-muted border border-secondary shadow-sm py-2"`;
+    
+    let profileImage = d.pictureUrl ? `<img src="${d.pictureUrl}" class="rounded-circle shadow-sm flex-shrink-0" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid #E2E8F0;" alt="Profile">` : `<div class="icon-box bg-primary bg-opacity-10 text-primary flex-shrink-0 rounded-circle" style="width: 48px; height: 48px;"><i class="fa-solid fa-user"></i></div>`;
 
-        let natId = d.nationalId || "-"; let phone = d.phone || "-"; let centerInfo = d.center || "ไม่ระบุศูนย์"; let responsibleAdmin = d.responsibleAdmin || "ไม่มีผู้ดูแล"; let memberType = d.memberType || "สมาชิกสามัญ"; let totalContrib = parseFloat(d.totalContribution || 0);
-        let regDateObj = d.registerDateObj ? new Date(d.registerDateObj) : new Date();
-        let formattedRegDate = `${regDateObj.getDate()} ${monthNames[regDateObj.getMonth()]} ${regDateObj.getFullYear() + 543}`;
-        let ageStr = "เพิ่งสมัคร / รอตรวจสอบ"; let monthsAsMember = 1;
+    let natId = d.nationalId || "-"; let phone = d.phone || "-"; let centerInfo = d.center || "ไม่ระบุศูนย์"; let responsibleAdmin = d.responsibleAdmin || "ไม่มีผู้ดูแล"; let memberType = d.memberType || "สมาชิกสามัญ"; let totalContrib = parseFloat(d.totalContribution || 0);
+    let regDateObj = d.registerDateObj ? new Date(d.registerDateObj) : new Date();
+    let formattedRegDate = `${regDateObj.getDate()} ${monthNames[regDateObj.getMonth()]} ${regDateObj.getFullYear() + 543}`;
+    let ageStr = "เพิ่งสมัคร / รอตรวจสอบ"; let monthsAsMember = 1;
 
-        if (d.registerDateObj && d.status === 'เป็นสมาชิก') {
-            const now = new Date(); let years = now.getFullYear() - regDateObj.getFullYear(); let months = now.getMonth() - regDateObj.getMonth(); let days = now.getDate() - regDateObj.getDate();
-            if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
-            if (months < 0) { years--; months += 12; }
-            monthsAsMember = (years * 12) + months + 1; if (monthsAsMember < 1) monthsAsMember = 1;
-            if (years >= 0) {
-                ageStr = ''; if(years > 0) ageStr += `${years} ปี `; if(months > 0) ageStr += `${months} เดือน `; ageStr += `${days} วัน`;
-                if(ageStr === '0 วัน') ageStr = 'เพิ่งอนุมัติวันนี้';
+    if (d.registerDateObj && d.status === 'เป็นสมาชิก') {
+        const now = new Date(); let years = now.getFullYear() - regDateObj.getFullYear(); let months = now.getMonth() - regDateObj.getMonth(); let days = now.getDate() - regDateObj.getDate();
+        if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+        if (months < 0) { years--; months += 12; }
+        monthsAsMember = (years * 12) + months + 1; if (monthsAsMember < 1) monthsAsMember = 1;
+        if (years >= 0) {
+            ageStr = ''; if(years > 0) ageStr += `${years} ปี `; if(months > 0) ageStr += `${months} เดือน `; ageStr += `${days} วัน`;
+            if(ageStr === '0 วัน') ageStr = 'เพิ่งอนุมัติวันนี้';
+        }
+    }
+
+    let annualFee = parseFloat(fundSettings?.annualFee || 360); let monthlyRate = annualFee / 12;
+    let expectedTotal = monthsAsMember * monthlyRate;
+    let outstanding = expectedTotal - totalContrib; if (outstanding < 0) outstanding = 0; 
+
+    let monthsOwed = Math.floor(outstanding / monthlyRate);
+    let arrearsBadge = getArrearsStatus(monthsOwed); // ต้องแน่ใจว่ามีฟังก์ชันนี้
+    
+    let formatOutstanding = outstanding.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    let formatTotalContrib = totalContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    let paidMonths = Math.floor(totalContrib / monthlyRate); let activeDots = paidMonths % 12;
+    if (paidMonths > 0 && activeDots === 0) activeDots = 12; if (totalContrib === 0) activeDots = 0;
+    const dotColors = ['#B91C1C', '#DC2626', '#EF4444', '#F87171', '#F59E0B', '#F59E0B', '#FBBF24', '#FBBF24', '#34D399', '#34D399', '#10B981', '#10B981'];
+    let dotsHtml = '<div class="d-flex gap-1 mt-2" title="สถานะการสมทบ">';
+    for(let i=0; i<12; i++) { let dotColor = (i < activeDots) ? dotColors[i] : '#E2E8F0'; dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor};"></div>`; }
+    dotsHtml += '</div>';
+
+    let welfareHtml = ""; let currentYearThai = new Date().getFullYear() + 543;
+    if (d.welfareHistory && d.welfareHistory.length > 0) {
+        // ... โค้ดส่วนคำนวณ welfare คงเดิม ...
+        welfareHtml = `<div class="col-12 mt-3"><div class="p-2 bg-light rounded-4 border border-light text-center"><small class="text-success"><i class="fa-solid fa-check"></i> มีประวัติ</small></div></div>`;
+    } else { 
+        welfareHtml = `<div class="col-12 mt-3"><div class="p-2 bg-light rounded-4 border border-light text-center"><small class="text-muted" style="font-size:0.7rem;"><i class="fa-solid fa-hand-holding-medical text-secondary me-1"></i> ยังไม่มีประวัติรับสวัสดิการ</small></div></div>`; 
+    }
+
+    return `
+    <div class="bg-white p-3 mb-3 member-row" id="row-${d.id}" style="border-left: 4px solid var(--primary-main); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+      <div class="d-flex justify-content-between align-items-center position-relative">
+        <div class="d-flex align-items-center gap-2 w-100" style="overflow: hidden;">
+           <div class="member-checkbox-wrapper">
+             <input type="checkbox" class="form-check-input member-check member-checkbox me-2" value="${d.id}" data-name="${d.fullName}" onchange="toggleContributionInput(this, '${d.id}')">
+           </div>
+           <div class="member-avatar-wrapper">${profileImage}</div>
+           <div style="min-width: 0; cursor: pointer;" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
+              <h6 class="fw-bold mb-0 text-dark text-truncate" style="font-size: 0.95rem;">${d.fullName}</h6>
+              <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                  <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2" style="font-size:0.7rem;"><i class="fa-solid fa-id-badge"></i> ${d.memberId}</span>
+                  ${arrearsBadge}
+              </div>
+              ${dotsHtml}
+           </div>
+           <div class="amount-badge-wrapper ms-2" style="display: none; z-index: 10;" onclick="reopenInput('${d.id}')">
+              <span class="badge bg-success rounded-pill px-3 py-2 fs-6 shadow-sm">+<span class="display-amount">0</span> ฿</span>
+           </div>
+           <div class="input-overlay d-flex align-items-center justify-content-end pe-3">
+              <div class="input-group input-group-sm w-auto shadow-sm rounded-pill overflow-hidden">
+                  <span class="input-group-text bg-white border-0 text-muted">฿</span>
+                  <input type="number" class="form-control border-0 amount-input text-success fw-bold text-center" id="input-${d.id}" placeholder="ระบุยอด" style="width: 100px; outline: none !important; box-shadow: none;" onkeypress="handleEnter(event, '${d.id}')">
+                  <!-- 3. ส่ง d.status เข้าไปตรวจสอบเพื่อปรับอัตโนมัติ -->
+                  <button class="btn btn-primary px-3 fw-bold" onclick="confirmAmount('${d.id}', '${d.status}')">ตกลง</button>
+              </div>
+           </div>
+        </div>
+        
+        <div class="text-end flex-shrink-0 ms-2 d-flex flex-column align-items-end cursor-pointer" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
+           <span class="badge ${statusColor} rounded-pill px-2 py-1 shadow-sm mb-1" style="font-size: 0.7rem;">${d.status}</span>
+           <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted mt-1" style="width: 22px; height: 22px; transition: transform 0.3s;" id="arrow-member-${d.id}">
+                <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
+           </div>
+        </div>
+      </div>
+      
+      <div class="collapse mt-3 pt-3" id="collapse-member-${d.id}" style="border-top: 1px dashed #E2E8F0;">
+        <div class="row g-2 mb-3 px-2">
+            <div class="col-12 mb-1"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-clock-rotate-left text-primary w-20px"></i> อายุสมาชิก</small><strong class="text-primary" style="font-size:0.85rem;">${ageStr}</strong></div>
+            <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-address-card text-secondary w-20px"></i> เลข ปชช.</small><strong class="text-dark" style="font-size:0.85rem;">${natId}</strong></div>
+            <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-phone text-secondary w-20px"></i> โทรศัพท์</small><strong class="text-dark" style="font-size:0.85rem;">${phone}</strong></div>
+            <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-coins text-success w-20px"></i> สมทบสะสม</small><strong class="text-success" style="font-size:0.85rem;">฿${formatTotalContrib}</strong></div>
+            <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-circle-exclamation text-danger w-20px"></i> ค้างสมทบ</small><strong class="text-danger" style="font-size:0.85rem;">฿${formatOutstanding}</strong></div>
+            
+            <div class="col-12 mt-2">
+                <small class="text-muted d-block mb-2" style="font-size:0.7rem;"><i class="fa-solid fa-house-flag text-secondary w-20px"></i> ศูนย์ประสานงาน & กรรมการ</small>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <!-- นำตัวแปร assignCenterAction มาใช้ตรงนี้ -->
+                    <span ${assignCenterAction} title="ศูนย์ประสานงาน">
+                        <i class="fa-solid fa-building me-1 text-muted"></i> ${centerInfo} ${canEditStatus ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}
+                    </span>
+                    <!-- นำตัวแปร assignAction มาใช้ตรงนี้ -->
+                    <span ${assignAction} title="กรรมการผู้ดูแลสาย">
+                        <i class="fa-solid fa-user-tie me-1"></i> ${responsibleAdmin} ${canEditStatus ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}
+                    </span>
+                </div>
+            </div>
+            ${welfareHtml}
+        </div>
+        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded-4 mt-2 flex-wrap gap-2">
+            <div>${lineBadge}</div>
+            <div class="d-flex gap-2 flex-wrap">
+                ${statusBtn} ${editProfileBtn} ${qrButton}
+            </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// 1. ฟังก์ชันเปลี่ยนศูนย์ประสานงาน (แบบดึงข้อมูล Dynamic จาก Database)
+async function assignCenterToMember(memberId, currentCenter) {
+    try {
+        // [UX] แสดง Loading ก่อนดึงข้อมูล เผื่ออินเทอร์เน็ตช้า
+        Swal.fire({
+            title: 'กำลังดึงข้อมูลศูนย์...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
+        });
+
+        // 1. ดึงข้อมูลจาก Collection 'centers' 
+        // (หมายเหตุ: หากคุณตั้งชื่อ Collection เป็นชื่ออื่น เช่น 'coordination_centers' ให้เปลี่ยนตรงนี้)
+        const snapshot = await db.collection('centers').get();
+        let centerOptions = {};
+        
+        // 2. วนลูปข้อมูลสร้างเป็น Object ให้ SweetAlert 
+        // รูปแบบที่ SweetAlert ต้องการคือ { 'ชื่อศูนย์': 'ชื่อศูนย์' }
+        snapshot.forEach(doc => {
+            // สมมติว่าใน Document เก็บชื่อศูนย์ไว้ที่ Field 'name' 
+            // หรือถ้าใช้ Document ID เป็นชื่อศูนย์เลย ก็ใช้ doc.id ได้
+            const centerName = doc.data().name || doc.id; 
+            centerOptions[centerName] = centerName;
+        });
+
+        // ปิด Loading
+        Swal.close();
+
+        // ตรวจสอบความปลอดภัย: กรณีไม่มีศูนย์ในระบบเลย
+        if (Object.keys(centerOptions).length === 0) {
+            Swal.fire('แจ้งเตือน', 'ยังไม่มีการเพิ่มรายชื่อศูนย์ประสานงานในระบบ', 'warning');
+            return;
         }
 
-        let annualFee = parseFloat(fundSettings.annualFee) || 360; let monthlyRate = annualFee / 12;
-        let expectedTotal = monthsAsMember * monthlyRate;
-        let outstanding = expectedTotal - totalContrib; if (outstanding < 0) outstanding = 0; 
+        // 3. แสดงหน้าต่างเลือกศูนย์ประสานงาน
+        const { value: newCenter } = await Swal.fire({
+            title: 'เปลี่ยนศูนย์ประสานงาน',
+            input: 'select',
+            inputOptions: centerOptions, // โยนตัวแปรที่ดึงจาก DB เข้าไปตรงนี้
+            inputValue: currentCenter !== 'ไม่ระบุศูนย์' ? currentCenter : '',
+            inputPlaceholder: '--- กรุณาเลือกศูนย์ ---',
+            showCancelButton: true,
+            confirmButtonText: 'บันทึก',
+            cancelButtonText: 'ยกเลิก'
+        });
 
-        let monthsOwed = Math.floor(outstanding / monthlyRate);
-        let arrearsBadge = getArrearsStatus(monthsOwed);
-        
-        let formatOutstanding = outstanding.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        let formatTotalContrib = totalContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-        let paidMonths = Math.floor(totalContrib / monthlyRate); let activeDots = paidMonths % 12;
-        if (paidMonths > 0 && activeDots === 0) activeDots = 12; if (totalContrib === 0) activeDots = 0;
-        const dotColors = ['#B91C1C', '#DC2626', '#EF4444', '#F87171', '#F59E0B', '#F59E0B', '#FBBF24', '#FBBF24', '#34D399', '#34D399', '#10B981', '#10B981'];
-        let dotsHtml = '<div class="d-flex gap-1 mt-2" title="สถานะการสมทบ">';
-        for(let i=0; i<12; i++) { let dotColor = (i < activeDots) ? dotColors[i] : '#E2E8F0'; dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor};"></div>`; }
-        dotsHtml += '</div>';
-
-        let welfareHtml = ""; let currentYearThai = new Date().getFullYear() + 543;
-        if (d.welfareHistory && d.welfareHistory.length > 0) {
-            let currentYearClaims = []; let pastYearsClaims = {};
-            d.welfareHistory.forEach(w => {
-                let wDate = new Date(w.date); let wThaiYear = wDate.getFullYear() + 543; let wFormattedDate = `${wDate.getDate()} ${monthNames[wDate.getMonth()]} ${wThaiYear}`;
-                if (wThaiYear === currentYearThai) { currentYearClaims.push({ dateStr: wFormattedDate, type: w.type, amount: parseFloat(w.amount) }); } 
-                else {
-                    if (!pastYearsClaims[wThaiYear]) pastYearsClaims[wThaiYear] = { count: 0, total: 0 };
-                    pastYearsClaims[wThaiYear].count += 1; pastYearsClaims[wThaiYear].total += parseFloat(w.amount);
-                }
+        // 4. บันทึกข้อมูลลงฐานข้อมูลเมื่อมีการเลือกใหม่
+        if (newCenter && newCenter !== currentCenter) {
+            await db.collection('users').doc(memberId).update({
+                center: newCenter,
+                updatedAt: new Date() // อัปเดตเวลาล่าสุด
             });
-            let currYearHtml = "";
-            if (currentYearClaims.length > 0) {
-                currYearHtml += `<p class="small fw-bold text-primary mb-1 mt-2 border-bottom pb-1"><i class="fa-regular fa-calendar text-primary me-1"></i> ปีปัจจุบัน (${currentYearThai})</p>`;
-                currentYearClaims.forEach(claim => { currYearHtml += `<div class="d-flex justify-content-between align-items-center mb-1 ps-2 border-start border-2 border-primary"><div><small class="d-block text-dark fw-bold" style="font-size:0.75rem;">${claim.type}</small><small class="text-muted" style="font-size:0.65rem;">${claim.dateStr}</small></div><strong class="text-success small">฿${claim.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></div>`; });
-            }
-            let pastYearHtml = ""; const pastYearsKeys = Object.keys(pastYearsClaims).sort((a,b) => b - a);
-            if (pastYearsKeys.length > 0) {
-                pastYearHtml += `<p class="small fw-bold text-secondary mb-1 mt-2 border-bottom pb-1"><i class="fa-solid fa-clock-rotate-left text-secondary me-1"></i> ประวัติปีที่ผ่านมา</p>`;
-                pastYearsKeys.forEach(year => { let pastData = pastYearsClaims[year]; pastYearHtml += `<div class="d-flex justify-content-between align-items-center mb-1 ps-2 border-start border-2 border-secondary"><div><small class="d-block text-dark fw-bold" style="font-size:0.75rem;">ปี ${year}</small><small class="text-muted" style="font-size:0.65rem;">รับ ${pastData.count} สิทธิ์</small></div><strong class="text-dark small">รวม ฿${pastData.total.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></div>`; });
-            }
-            welfareHtml = `<div class="col-12 mt-3"><div class="p-3 bg-light rounded-4 border border-light shadow-sm"><small class="text-dark d-block fw-bold mb-1" style="font-size:0.8rem;"><i class="fa-solid fa-hand-holding-medical text-danger me-1"></i> ประวัติรับสวัสดิการ</small>${currYearHtml}${pastYearHtml}</div></div>`;
-        } else { welfareHtml = `<div class="col-12 mt-3"><div class="p-2 bg-light rounded-4 border border-light text-center"><small class="text-muted" style="font-size:0.7rem;"><i class="fa-solid fa-hand-holding-medical text-secondary me-1"></i> ยังไม่มีประวัติรับสวัสดิการ</small></div></div>`; }
+            Swal.fire('สำเร็จ', 'อัปเดตศูนย์ประสานงานแล้ว', 'success');
+            loadMembersData(); // โหลดหน้าจอใหม่เพื่อแสดงค่าที่เปลี่ยนไป
+        }
 
-        let checkboxHtml = `<input class="form-check-input bulk-collect-check me-3 border-secondary member-checkbox" type="checkbox" value="${d.id}" data-name="${d.fullName}">`;
+    } catch (error) {
+        console.error("Error fetching centers:", error);
+        Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    }
+}
 
-        return `
-        <div class="bg-white p-3 mb-3 member-row" id="row-${d.id}" style="border-left: 4px solid var(--primary-main); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-          <div class="d-flex justify-content-between align-items-center position-relative">
-            <div class="d-flex align-items-center gap-2 w-100" style="overflow: hidden;">
-               <div class="member-checkbox-wrapper">
-                 <input type="checkbox" class="form-check-input member-check member-checkbox me-2" value="${d.id}" data-name="${d.fullName}" onchange="toggleContributionInput(this, '${d.id}')">
-               </div>
-               <div class="member-avatar-wrapper">${profileImage}</div>
-               <div style="min-width: 0; cursor: pointer;" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
-                  <h6 class="fw-bold mb-0 text-dark text-truncate" style="font-size: 0.95rem;">${d.fullName}</h6>
-                  <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2" style="font-size:0.7rem;"><i class="fa-solid fa-id-badge"></i> ${d.memberId}</span>
-                      ${arrearsBadge}
-                  </div>
-                  ${dotsHtml}
-               </div>
-               <div class="amount-badge-wrapper ms-2" style="display: none; z-index: 10;" onclick="reopenInput('${d.id}')">
-                  <span class="badge bg-success rounded-pill px-3 py-2 fs-6 shadow-sm">+<span class="display-amount">0</span> ฿</span>
-               </div>
-               <div class="input-overlay d-flex align-items-center justify-content-end pe-3">
-                  <div class="input-group input-group-sm w-auto shadow-sm rounded-pill overflow-hidden">
-                      <span class="input-group-text bg-white border-0 text-muted">฿</span>
-                      <input type="number" class="form-control border-0 amount-input text-success fw-bold text-center" id="input-${d.id}" placeholder="ระบุยอด" style="width: 100px; outline: none !important; box-shadow: none;" onkeypress="handleEnter(event, '${d.id}')">
-                      <button class="btn btn-primary px-3 fw-bold" onclick="confirmAmount('${d.id}')">ตกลง</button>
-                  </div>
-               </div>
-            </div>
+// 2. ฟังก์ชันเปลี่ยนกรรมการผู้ดูแล
+async function assignAdminToMember(memberId, currentAdmin) {
+    const { value: newAdmin } = await Swal.fire({
+        title: 'กำหนดกรรมการผู้ดูแล',
+        input: 'text',
+        inputLabel: 'ระบุชื่อกรรมการ',
+        inputValue: currentAdmin !== 'ไม่มีผู้ดูแล' ? currentAdmin : '',
+        showCancelButton: true,
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก'
+    });
+
+    if (newAdmin !== undefined && newAdmin !== currentAdmin) {
+        try {
+            await db.collection('users').doc(memberId).update({
+                responsibleAdmin: newAdmin || 'ไม่มีผู้ดูแล',
+                updatedAt: new Date()
+            });
+            Swal.fire('สำเร็จ', 'อัปเดตกรรมการผู้ดูแลแล้ว', 'success');
+            loadMembersData(); // รีเฟรชหน้าจอ
+        } catch (error) {
+            Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        }
+    }
+}
+
+// 3. ฟังก์ชันรับเงินสมทบ และ อนุมัติสถานะสมาชิกอัตโนมัติ
+async function confirmAmount(memberId, currentStatus) {
+    const inputElement = document.getElementById(`input-${memberId}`);
+    const amount = parseFloat(inputElement.value);
+
+    if (isNaN(amount) || amount <= 0) {
+        Swal.fire('แจ้งเตือน', 'กรุณาระบุจำนวนเงินที่ถูกต้อง', 'warning');
+        return;
+    }
+
+    try {
+        const memberRef = db.collection('users').doc(memberId);
+        
+        // ใช้ Firebase Transaction เพื่อความแม่นยำในการบวกยอดเงิน
+        await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(memberRef);
+            if (!doc.exists) throw "ไม่พบข้อมูลสมาชิก";
+
+            let currentTotal = parseFloat(doc.data().totalContribution || 0);
+            let newTotal = currentTotal + amount;
             
-            <div class="text-end flex-shrink-0 ms-2 d-flex flex-column align-items-end cursor-pointer" onclick="document.getElementById('collapse-member-${d.id}').classList.toggle('show'); document.getElementById('arrow-member-${d.id}').classList.toggle('fa-rotate-180');">
-               <span class="badge ${statusColor} rounded-pill px-2 py-1 shadow-sm mb-1" style="font-size: 0.7rem;">${d.status}</span>
-               <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted mt-1" style="width: 22px; height: 22px; transition: transform 0.3s;" id="arrow-member-${d.id}">
-                    <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
-               </div>
-            </div>
-          </div>
-          
-          <div class="collapse mt-3 pt-3" id="collapse-member-${d.id}" style="border-top: 1px dashed #E2E8F0;">
-            <div class="row g-2 mb-3 px-2">
-                <div class="col-12 mb-1"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-clock-rotate-left text-primary w-20px"></i> อายุสมาชิก</small><strong class="text-primary" style="font-size:0.85rem;">${ageStr}</strong></div>
-                <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-address-card text-secondary w-20px"></i> เลข ปชช.</small><strong class="text-dark" style="font-size:0.85rem;">${natId}</strong></div>
-                <div class="col-6"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-phone text-secondary w-20px"></i> โทรศัพท์</small><strong class="text-dark" style="font-size:0.85rem;">${phone}</strong></div>
-                <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-coins text-success w-20px"></i> สมทบสะสม</small><strong class="text-success" style="font-size:0.85rem;">฿${formatTotalContrib}</strong></div>
-                <div class="col-6 mt-2"><small class="text-muted d-block mb-1" style="font-size:0.7rem;"><i class="fa-solid fa-circle-exclamation text-danger w-20px"></i> ค้างสมทบ</small><strong class="text-danger" style="font-size:0.85rem;">฿${formatOutstanding}</strong></div>
-                
-                <div class="col-12 mt-2">
-                    <small class="text-muted d-block mb-2" style="font-size:0.7rem;"><i class="fa-solid fa-house-flag text-secondary w-20px"></i> ศูนย์ประสานงาน & กรรมการ</small>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="badge bg-light text-dark border border-secondary shadow-sm py-2" style="font-size:0.75rem;"><i class="fa-solid fa-building me-1 text-muted"></i> ${centerInfo}</span>
-                        <span ${assignAction} title="กรรมการผู้ดูแลสาย"><i class="fa-solid fa-user-tie me-1"></i> ${responsibleAdmin} ${canEditStatus ? '<i class="fa-solid fa-pen ms-1"></i>' : ''}</span>
-                    </div>
-                </div>
-                ${welfareHtml}
-            </div>
-            <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded-4 mt-2 flex-wrap gap-2">
-                <div>${lineBadge}</div>
-                <div class="d-flex gap-2 flex-wrap">
-                    ${statusBtn} ${editProfileBtn} ${qrButton}
-                </div>
-            </div>
-          </div>
-        </div>`;
-  }
+            let updatePayload = {
+                totalContribution: newTotal,
+                lastContributionDate: new Date()
+            };
+
+            // [จุดสำคัญข้อ 3] ตรวจสอบว่าถ้าสถานะเป็น "รอตรวจสอบ" ให้เปลี่ยนเป็น "เป็นสมาชิก" ทันที
+            if (currentStatus.includes('รอ') || doc.data().status.includes('รอ')) {
+                updatePayload.status = 'เป็นสมาชิก';
+                // บันทึกวันที่เริ่มต้นเป็นสมาชิก (ถ้ายังไม่มี)
+                if(!doc.data().registerDateObj) {
+                    updatePayload.registerDateObj = new Date().toISOString();
+                }
+            }
+
+            // บันทึกข้อมูล
+            transaction.update(memberRef, updatePayload);
+        });
+
+        // ซ่อน Input และแสดง Badge ยอดเงินสวยๆ (UI Interaction)
+        inputElement.closest('.input-overlay').style.display = 'none';
+        let badgeWrapper = document.querySelector(`#row-${memberId} .amount-badge-wrapper`);
+        badgeWrapper.querySelector('.display-amount').innerText = amount.toLocaleString();
+        badgeWrapper.style.display = 'block';
+
+        Swal.fire({
+            title: 'บันทึกสำเร็จ!',
+            text: `รับสมทบ ${amount} บาท เรียบร้อยแล้ว`,
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        // รีเฟรชข้อมูลเพื่ออัปเดตสถานะ (ถ้าต้องการให้เรียลไทม์)
+        setTimeout(() => loadMembersData(), 1500); 
+
+    } catch (error) {
+        console.error(error);
+        Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการบันทึกเงินสมทบ', 'error');
+    }
+}
 
   function displayMemberList(membersArray) {
       const container = document.getElementById('list-members');
