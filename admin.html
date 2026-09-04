@@ -802,6 +802,22 @@
         <div class="input-group mb-2"><input type="text" id="newCenterInput" class="form-control-modern flex-grow-1" placeholder="พิมพ์ชื่อศูนย์ประสานงาน..." onkeypress="if(event.key === 'Enter') addCenterBadge();"><button type="button" class="btn btn-primary px-3 rounded-end-4 ms-1" onclick="addCenterBadge()"><i class="fa-solid fa-plus"></i></button></div>
         <div id="centersContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
       </div>
+      
+      <!-- 🌟 เพิ่มช่องตัวแปรประเภทสวัสดิการและเงื่อนไข (ต่อท้ายศูนย์ประสานงาน) -->
+        <label class="small fw-bold text-muted mb-1 mt-2"><i class="fa-solid fa-hand-holding-heart text-danger"></i> ประเภทสวัสดิการ (สำหรับตั้งระเบียบ)</label>
+        <div class="input-group mb-2">
+            <input type="text" id="newWelfareTypeInput" class="form-control-modern flex-grow-1" placeholder="เช่น ค่าคลอดบุตร, ค่าทำศพ..." onkeypress="if(event.key === 'Enter') addWelfareTypeBadge();">
+            <button type="button" class="btn btn-danger px-3 rounded-end-4 ms-1" onclick="addWelfareTypeBadge()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div id="welfareTypesContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+        <label class="small fw-bold text-muted mb-1"><i class="fa-solid fa-filter text-warning"></i> ประเภทเงื่อนไขการรับสิทธิ์</label>
+        <div class="input-group mb-2">
+            <input type="text" id="newConditionTypeInput" class="form-control-modern flex-grow-1" placeholder="เช่น อายุสมาชิกขั้นต่ำ, จ่ายสูงสุดต่อครั้ง..." onkeypress="if(event.key === 'Enter') addConditionTypeBadge();">
+            <button type="button" class="btn btn-warning px-3 rounded-end-4 ms-1 text-dark" onclick="addConditionTypeBadge()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div id="conditionTypesContainer" class="d-flex flex-wrap gap-2 mb-4"></div> 
+
 
       <!-- โครงสร้างคณะกรรมการ -->
       <div class="admin-card border-0 p-4 mb-3">
@@ -933,6 +949,105 @@
 
   </div> <!-- End container-fluid -->
 </div> <!-- End adminApp -->
+<!-- ==========================================
+     MODAL: ฟอร์มเพิ่ม/แก้ไขข้อมูลสมาชิก
+=========================================== -->
+<div class="modal fade" id="memberFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary bg-opacity-10 border-0 p-4">
+                <h5 class="modal-title fw-bold text-primary" id="memberModalTitle"><i class="fa-solid fa-user-plus me-2"></i>ขึ้นทะเบียนสมาชิกใหม่</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <form id="memberDataForm" onsubmit="saveMemberData(event)">
+                    <!-- ซ่อน ID ไว้ใช้กรณีแก้ไขข้อมูล -->
+                    <input type="hidden" id="memDocId" value="">
+
+                    <div class="row g-3">
+                        <!-- ส่วนที่ 1: ข้อมูลส่วนตัว -->
+                        <div class="col-12"><h6 class="fw-bold text-dark mb-1 border-bottom pb-2">1. ข้อมูลส่วนตัวพื้นฐาน</h6></div>
+                        
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">เลขประจำตัวประชาชน (13 หลัก) *</label>
+                            <input type="text" id="memNationalId" class="form-control-modern w-100" maxlength="13" required placeholder="เลข 13 หลัก">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">ชื่อ-นามสกุล *</label>
+                            <input type="text" id="memFullName" class="form-control-modern w-100" required placeholder="นาย/นาง/นางสาว...">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">วัน/เดือน/ปีเกิด (เพื่อคำนวณอายุ) *</label>
+                            <input type="date" id="memDob" class="form-control-modern w-100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">เบอร์โทรศัพท์</label>
+                            <input type="tel" id="memPhone" class="form-control-modern w-100" placeholder="08X-XXX-XXXX">
+                        </div>
+
+                        <!-- ส่วนที่ 2: ข้อมูลที่อยู่และสถานะทางสังคม (สำคัญสำหรับรายงาน) -->
+                        <div class="col-12 mt-4"><h6 class="fw-bold text-dark mb-1 border-bottom pb-2">2. ข้อมูลที่อยู่และกลุ่มเปราะบาง</h6></div>
+
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold mb-1">บ้านเลขที่</label>
+                            <input type="text" id="memAddressNo" class="form-control-modern w-100" placeholder="เลขที่ / ซอย">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold mb-1">หมู่ที่ (ดึงจากตั้งค่า)</label>
+                            <select id="memVillage" class="form-select-modern w-100 border-0 bg-white shadow-sm"></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold mb-1">กลุ่มเปราะบาง *</label>
+                            <select id="memVulnerability" class="form-select-modern w-100 border-0 bg-white shadow-sm" required>
+                                <option value="ปกติ">ปกติ (ไม่มีความเปราะบาง)</option>
+                                <option value="ผู้ด้อยโอกาส">ผู้ด้อยโอกาส</option>
+                                <option value="ผู้พิการ">ผู้พิการ</option>
+                                <option value="ผู้ป่วยติดเตียง">ผู้ป่วยติดเตียง</option>
+                            </select>
+                        </div>
+
+                        <!-- ส่วนที่ 3: ข้อมูลกองทุนสวัสดิการ -->
+                        <div class="col-12 mt-4"><h6 class="fw-bold text-dark mb-1 border-bottom pb-2">3. ข้อมูลทางกองทุน</h6></div>
+
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">รหัสสมาชิกกองทุน</label>
+                            <input type="text" id="memFundId" class="form-control-modern w-100 text-primary fw-bold" placeholder="ปล่อยว่างเพื่อรันอัตโนมัติ">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted fw-bold mb-1">วันที่สมัครเข้ากองทุน *</label>
+                            <input type="date" id="memRegDate" class="form-control-modern w-100" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold mb-1">ประเภทสมาชิก *</label>
+                            <select id="memType" class="form-select-modern w-100 border-0 bg-white shadow-sm" required></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold mb-1">ศูนย์ประสานงาน *</label>
+                            <select id="memCenter" class="form-select-modern w-100 border-0 bg-white shadow-sm" required></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted fw-bold mb-1">ผู้รับผลประโยชน์</label>
+                            <input type="text" id="memBeneficiary" class="form-control-modern w-100" placeholder="ชื่อ-สกุล (ความสัมพันธ์)">
+                        </div>
+
+                        <!-- ซ่อนฟิลด์สำหรับแอดมินศูนย์ -->
+                        <div class="col-12">
+                            <p class="small text-danger mb-0 mt-2 d-none" id="adminLockWarning"><i class="fa-solid fa-lock"></i> สิทธิ์ของคุณถูกล็อกให้เพิ่ม/แก้ไขสมาชิกได้เฉพาะในศูนย์ประสานงานของคุณเท่านั้น</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"><i class="fa-solid fa-save me-1"></i> บันทึกข้อมูลสมาชิก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- ==========================================
      [6] JAVASCRIPT LOGIC
@@ -996,44 +1111,48 @@
   let uiSettingsRules = [];
 
   async function loadGlobalSettings() {
-      showLoader(true, "กำลังโหลดการตั้งค่า...");
-      try {
-          const snap = await db.collection("settings").doc("master").get();
-          if(snap.exists) {
-              const d = snap.data();
-              
-              // ข้อมูลองค์กร
-              const textFields = ['fundName','addressNo','addressMoo','addressSub','addressDist','addressProv','addressZip','fundPhone','fundEmail','fundFb','presidentName','presidentPhone','presidentEmail'];
-              textFields.forEach(f => {
-                  const el = document.getElementById('set' + f.charAt(0).toUpperCase() + f.slice(1));
-                  if(el) el.value = d[f] || "";
-              });
-              
-              // ข้อมูลการเงินและ Array
-              if(document.getElementById('setAnnualFee')) document.getElementById('setAnnualFee').value = d.annualFee || 365;
-              
-              uiSettingsMemberTypes = d.memberTypes || ['สมาชิกสามัญ', 'สมาชิกสมทบ'];
-              uiSettingsVillages = d.inZoneVillages || [];
-              uiSettingsCenters = d.centers || [];
+    showLoader(true, "กำลังโหลดการตั้งค่า...");
+    try {
+        const snap = await db.collection("settings").doc("master").get();
+        if(snap.exists) {
+            const d = snap.data();
+            
+            const textFields = ['fundName','addressNo','addressMoo','addressSub','addressDist','addressProv','addressZip','fundPhone','fundEmail','fundFb','presidentName','presidentPhone','presidentEmail', 'fundCode', 'fundLat', 'fundLng', 'presidentAddress', 'coordinatorName', 'coordinatorAddress', 'coordinatorPhone', 'coordinatorEmail', 'supportOrg'];
+            textFields.forEach(f => {
+                const el = document.getElementById('set' + f.charAt(0).toUpperCase() + f.slice(1));
+                if(el) el.value = d[f] || "";
+            });
+            
+            if(document.getElementById('setAnnualFee')) document.getElementById('setAnnualFee').value = d.annualFee || 365;
+            if(document.getElementById('setEstablishDate')) document.getElementById('setEstablishDate').value = d.establishDate || "";
+            
+            uiSettingsMemberTypes = d.memberTypes || ['สมาชิกสามัญ', 'สมาชิกสมทบ'];
+            uiSettingsVillages = d.inZoneVillages || [];
+            uiSettingsCenters = d.centers || [];
+            uiSettingsCommittee = d.committee || [];
+            uiSettingsRules = d.welfareRules || [];
+            
+            // 🌟 โหลดตัวแปรใหม่ 3 ตัว
+            uiSettingsObjectives = d.objectives || [];
+            uiSettingsWelfareTypes = d.welfareTypes || ['ค่ารักษาพยาบาล', 'ค่าคลอดบุตร', 'ค่าทำศพ'];
+            uiSettingsConditionTypes = d.conditionTypes || ['เป็นสมาชิกขั้นต่ำ (วัน)', 'จำกัดจ่ายสูงสุด (บาท/ครั้ง)'];
 
-              // 🌟 [เพิ่มคำสั่งนี้] โหลดข้อมูลกรรมการและระเบียบสวัสดิการจาก Firebase
-              uiSettingsCommittee = d.committee || [];
-              uiSettingsRules = d.welfareRules || [];
+            // 🌟 สั่งวาด UI ทั้งหมด
+            renderMemberTypeBadges(); renderVillageBadges(); renderCenterBadges();
+            if(typeof renderCommitteeList === 'function') renderCommitteeList();
+            if(typeof renderRulesList === 'function') renderRulesList();
+            
+            // วาดตัวแปรใหม่
+            renderObjectivesList();
+            renderWelfareTypeBadges();
+            renderConditionTypeBadges();
+        }
+        showLoader(false);
+    } catch(e) { 
+        showLoader(false); console.error(e); 
+    }
+}
 
-              renderMemberTypeBadges(); 
-              renderVillageBadges(); 
-              renderCenterBadges();
-
-              // 🌟 [เพิ่มคำสั่งนี้] สั่งให้วาดโครงสร้างกรรมการและระเบียบลงบนหน้าจอ
-              if(typeof renderCommitteeList === 'function') renderCommitteeList();
-              if(typeof renderRulesList === 'function') renderRulesList();
-          }
-          showLoader(false);
-      } catch(e) { 
-          showLoader(false); console.error(e); 
-          Swal.fire('Error', 'ไม่สามารถดึงข้อมูลตั้งค่าได้', 'error'); 
-      }
-  }
   function renderMemberTypeBadges() {
       const container = document.getElementById('memberTypesContainer'); container.innerHTML = "";
       uiSettingsMemberTypes.forEach((type, index) => {
@@ -1083,50 +1202,68 @@
   function removeCenterBadge(index) { uiSettingsCenters.splice(index, 1); renderCenterBadges(); }
 
   async function saveGlobalSettings() {
-      if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
-          return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่สามารถเปลี่ยนการตั้งค่าระบบได้', 'error');
-      }
-      
-      const payload = {
-          fundName: document.getElementById('setFundName').value.trim(),
-          addressNo: document.getElementById('setAddressNo').value.trim(),
-          addressMoo: document.getElementById('setAddressMoo').value.trim(),
-          addressSub: document.getElementById('setAddressSub').value.trim(),
-          addressDist: document.getElementById('setAddressDist').value.trim(),
-          addressProv: document.getElementById('setAddressProv').value.trim(),
-          addressZip: document.getElementById('setAddressZip').value.trim(),
-          fundPhone: document.getElementById('setFundPhone').value.trim(),
-          fundEmail: document.getElementById('setFundEmail').value.trim(),
-          fundFb: document.getElementById('setFundFb').value.trim(),
-          presidentName: document.getElementById('setPresidentName').value.trim(),
-          presidentPhone: document.getElementById('setPresidentPhone').value.trim(),
-          presidentEmail: document.getElementById('setPresidentEmail').value.trim(),
-          annualFee: parseFloat(document.getElementById('setAnnualFee').value) || 365,
-          
-          memberTypes: uiSettingsMemberTypes,
-          inZoneVillages: uiSettingsVillages,
-          centers: uiSettingsCenters
-      };
-      
-      showLoader(true, "กำลังอัปเดตระบบส่วนกลาง...");
-      try {
-          await db.collection("settings").doc("master").set(payload, { merge: true });
-          fundSettings = { ...fundSettings, ...payload };
-          
-          if(document.getElementById('headerFundName')) {
-              document.getElementById('headerFundName').innerText = payload.fundName;
-          }
-          
-          if(typeof populateDropdown === "function") {
-              populateDropdown("filterCenter", uiSettingsCenters);
-              populateDropdown("filterType", uiSettingsMemberTypes);
-          }
+    if(currentAdminData && currentAdminData.role !== 'Admin-Master') {
+        return Swal.fire('ไม่อนุญาต', 'เฉพาะ Admin-Master เท่านั้นที่เปลี่ยนการตั้งค่าได้', 'error');
+    }
+    
+    // ดึงค่าทั้งหมดใส่ Payload
+    const payload = {
+        fundName: document.getElementById('setFundName')?.value.trim() || '',
+        fundCode: document.getElementById('setFundCode')?.value.trim() || '',
+        fundLat: document.getElementById('setFundLat')?.value.trim() || '',
+        fundLng: document.getElementById('setFundLng')?.value.trim() || '',
+        addressNo: document.getElementById('setAddressNo')?.value.trim() || '',
+        addressMoo: document.getElementById('setAddressMoo')?.value.trim() || '',
+        addressSub: document.getElementById('setAddressSub')?.value.trim() || '',
+        addressDist: document.getElementById('setAddressDist')?.value.trim() || '',
+        addressProv: document.getElementById('setAddressProv')?.value.trim() || '',
+        addressZip: document.getElementById('setAddressZip')?.value.trim() || '',
+        fundPhone: document.getElementById('setFundPhone')?.value.trim() || '',
+        fundEmail: document.getElementById('setFundEmail')?.value.trim() || '',
+        fundFb: document.getElementById('setFundFb')?.value.trim() || '',
+        
+        presidentName: document.getElementById('setPresidentName')?.value.trim() || '',
+        presidentAddress: document.getElementById('setPresidentAddress')?.value.trim() || '',
+        presidentPhone: document.getElementById('setPresidentPhone')?.value.trim() || '',
+        presidentEmail: document.getElementById('setPresidentEmail')?.value.trim() || '',
+        
+        coordinatorName: document.getElementById('setCoordinatorName')?.value.trim() || '',
+        coordinatorAddress: document.getElementById('setCoordinatorAddress')?.value.trim() || '',
+        coordinatorPhone: document.getElementById('setCoordinatorPhone')?.value.trim() || '',
+        coordinatorEmail: document.getElementById('setCoordinatorEmail')?.value.trim() || '',
+        
+        establishDate: document.getElementById('setEstablishDate')?.value || '',
+        supportOrg: document.getElementById('setSupportOrg')?.value.trim() || '',
+        annualFee: parseFloat(document.getElementById('setAnnualFee')?.value) || 365,
+        
+        memberTypes: uiSettingsMemberTypes,
+        inZoneVillages: uiSettingsVillages,
+        centers: uiSettingsCenters,
+        
+        // 🌟 บันทึกตัวแปรใหม่ 3 ตัวลง Firebase
+        objectives: uiSettingsObjectives,
+        welfareTypes: uiSettingsWelfareTypes,
+        conditionTypes: uiSettingsConditionTypes
+    };
+    
+    showLoader(true, "กำลังอัปเดตระบบ...");
+    try {
+        await db.collection("settings").doc("master").set(payload, { merge: true });
+        fundSettings = { ...fundSettings, ...payload };
+        
+        if(document.getElementById('headerFundName')) {
+            document.getElementById('headerFundName').innerText = payload.fundName;
+        }
+        
+        if(typeof populateDropdown === "function") {
+            populateDropdown("filterCenter", uiSettingsCenters);
+            populateDropdown("filterType", uiSettingsMemberTypes);
+        }
 
-          showLoader(false); 
-          Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', text: 'ข้อมูลเชื่อมโยงทั่วทั้งระบบแล้ว Dropdown ต่างๆ จะถูกอัปเดตทันที', showConfirmButton: false, timer: 2000 });
-          
-      } catch(e) { showLoader(false); console.error(e); Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
-  }
+        showLoader(false); 
+        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', text: 'ข้อมูลเชื่อมโยงทั่วทั้งระบบแล้ว', showConfirmButton: false, timer: 2000 });
+    } catch(e) { showLoader(false); console.error(e); Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error'); }
+}
   // ฟังก์ชันวาดรายชื่อคณะกรรมการลงหน้าจอ
 function renderCommitteeList() {
     const container = document.getElementById('committeeContainer');
@@ -2235,7 +2372,9 @@ async function assignAdminToMember(memberId, currentAdmin) {
     }
 }
 
-// 3. ฟังก์ชันรับเงินสมทบ และ อนุมัติสถานะสมาชิกอัตโนมัติ
+// =========================================================
+// 💸 ระบบผูกตัวเลขเงินสมทบรายบุคคลเข้าสู่บัญชีกลาง (Ledger Integration)
+// =========================================================
 async function confirmAmount(memberId, currentStatus) {
     const inputElement = document.getElementById(`input-${memberId}`);
     const amount = parseFloat(inputElement.value);
@@ -2245,53 +2384,95 @@ async function confirmAmount(memberId, currentStatus) {
         return;
     }
 
+    showLoader(true, "กำลังบันทึกยอดเงินลงสมุดบัญชี...");
     try {
-        const memberRef = db.collection('users').doc(memberId);
+        // 🚨 แก้ไขจาก 'users' เป็น 'members' ให้ตรงกับระบบฐานข้อมูลของคุณ
+        const memberRef = db.collection('members').doc(memberId);
+        let memberName = "";
         
-        // ใช้ Firebase Transaction เพื่อความแม่นยำในการบวกยอดเงิน
+        // 1. อัปเดตข้อมูลส่วนตัวสมาชิก (เพิ่มยอดสะสม ลดหนี้คงค้าง เปลี่ยนสถานะ)
         await db.runTransaction(async (transaction) => {
             const doc = await transaction.get(memberRef);
             if (!doc.exists) throw "ไม่พบข้อมูลสมาชิก";
 
+            memberName = doc.data().fullName; // เก็บชื่อไว้ลงสมุดบัญชี
             let currentTotal = parseFloat(doc.data().totalContribution || 0);
+            let currentOutstanding = parseFloat(doc.data().outstandingBalance || 0);
+            
             let newTotal = currentTotal + amount;
+            let newOutstanding = currentOutstanding - amount;
+            if (newOutstanding < 0) newOutstanding = 0; // หนี้ต้องไม่ติดลบ
             
             let updatePayload = {
                 totalContribution: newTotal,
-                lastContributionDate: new Date()
+                outstandingBalance: newOutstanding,
+                lastContributionDate: new Date().toISOString()
             };
 
-            // [จุดสำคัญข้อ 3] ตรวจสอบว่าถ้าสถานะเป็น "รอตรวจสอบ" ให้เปลี่ยนเป็น "เป็นสมาชิก" ทันที
+            // อนุมัติสมาชิกอัตโนมัติหากสถานะเป็น "รอตรวจสอบ"
             if (currentStatus.includes('รอ') || doc.data().status.includes('รอ')) {
                 updatePayload.status = 'เป็นสมาชิก';
-                // บันทึกวันที่เริ่มต้นเป็นสมาชิก (ถ้ายังไม่มี)
                 if(!doc.data().registerDateObj) {
                     updatePayload.registerDateObj = new Date().toISOString();
                 }
             }
 
-            // บันทึกข้อมูล
             transaction.update(memberRef, updatePayload);
         });
 
-        // ซ่อน Input และแสดง Badge ยอดเงินสวยๆ (UI Interaction)
+        // 🌟 2. [ส่วนที่เพิ่มใหม่] สร้าง Transaction วิ่งเข้าสู่ระบบการเงิน (Ledger) ทันที
+        const txId = "TX" + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100).toString().padStart(2,'0');
+        
+        // เช็คสิทธิ์: ถ้าเป็น Master/การเงิน เงินเข้าคลังเลย ถ้าเป็นแอดมินศูนย์ เงินจะติดสถานะ 'รอส่งมอบ'
+        let setStatus = "รอส่งมอบ"; 
+        let holder = currentAdminData.email;
+        if(currentAdminData.role === 'Admin-Master' || currentAdminData.role === 'Admin-การเงิน') { 
+            setStatus = "อนุมัติแล้ว"; 
+            holder = "CENTRAL_BANK"; 
+        }
+
+        await db.collection("transactions").add({ 
+            txId: txId, 
+            type: 'สมทบเงินกองทุน', 
+            amount: amount, 
+            paymentMethod: 'เงินสด', 
+            transactionDate: new Date().toISOString().split('T')[0], 
+            fullName: 'แอดมิน: ' + currentAdminData.name, 
+            status: setStatus, 
+            currentHolder: holder, 
+            note: `รับเงินสมทบจาก: ${memberName}`, 
+            uid: memberId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+        });
+
+        // 3. อัปเดตหน้าตา UI ให้ดูสวยงาม (ไม่ต้องโหลดใหม่ทั้งหน้า)
         inputElement.closest('.input-overlay').style.display = 'none';
         let badgeWrapper = document.querySelector(`#row-${memberId} .amount-badge-wrapper`);
-        badgeWrapper.querySelector('.display-amount').innerText = amount.toLocaleString();
-        badgeWrapper.style.display = 'block';
+        if(badgeWrapper) {
+            badgeWrapper.querySelector('.display-amount').innerText = amount.toLocaleString('en-US');
+            badgeWrapper.style.display = 'block';
+        }
 
+        showLoader(false);
         Swal.fire({
             title: 'บันทึกสำเร็จ!',
-            text: `รับสมทบ ${amount} บาท เรียบร้อยแล้ว`,
+            text: `รับสมทบ ${amount} บาท และลงบัญชีเรียบร้อยแล้ว`,
             icon: 'success',
             timer: 1500,
             showConfirmButton: false
         });
 
-        // รีเฟรชข้อมูลเพื่ออัปเดตสถานะ (ถ้าต้องการให้เรียลไทม์)
-        setTimeout(() => loadMembersData(), 1500); 
+        // รีเฟรชข้อมูลเบื้องหลัง
+        setTimeout(() => {
+            loadMembersData();
+            // หาก Admin เปิดหน้า Dashboard อยู่ ให้โหลดกราฟใหม่ด้วย
+            if(document.getElementById('admin-view-overview').classList.contains('d-block')) {
+                loadDashboardOverview();
+            }
+        }, 1500); 
 
     } catch (error) {
+        showLoader(false);
         console.error(error);
         Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการบันทึกเงินสมทบ', 'error');
     }
@@ -2394,7 +2575,7 @@ async function confirmAmount(memberId, currentStatus) {
           } catch(e) { showLoader(false); console.error(e); Swal.fire('Error', 'ผิดพลาด', 'error'); }
       }
   }
-
+  
   // =========================================================
   // หมวดที่ 6: Ledger & Transactions (รับ-จ่าย)
   // =========================================================
@@ -2595,7 +2776,30 @@ async function confirmAmount(memberId, currentStatus) {
           });
       } catch(e) { showLoader(false); Swal.fire('Error', 'ผิดพลาด', 'error'); }
   }
+  // =========================================================
+// 📊 ฟังก์ชันโหลดข้อมูลเข้าหน้า "การเงิน (Ledger)"
+// =========================================================
+function loadLedgerData() {
+    // 1. โหลดประวัติธุรกรรม รับ-จ่าย และรอตรวจสอบ
+    if (typeof loadTransactions === 'function') {
+        loadTransactions(); 
+    }
+    
+    // 2. โหลดประวัติการรับเงินผ่าน QR Code (ถ้ามี)
+    if (typeof loadReceiptHistory === 'function') {
+        loadReceiptHistory(); 
+    }
+    
+    // 3. ตรวจสอบสิทธิ์ว่าแอดมินคนนี้มีปุ่ม "ยืนยันยอดเข้าคลัง" หรือไม่
+    if (typeof checkFinanceButtons === 'function') {
+        checkFinanceButtons(); 
+    }
 
+    // 4. เตรียม Dropdown หมวดหมู่รับ-จ่าย
+    if (typeof loadLedgerNotes === 'function') {
+        loadLedgerNotes();
+    }
+}
   // =========================================================
   // หมวดที่ 7: Claims & Settings & อื่นๆ
   // =========================================================
@@ -2810,7 +3014,278 @@ function getCurrentLocation() {
         Swal.fire('ไม่รองรับ', 'เบราว์เซอร์หรืออุปกรณ์ของคุณไม่รองรับการดึงพิกัด GPS', 'warning');
     }
 }
+// =========================================================
+// 👤 ระบบทะเบียนสมาชิก (เปิดฟอร์ม, บันทึก, คำนวณอายุ)
+// =========================================================
 
+// ฟังก์ชันเปิด Modal สำหรับ "เพิ่มสมาชิกใหม่"
+function openAdminRegisterModal() {
+    // 1. ล้างค่าฟอร์ม
+    document.getElementById('memberDataForm').reset();
+    document.getElementById('memDocId').value = "";
+    document.getElementById('memberModalTitle').innerHTML = '<i class="fa-solid fa-user-plus me-2"></i>ขึ้นทะเบียนสมาชิกใหม่';
+    document.getElementById('memRegDate').value = new Date().toISOString().split('T')[0];
+
+    // 2. ดึงตัวเลือกจาก Global Settings มาใส่ Dropdown
+    populateDropdownDirect('memVillage', uiSettingsVillages, 'เลือกหมู่บ้าน');
+    populateDropdownDirect('memType', uiSettingsMemberTypes, '');
+    populateDropdownDirect('memCenter', uiSettingsCenters, 'เลือกศูนย์ประสานงาน');
+
+    // 3. ตรวจสอบสิทธิ์ (RBAC) หากเป็น Admin-ศูนย์ ให้ล็อกบังคับเลือกศูนย์ตัวเอง
+    const centerSelect = document.getElementById('memCenter');
+    const lockWarning = document.getElementById('adminLockWarning');
+    if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน') {
+        centerSelect.value = currentAdminData.center;
+        centerSelect.setAttribute('disabled', 'true');
+        lockWarning.classList.remove('d-none');
+    } else {
+        centerSelect.removeAttribute('disabled');
+        lockWarning.classList.add('d-none');
+    }
+
+    // 4. เปิด Modal
+    const modal = new bootstrap.Modal(document.getElementById('memberFormModal'));
+    modal.show();
+}
+
+// ฟังก์ชันเปิด Modal สำหรับ "แก้ไขข้อมูล" (อัปเดตจากปุ่มดินสอ)
+function editMemberProfile(docId) {
+    const member = allMembersCache.find(m => m.id === docId);
+    if (!member) return Swal.fire('Error', 'ไม่พบข้อมูลสมาชิก', 'error');
+
+    // 1. ดึงตัวเลือกจาก Global Settings มาใส่ Dropdown ก่อน
+    populateDropdownDirect('memVillage', uiSettingsVillages, 'เลือกหมู่บ้าน');
+    populateDropdownDirect('memType', uiSettingsMemberTypes, '');
+    populateDropdownDirect('memCenter', uiSettingsCenters, 'เลือกศูนย์ประสานงาน');
+
+    // 2. นำข้อมูลเก่ามาหยอดลงฟอร์ม
+    document.getElementById('memDocId').value = member.id;
+    document.getElementById('memberModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square me-2"></i>แก้ไขข้อมูลสมาชิก';
+    
+    document.getElementById('memNationalId').value = member.nationalId || "";
+    document.getElementById('memFullName').value = member.fullName || "";
+    document.getElementById('memDob').value = member.dob || "";
+    document.getElementById('memPhone').value = member.phone || "";
+    document.getElementById('memAddressNo').value = member.addressNo || "";
+    document.getElementById('memVillage').value = member.village || "";
+    document.getElementById('memVulnerability').value = member.vulnerability || "ปกติ";
+    document.getElementById('memFundId').value = member.memberId || "";
+    
+    if (member.registerDateObj) {
+        document.getElementById('memRegDate').value = new Date(member.registerDateObj).toISOString().split('T')[0];
+    }
+    document.getElementById('memType').value = member.memberType || "";
+    document.getElementById('memCenter').value = member.center || "";
+    document.getElementById('memBeneficiary').value = member.beneficiary || "";
+
+    // 3. จัดการสิทธิ์
+    const centerSelect = document.getElementById('memCenter');
+    if (currentAdminData.role === 'Admin-ศูนย์ประสานงาน') {
+        centerSelect.setAttribute('disabled', 'true');
+    } else {
+        centerSelect.removeAttribute('disabled');
+    }
+
+    // 4. เปิด Modal
+    const modal = new bootstrap.Modal(document.getElementById('memberFormModal'));
+    modal.show();
+}
+
+// ฟังก์ชันช่วยยัดข้อมูลลง Dropdown
+function populateDropdownDirect(selectId, dataArray, placeholder) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    select.innerHTML = placeholder ? `<option value="" disabled selected>-- ${placeholder} --</option>` : '';
+    dataArray.sort().forEach(item => {
+        select.innerHTML += `<option value="${item}">${item}</option>`;
+    });
+}
+
+// ฟังก์ชันบันทึกข้อมูล (เพิ่มใหม่ หรือ อัปเดต)
+async function saveMemberData(e) {
+    e.preventDefault();
+    
+    const docId = document.getElementById('memDocId').value;
+    const nationalId = document.getElementById('memNationalId').value.trim();
+    const fullName = document.getElementById('memFullName').value.trim();
+    const center = document.getElementById('memCenter').value;
+    const actualCenter = document.getElementById('memCenter').disabled ? currentAdminData.center : center;
+
+    // 🌟 [เพิ่มใหม่] เช็คเลขบัตรประชาชนซ้ำในฐานข้อมูล
+    showLoader(true, "กำลังตรวจสอบข้อมูล...");
+    try {
+        const duplicateCheck = await db.collection("members").where("nationalId", "==", nationalId).get();
+        if (!duplicateCheck.empty) {
+            let isDuplicate = false;
+            duplicateCheck.forEach(doc => {
+                if (doc.id !== docId) isDuplicate = true; // ตรวจสอบว่าไม่ใช่เอกสารตัวเองที่กำลังแก้ไขอยู่
+            });
+            if (isDuplicate) {
+                showLoader(false);
+                return Swal.fire('ข้อมูลซ้ำ!', `เลขบัตรประชาชน ${nationalId} ถูกลงทะเบียนในระบบแล้ว`, 'error');
+            }
+        }
+    } catch (err) {
+        showLoader(false);
+        return Swal.fire('ข้อผิดพลาด', 'ไม่สามารถตรวจสอบฐานข้อมูลได้', 'error');
+    }
+    
+    // เตรียม Data Payload
+    const payload = {
+        nationalId: nationalId,
+        fullName: fullName,
+        dob: document.getElementById('memDob').value,
+        phone: document.getElementById('memPhone').value.trim(),
+        addressNo: document.getElementById('memAddressNo').value.trim(),
+        village: document.getElementById('memVillage').value,
+        vulnerability: document.getElementById('memVulnerability').value,
+        registerDateObj: new Date(document.getElementById('memRegDate').value).toISOString(),
+        memberType: document.getElementById('memType').value,
+        center: actualCenter,
+        beneficiary: document.getElementById('memBeneficiary').value.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const customMemberId = document.getElementById('memFundId').value.trim();
+    if (customMemberId) payload.memberId = customMemberId;
+
+    showLoader(true, "กำลังบันทึกข้อมูลสมาชิก...");
+    try {
+        if (docId) {
+            await db.collection("members").doc(docId).update(payload);
+            Swal.fire({icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ', showConfirmButton: false, timer: 1500});
+        } else {
+            if (!customMemberId) {
+                const yearPrefix = (new Date().getFullYear() + 543).toString().slice(-2);
+                const randomNum = Math.floor(1000 + Math.random() * 9000); 
+                payload.memberId = `MB${yearPrefix}-${randomNum}`; 
+            }
+            
+            payload.status = "รอตรวจสอบ";
+            payload.totalContribution = 0;
+            payload.outstandingBalance = 0;
+            payload.linkStatus = "unlinked";
+            payload.responsibleAdmin = currentAdminData.name; 
+            payload.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+            await db.collection("members").add(payload);
+            Swal.fire({icon: 'success', title: 'เพิ่มสมาชิกใหม่สำเร็จ', showConfirmButton: false, timer: 1500});
+        }
+
+        const modalEl = document.getElementById('memberFormModal');
+        if (modalEl && typeof bootstrap !== 'undefined') bootstrap.Modal.getInstance(modalEl)?.hide();
+        loadMembersData();
+        showLoader(false);
+
+    } catch (error) {
+        showLoader(false);
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+    }
+}
+
+// =========================================================
+// 🌟 1. ฟังก์ชันสร้าง QR ผูกบัญชี และกล่องข้อความยืนยันคำขอ (ส่วนที่ขาดหาย)
+// =========================================================
+function generateLinkQR(memberId, memberName) {
+    Swal.fire({
+        title: 'ผูกบัญชี LINE สมาชิก',
+        html: `
+            <p class="small text-muted mb-2">ให้ <b>${memberName}</b> ใช้แอป LINE สแกน QR Code นี้</p>
+            <div id="memberLinkQrContainer" class="d-flex justify-content-center bg-white p-3 rounded-4 shadow-sm mx-auto mb-3" style="width: 220px; height: 220px;"></div>
+        `,
+        didOpen: () => {
+            // สร้าง QR Code โดยส่งรหัสอ้างอิงและ Action ไปด้วย
+            new QRCode(document.getElementById("memberLinkQrContainer"), { 
+                text: JSON.stringify({ action: "link_member_line", ref: memberId }), 
+                width: 180, height: 180 
+            });
+        },
+        showConfirmButton: true,
+        confirmButtonText: 'ปิดหน้าต่าง'
+    });
+}
+
+function showPendingLinksModal() {
+    Swal.fire({
+        title: 'ตรวจสอบคำขอผูกบัญชี',
+        text: 'ระบบดึงข้อมูลคำขอผูกบัญชี LINE (ฟังก์ชันนี้จะเชื่อมกับหน้ารายการอนุมัติในอนาคต)',
+        icon: 'info'
+    });
+}
+
+// =========================================================
+// 🌟 2. ฟังก์ชันจัดการวัตถุประสงค์กองทุน (ส่วนที่ขาดหาย)
+// =========================================================
+let uiSettingsObjectives = [];
+
+function renderObjectivesList() {
+    const container = document.getElementById('objectivesContainer');
+    if (!container) return;
+    container.innerHTML = "";
+    uiSettingsObjectives.forEach((obj, idx) => {
+        container.innerHTML += `<div class="d-flex align-items-center justify-content-between p-2 bg-light border rounded-3 mb-1"><span style="font-size: 0.85rem;"><i class="fa-solid fa-check text-success me-2"></i>${obj}</span><button type="button" class="btn btn-sm text-danger py-0" onclick="removeObjectiveItem(${idx})"><i class="fa-solid fa-trash"></i></button></div>`;
+    });
+}
+
+function addObjectiveItem() {
+    const val = document.getElementById('newObjectiveInput').value.trim();
+    if(!val) return;
+    if(uiSettingsObjectives.includes(val)) return Swal.fire('เตือน', 'มีวัตถุประสงค์นี้แล้ว', 'warning');
+    uiSettingsObjectives.push(val); 
+    document.getElementById('newObjectiveInput').value = ""; 
+    renderObjectivesList();
+}
+
+function removeObjectiveItem(idx) {
+    uiSettingsObjectives.splice(idx, 1);
+    renderObjectivesList();
+}
+
+// =========================================================
+// 🌟 3. ฟังก์ชันควบคุม UI สำหรับ ประเภทสวัสดิการ และ เงื่อนไข (Dynamic Dropdowns)
+// =========================================================
+let uiSettingsWelfareTypes = [];
+let uiSettingsConditionTypes = [];
+
+function renderWelfareTypeBadges() {
+    const container = document.getElementById('welfareTypesContainer'); 
+    if(!container) return;
+    container.innerHTML = "";
+    uiSettingsWelfareTypes.forEach((type, index) => {
+        container.innerHTML += `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger d-flex align-items-center py-2 px-3 shadow-sm" style="font-size: 0.8rem; border-radius: 12px;">${type} <i class="fa-solid fa-xmark ms-2 text-danger cursor-pointer" onclick="removeWelfareTypeBadge(${index})"></i></span>`;
+    });
+    
+    // อัปเดต Dropdown ในหน้าระเบียบแบบ Real-time
+    const ruleSelect = document.getElementById('ruleName');
+    if (ruleSelect) {
+        ruleSelect.innerHTML = '<option value="" disabled selected>-- เลือกประเภทสวัสดิการ --</option>';
+        uiSettingsWelfareTypes.forEach(type => { ruleSelect.innerHTML += `<option value="${type}">${type}</option>`; });
+        ruleSelect.innerHTML += '<option value="อื่นๆ (ระบุเอง)">อื่นๆ (ระบุเอง)</option>';
+    }
+}
+function addWelfareTypeBadge() {
+    const val = document.getElementById('newWelfareTypeInput').value.trim();
+    if(!val || uiSettingsWelfareTypes.includes(val)) return;
+    uiSettingsWelfareTypes.push(val); document.getElementById('newWelfareTypeInput').value = ""; renderWelfareTypeBadges();
+}
+function removeWelfareTypeBadge(index) { uiSettingsWelfareTypes.splice(index, 1); renderWelfareTypeBadges(); }
+
+function renderConditionTypeBadges() {
+    const container = document.getElementById('conditionTypesContainer');
+    if(!container) return;
+    container.innerHTML = "";
+    uiSettingsConditionTypes.forEach((type, index) => {
+        container.innerHTML += `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning d-flex align-items-center py-2 px-3 shadow-sm" style="font-size: 0.8rem; border-radius: 12px;">${type} <i class="fa-solid fa-xmark ms-2 text-danger cursor-pointer" onclick="removeConditionTypeBadge(${index})"></i></span>`;
+    });
+}
+function addConditionTypeBadge() {
+    const val = document.getElementById('newConditionTypeInput').value.trim();
+    if(!val || uiSettingsConditionTypes.includes(val)) return;
+    uiSettingsConditionTypes.push(val); document.getElementById('newConditionTypeInput').value = ""; renderConditionTypeBadges();
+}
+function removeConditionTypeBadge(index) { uiSettingsConditionTypes.splice(index, 1); renderConditionTypeBadges(); 
+
+}
 
 </script>
 </body>
