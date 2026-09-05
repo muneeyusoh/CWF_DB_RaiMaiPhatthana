@@ -1,26 +1,13 @@
 // ============================================================================
 // 👤 member-main.js: ควบคุมหน้า Dashboard และการสมัครสมาชิก (index.html)
 // ============================================================================
-// สารบัญโค้ด (ค้นหาคำเหล่านี้ด้วย Ctrl+F เพื่อกระโดดไปยังส่วนที่ต้องการแก้ไข)
-// 📌 SECTION 1: ตัวแปรและการเริ่มต้นระบบ (Initialization)
-// 📌 SECTION 2: ระบบสมัครสมาชิกและผูกบัญชี (Registration & Account Link)
-// 📌 SECTION 3: การแสดงผลหน้าแดชบอร์ด (Dashboard UI Rendering)
-// 📌 SECTION 4: ภารกิจและคะแนนสะสม (Gamification & Check-in)
-// 📌 SECTION 5: กระดานโปร่งใสและไทม์ไลน์ (Transparency & Timeline)
-// 📌 SECTION 6: เครื่องมือเสริม (QR Scan & Share)
-// ============================================================================
 
-// ============================================================================
 // 📌 SECTION 1: ตัวแปรและการเริ่มต้นระบบ (Initialization)
-// ============================================================================
 const LIFF_ID = "2011183541-9UDIqf8P";
 let unmaskedData = { NatId: '', Phone: '' };
-let isDataMasked = { natId: true, phone: true }; // 🌟 เพิ่มบรรทัดนี้
+let isDataMasked = { natId: true, phone: true };
 let currentShareMode = 'news';
 
-/**
- * โหลดข้อมูลเริ่มต้นเมื่อเปิดหน้าเว็บ (ดึงตั้งค่าส่วนกลาง, โหลดรายชื่อหมู่บ้าน/กรรมการ, และเช็คล็อกอิน LINE)
- */
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     const sysSnap = await db.collection("settings").doc("master").get();
@@ -30,8 +17,8 @@ document.addEventListener("DOMContentLoaded", async () => {
        
        const regCenter = document.getElementById('regCenterSelect');
        const regVillage = document.getElementById('regVillageSelect');
-       (fundSettings.centers || []).forEach(c => regCenter.add(new Option(c, c)));
-       (fundSettings.inZoneVillages || []).forEach(v => regVillage.add(new Option(v, v)));
+       if(regCenter) (fundSettings.centers || []).forEach(c => regCenter.add(new Option(c, c)));
+       if(regVillage) (fundSettings.inZoneVillages || []).forEach(v => regVillage.add(new Option(v, v)));
     }
 
     const regAdmin = document.getElementById('regResponsibleAdmin');
@@ -42,11 +29,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await liff.init({ liffId: LIFF_ID });
     const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('ref')) document.getElementById('refCode').value = urlParams.get('ref');
+    if(urlParams.get('ref') && document.getElementById('refCode')) document.getElementById('refCode').value = urlParams.get('ref');
 
     if (liff.isLoggedIn()) {
       const profile = await liff.getProfile();
-      document.getElementById('uid').value = profile.userId;
+      if(document.getElementById('uid')) document.getElementById('uid').value = profile.userId;
       await checkMemberOnCloud(profile.userId, profile.pictureUrl || "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg");
     } else { liff.login(); }
   } catch (err) { 
@@ -54,14 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-
-// ============================================================================
 // 📌 SECTION 2: ระบบสมัครสมาชิกและผูกบัญชี (Registration & Account Link)
-// ============================================================================
-
-/**
- * ตรวจสอบว่าผู้ใช้นี้เคยสมัครสมาชิกไว้แล้วหรือยัง
- */
 async function checkMemberOnCloud(uid, pictureUrl) {
   try {
     const docRef = db.collection("members").doc(uid);
@@ -76,7 +56,6 @@ async function checkMemberOnCloud(uid, pictureUrl) {
       }
       renderDashboardData(cachedUserData, finalPicUrl);
     } else { 
-      // ถ้าไม่เจอข้อมูล ให้แสดงหน้าต่างให้เลือกว่าจะสมัครใหม่หรือผูกบัญชี
       document.getElementById('accountLinkView').style.display = 'block'; 
     }
   } catch (error) { 
@@ -84,9 +63,6 @@ async function checkMemberOnCloud(uid, pictureUrl) {
   }
 }
 
-/**
- * ส่งข้อมูลสมัครสมาชิกใหม่ขึ้นฐานข้อมูล Firebase
- */
 async function handleRegister(e) {
   e.preventDefault(); 
   const btn = document.getElementById('submitRegBtn'); btn.disabled = true; btn.innerHTML = 'กำลังตรวจสอบข้อมูล...';
@@ -146,9 +122,6 @@ async function handleRegister(e) {
   }
 }
 
-/**
- * ส่งคำขอผูกบัญชี LINE กับข้อมูลเดิมที่กรรมการเคยลงให้แล้ว
- */
 async function requestAccountLink() {
     const natId = document.getElementById('linkNatId').value;
     if(natId.length !== 13) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลข ปชช. 13 หลัก', 'warning');
@@ -173,14 +146,7 @@ async function requestAccountLink() {
     });
 }
 
-
-// ============================================================================
 // 📌 SECTION 3: การแสดงผลหน้าแดชบอร์ด (Dashboard UI Rendering)
-// ============================================================================
-
-/**
- * นำข้อมูลสมาชิกมาแสดงผลบนหน้าจอหลัก (คำนวณยอดเงิน, อายุสมาชิก ฯลฯ)
- */
 function renderDashboardData(data, pictureUrl) {
   // ตั้งค่ารูปโปรไฟล์
   document.getElementById('userAvatar').src = pictureUrl;
@@ -189,15 +155,12 @@ function renderDashboardData(data, pictureUrl) {
   document.getElementById('dashCenterText').innerText = " " + (data.center || "ยังไม่ระบุศูนย์");
   document.getElementById('dashCwfPoints').innerText = data.cwfPoints || 0;
   
-  // อัปเดตป้ายยศ (Tier)
   if (data.cwfPoints !== undefined) updateTierOnScreen(data.cwfPoints);
 
-  // ตั้งค่าป้ายสถานะ
   const statusBadge = document.getElementById('dashStatusBadge');
   statusBadge.innerText = data.status || "รอตรวจสอบ";
   statusBadge.className = `badge-status ${data.status === 'เป็นสมาชิก' ? 'status-active' : 'status-pending'}`;
 
-  // แสดงยอดเงินกระเป๋า (Wallet)
   document.getElementById('dashTotalContrib').innerText = (data.totalContribution || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
   let outstanding = (data.outstandingBalance !== undefined) ? data.outstandingBalance : ((fundSettings.annualFee || 365) - (data.totalContribution || 0));
   if (outstanding < 0) outstanding = 0;
@@ -205,14 +168,13 @@ function renderDashboardData(data, pictureUrl) {
   
   document.getElementById('dashTotalWelfare').innerText = (data.totalWelfareReceived || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
   
-  // 🌟 เก็บข้อมูลจริงไว้ในหน่วยความจำสำหรับการเปิด Popup
+  // เก็บข้อมูลไว้ในหน่วยความจำสำหรับการเปิด Popup
   unmaskedData.NatId = data.nationalId || "";
   unmaskedData.Phone = data.phone || "";
   
   let ageStr = "เพิ่งสมัคร/รอตรวจสอบ";
   let regDateDisplay = "-";
   
-  // คำนวณอายุและวันที่
   if (data.registerDateObj && data.status === 'เป็นสมาชิก') {
       const regD = new Date(data.registerDateObj); const now = new Date();
       regDateDisplay = `${String(regD.getDate()).padStart(2,'0')}/${String(regD.getMonth()+1).padStart(2,'0')}/${regD.getFullYear()+543}`;
@@ -223,11 +185,9 @@ function renderDashboardData(data, pictureUrl) {
       if(years >= 0) ageStr = `${years} ปี ${months} ด. ${days} ว.`;
   }
   
-  // 🌟 เซฟอายุและวันที่ลงในตัวแปร เพื่อให้ป๊อปอัปดึงไปใช้ได้
   cachedUserData.displayAge = ageStr;
   cachedUserData.displayRegDate = regDateDisplay;
 
-  // ประวัติรับสวัสดิการ
   const historyList = document.getElementById('dashWelfareList');
   historyList.innerHTML = "";
   if((data.welfareHistory || []).length === 0) {
@@ -239,23 +199,17 @@ function renderDashboardData(data, pictureUrl) {
     });
   }
   
-  document.getElementById('accountLinkView').style.display = 'none';
+  if(document.getElementById('accountLinkView')) document.getElementById('accountLinkView').style.display = 'none';
   renderStreakUI(data.checkInStreak || 0, data.lastCheckInDate || "");
   loadTransparencyBoard();
   loadMemberTransactionTimeline(document.getElementById('uid').value);
   loadCommunityNews();
-
+  // 🌟 เติมคำสั่งโหลดของรางวัลเพิ่มตรงนี้ครับ:
+  loadMemberRewards();
   document.getElementById('dashboardView').style.display = 'block';
 }
 
-
-// ============================================================================
 // 📌 SECTION 4: ภารกิจและคะแนนสะสม (Gamification & Check-in)
-// ============================================================================
-
-/**
- * เปลี่ยนสีป้ายสถานะยศ (Tier) ตามคะแนน
- */
 function updateTierOnScreen(points) {
     let tierName = "ร่วมใจ (Unity)"; let tierColor = "#64748B"; 
     if (points >= 5000) { tierName = "เกียรติภูมิชุมชน (Legacy)"; tierColor = "#D97706"; }
@@ -273,9 +227,6 @@ function updateTierOnScreen(points) {
     }
 }
 
-/**
- * กดเช็คอินรับแต้มรายวัน
- */
 async function processDailyCheckIn() {
     Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
     try {
@@ -314,9 +265,6 @@ async function processDailyCheckIn() {
     } catch (error) { Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); }
 }
 
-/**
- * วาดวงกลม 7 วันเช็คอิน
- */
 function renderStreakUI(streakCount, lastCheckInStr) {
     const now = new Date(); const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
     for (let i = 1; i <= 7; i++) {
@@ -326,18 +274,13 @@ function renderStreakUI(streakCount, lastCheckInStr) {
         if (i <= streakCount) { circle.classList.add('active'); if (i !== 7) circle.innerHTML = '<i class="fa-solid fa-check"></i>'; }
     }
     const btn = document.getElementById('btnCheckIn');
-    if (lastCheckInStr === todayStr) { btn.classList.replace('btn-success', 'btn-secondary'); btn.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> เช็คอินแล้ว'; btn.disabled = true; } 
-    else { btn.classList.replace('btn-secondary', 'btn-success'); btn.innerHTML = '<i class="fa-solid fa-calendar-check me-1"></i> กดเช็คอินรับแต้มวันนี้'; btn.disabled = false; }
+    if(btn) {
+        if (lastCheckInStr === todayStr) { btn.classList.replace('btn-success', 'btn-secondary'); btn.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> เช็คอินแล้ว'; btn.disabled = true; } 
+        else { btn.classList.replace('btn-secondary', 'btn-success'); btn.innerHTML = '<i class="fa-solid fa-calendar-check me-1"></i> กดเช็คอินรับแต้มวันนี้'; btn.disabled = false; }
+    }
 }
 
-
-// ============================================================================
 // 📌 SECTION 5: กระดานโปร่งใสและไทม์ไลน์ (Transparency & Timeline)
-// ============================================================================
-
-/**
- * ดึงประวัติธุรกรรมเพื่อแสดง Timeline ติดตามเงิน
- */
 async function loadMemberTransactionTimeline(uid) {
     const container = document.getElementById('dashTxTimeline');
     try {
@@ -379,9 +322,6 @@ async function loadMemberTransactionTimeline(uid) {
     } catch (e) { container.innerHTML = `<div class="text-center text-danger small py-2">โหลดข้อมูลไทม์ไลน์ล้มเหลว</div>`; }
 }
 
-/**
- * ดึงรายการเบิกจ่ายสวัสดิการมาให้สมาชิกช่วยตรวจสอบความโปร่งใส
- */
 async function loadTransparencyBoard() {
     const feed = document.getElementById('transparencyFeed');
     try {
@@ -436,9 +376,6 @@ async function loadTransparencyBoard() {
     } catch(e) { feed.innerHTML = '<div class="text-center text-danger small p-3">โหลดข้อมูลกระดานล้มเหลว</div>'; }
 }
 
-/**
- * กดตรวจสอบรายการในกระดานเพื่อรับแต้ม
- */
 async function verifyTransaction(txId, pointsToGive) {
     Swal.fire({ title: 'กำลังประมวลผล...', didOpen: () => Swal.showLoading() });
     try {
@@ -464,17 +401,10 @@ async function verifyTransaction(txId, pointsToGive) {
     } catch(e) { Swal.fire('Error', 'เกิดข้อผิดพลาด กรุณาลองใหม่', 'error'); }
 }
 
-
-// ============================================================================
 // 📌 SECTION 6: เครื่องมือเสริม (QR Scan & Share)
-// ============================================================================
-
 function openShareModal(mode) { currentShareMode = mode; document.getElementById('shareModal').style.display = 'flex'; }
 function closeShareModal() { document.getElementById('shareModal').style.display = 'none'; }
 
-/**
- * สร้างลิงก์เชิญเพื่อนผ่าน LINE หรือ Facebook
- */
 async function executeShare(platform) {
     closeShareModal();
     const url = `https://liff.line.me/${LIFF_ID}` + (currentShareMode==='invite' ? `?ref=${cachedUserData.memberId}` : '');
@@ -484,9 +414,6 @@ async function executeShare(platform) {
     else { navigator.clipboard.writeText(url); Swal.fire('สำเร็จ', 'คัดลอกลิงก์แล้ว', 'success'); }
 }
 
-/**
- * สแกน QR Code ที่แอดมินสร้าง เพื่อยืนยันการจ่ายเงินสด
- */
 async function scanToPayAdmin() {
     if (!liff.isLoggedIn()) return Swal.fire('แจ้งเตือน', 'กรุณาเปิดแอปผ่าน LINE เพื่อใช้งานกล้องครับ', 'warning');
     try {
@@ -531,102 +458,11 @@ async function scanToPayAdmin() {
         }
     } catch (err) {}
 }
-/**
- * ฟังก์ชันสร้างตัวเลขซ่อน (*)
- */
-window.maskString = (str) => {
-    if (!str) return "-";
-    if (str.length <= 4) return str;
-    return "*".repeat(str.length - 4) + str.slice(-4);
-};
 
-/**
- * ฟังก์ชันแสดงป๊อปอัปข้อมูลส่วนตัว
- */
-window.showProfilePopup = function() {
-    if(!cachedUserData) return;
-
-    const memId = cachedUserData.memberId || "-";
-    const memType = cachedUserData.memberType || "สมาชิกสามัญ";
-    const age = cachedUserData.displayAge || "-";
-    const regDate = cachedUserData.displayRegDate || "-";
-
-    // รีเซ็ตสถานะเป็นซ่อนเสมอเมื่อเปิดป๊อปอัป
-    isDataMasked.natId = true;
-    isDataMasked.phone = true;
-
-    Swal.fire({
-        title: '<i class="fa-solid fa-address-card text-primary me-2"></i> ข้อมูลส่วนตัว',
-        html: `
-        <div class="info-list shadow-none mb-0 text-start mt-3" style="font-family: 'Prompt', sans-serif;">
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">รหัสสมาชิก</span>
-            <span class="info-data text-primary fw-bold">${memId}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">ประเภทสมาชิก</span>
-            <span class="info-data text-dark fw-bold">${memType}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between align-items-center">
-            <span class="info-label fw-bold">เลข ปชช. 
-              <i class="fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6" id="swal-toggle-natId" onclick="toggleSwalSecureData('natId')"></i>
-            </span>
-            <span class="info-data text-dark fw-bold" id="swal-natId-display">${window.maskString(unmaskedData.NatId)}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between align-items-center">
-            <span class="info-label fw-bold">เบอร์โทรศัพท์ 
-              <i class="fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6" id="swal-toggle-phone" onclick="toggleSwalSecureData('phone')"></i>
-            </span>
-            <span class="info-data text-dark fw-bold" id="swal-phone-display">${window.maskString(unmaskedData.Phone)}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">อายุสมาชิก</span>
-            <span class="info-data text-success fw-bold">${age}</span>
-          </div>
-          <div class="info-row px-0 py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">วันที่สมัคร</span>
-            <span class="info-data text-dark fw-bold">${regDate}</span>
-          </div>
-        </div>
-        `,
-        showConfirmButton: false,
-        showCloseButton: true,
-        customClass: { popup: 'rounded-4 px-3 pb-4' }
-    });
-};
-
-/**
- * ฟังก์ชันเปิด/ปิด ตา ในหน้าป๊อปอัป SweetAlert
- */
-window.toggleSwalSecureData = function(type) {
-    const displayEl = document.getElementById(type === 'natId' ? 'swal-natId-display' : 'swal-phone-display');
-    const iconEl = document.getElementById(type === 'natId' ? 'swal-toggle-natId' : 'swal-toggle-phone');
-    const realData = type === 'natId' ? unmaskedData.NatId : unmaskedData.Phone;
-    
-    if (!displayEl || !iconEl || !realData) return;
-
-    isDataMasked[type] = !isDataMasked[type];
-    
-    if (isDataMasked[type]) {
-        displayEl.innerText = window.maskString(realData);
-        iconEl.className = "fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6";
-    } else {
-        displayEl.innerText = realData;
-        iconEl.className = "fa-solid fa-eye text-primary ms-2 cursor-pointer fs-6";
-    }
-};   
-
-// ============================================================================
 // 📌 SECTION 7: ข่าวสารและประกาศชุมชน (Community News)
-// ============================================================================
-
-/**
- * ดึงข่าวสารล่าสุดจาก Firestore มาแสดงเป็นแบบการ์ด
- */
 async function loadCommunityNews() {
     const container = document.getElementById('memberNewsFeed');
     try {
-        // ดึงข่าวสารล่าสุด 10 รายการ เรียงตามวันที่ล่าสุด
         const snap = await db.collection("news").orderBy("timestamp", "desc").limit(10).get();
         if (snap.empty) {
             container.innerHTML = `<div class="text-center text-muted small py-3 w-100 bg-white rounded-4 border">ยังไม่มีประกาศข่าวสารใหม่</div>`;
@@ -636,7 +472,6 @@ async function loadCommunityNews() {
         let html = "";
         snap.forEach(doc => {
             const n = doc.data();
-            // ใช้รูปภาพเริ่มต้น หากแอดมินไม่ได้แนบ URL มา
             const img = n.imageUrl || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=500&q=80";
             
             html += `
@@ -657,9 +492,6 @@ async function loadCommunityNews() {
     }
 }
 
-/**
- * เปิดดูรายละเอียดข่าวสารเมื่อสมาชิกกดคลิกที่การ์ดข่าว
- */
 window.viewNewsDetail = async function(newsId) {
     Swal.fire({ title: 'กำลังโหลด...', didOpen: () => Swal.showLoading() });
     try {
@@ -676,13 +508,12 @@ window.viewNewsDetail = async function(newsId) {
                         <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">${n.category || 'ทั่วไป'}</span>
                         <small class="text-muted"><i class="fa-regular fa-calendar me-1"></i> ${n.dateStr || ''}</small>
                     </div>
-                    <!-- white-space: pre-wrap; ทำให้รองรับการเว้นบรรทัด (Enter) จากแอดมิน -->
                     <p style="font-size: 0.9rem; line-height: 1.6; color: #334155; white-space: pre-wrap;">${n.content}</p>
                 </div>
             `,
             confirmButtonText: 'ปิด',
             confirmButtonColor: '#2563EB',
-            width: '90%', // ปรับขนาด popup ให้กว้างขึ้นในมือถือ
+            width: '90%',
             padding: '1.5em'
         });
     } catch (e) {
@@ -690,22 +521,13 @@ window.viewNewsDetail = async function(newsId) {
     }
 };
 
-// ============================================================================
 // 📌 SECTION 8: ป๊อปอัปข้อมูลส่วนตัว (Profile Popup)
-// ============================================================================
-
-/**
- * ฟังก์ชันสร้างตัวเลขซ่อน (*)
- */
 window.maskString = (str) => {
     if (!str) return "-";
     if (str.length <= 4) return str;
     return "*".repeat(str.length - 4) + str.slice(-4);
 };
 
-/**
- * ฟังก์ชันแสดงป๊อปอัปข้อมูลส่วนตัว
- */
 window.showProfilePopup = function() {
     if(!cachedUserData) return;
 
@@ -714,42 +536,51 @@ window.showProfilePopup = function() {
     const age = cachedUserData.displayAge || "-";
     const regDate = cachedUserData.displayRegDate || "-";
 
-    // รีเซ็ตสถานะเป็นซ่อนเสมอเมื่อเปิดป๊อปอัป
     isDataMasked.natId = true;
     isDataMasked.phone = true;
 
     Swal.fire({
         title: '<i class="fa-solid fa-address-card text-primary me-2"></i> ข้อมูลส่วนตัว',
         html: `
-        <div class="info-list shadow-none mb-0 text-start mt-3" style="font-family: 'Prompt', sans-serif;">
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">รหัสสมาชิก</span>
-            <span class="info-data text-primary fw-bold">${memId}</span>
+        <div class="text-start mt-3" style="font-family: 'Prompt', sans-serif;">
+          
+          <button id="swal-toggle-details-btn" class="btn btn-light w-100 rounded-pill border text-primary fw-bold mb-2 shadow-sm" onclick="toggleProfileDetails()">
+             <i class="fa-solid fa-chevron-down me-2" id="swal-toggle-details-icon"></i> แสดงรายละเอียด
+          </button>
+
+          <div id="swal-profile-details" style="display: none;">
+            <div class="info-list shadow-none mb-0 mt-3">
+              <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
+                <span class="info-label fw-bold">รหัสสมาชิก</span>
+                <span class="info-data text-primary fw-bold">${memId}</span>
+              </div>
+              <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
+                <span class="info-label fw-bold">ประเภทสมาชิก</span>
+                <span class="info-data text-dark fw-bold">${memType}</span>
+              </div>
+              <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between align-items-center">
+                <span class="info-label fw-bold">เลข ปชช. 
+                  <i class="fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6" id="swal-toggle-natId" onclick="toggleSwalSecureData('natId')"></i>
+                </span>
+                <span class="info-data text-dark fw-bold" id="swal-natId-display">${window.maskString(unmaskedData.NatId)}</span>
+              </div>
+              <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between align-items-center">
+                <span class="info-label fw-bold">เบอร์โทรศัพท์ 
+                  <i class="fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6" id="swal-toggle-phone" onclick="toggleSwalSecureData('phone')"></i>
+                </span>
+                <span class="info-data text-dark fw-bold" id="swal-phone-display">${window.maskString(unmaskedData.Phone)}</span>
+              </div>
+              <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
+                <span class="info-label fw-bold">อายุสมาชิก</span>
+                <span class="info-data text-success fw-bold">${age}</span>
+              </div>
+              <div class="info-row px-0 py-3 d-flex justify-content-between">
+                <span class="info-label fw-bold">วันที่สมัคร</span>
+                <span class="info-data text-dark fw-bold">${regDate}</span>
+              </div>
+            </div>
           </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">ประเภทสมาชิก</span>
-            <span class="info-data text-dark fw-bold">${memType}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between align-items-center">
-            <span class="info-label fw-bold">เลข ปชช. 
-              <i class="fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6" id="swal-toggle-natId" onclick="toggleSwalSecureData('natId')"></i>
-            </span>
-            <span class="info-data text-dark fw-bold" id="swal-natId-display">${window.maskString(unmaskedData.NatId)}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between align-items-center">
-            <span class="info-label fw-bold">เบอร์โทรศัพท์ 
-              <i class="fa-solid fa-eye-slash text-primary ms-2 cursor-pointer fs-6" id="swal-toggle-phone" onclick="toggleSwalSecureData('phone')"></i>
-            </span>
-            <span class="info-data text-dark fw-bold" id="swal-phone-display">${window.maskString(unmaskedData.Phone)}</span>
-          </div>
-          <div class="info-row px-0 border-bottom py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">อายุสมาชิก</span>
-            <span class="info-data text-success fw-bold">${age}</span>
-          </div>
-          <div class="info-row px-0 py-3 d-flex justify-content-between">
-            <span class="info-label fw-bold">วันที่สมัคร</span>
-            <span class="info-data text-dark fw-bold">${regDate}</span>
-          </div>
+
         </div>
         `,
         showConfirmButton: false,
@@ -758,9 +589,23 @@ window.showProfilePopup = function() {
     });
 };
 
-/**
- * ฟังก์ชันเปิด/ปิด ตา ในหน้าป๊อปอัป SweetAlert
- */
+window.toggleProfileDetails = function() {
+    const detailsDiv = document.getElementById('swal-profile-details');
+    const btn = document.getElementById('swal-toggle-details-btn');
+    
+    if (detailsDiv.style.display === 'none') {
+        detailsDiv.style.display = 'block';
+        btn.innerHTML = '<i class="fa-solid fa-chevron-up me-2"></i> ซ่อนรายละเอียด';
+        btn.classList.replace('btn-light', 'btn-primary');
+        btn.classList.replace('text-primary', 'text-white');
+    } else {
+        detailsDiv.style.display = 'none';
+        btn.innerHTML = '<i class="fa-solid fa-chevron-down me-2"></i> แสดงรายละเอียด';
+        btn.classList.replace('btn-primary', 'btn-light');
+        btn.classList.replace('text-white', 'text-primary');
+    }
+};
+
 window.toggleSwalSecureData = function(type) {
     const displayEl = document.getElementById(type === 'natId' ? 'swal-natId-display' : 'swal-phone-display');
     const iconEl = document.getElementById(type === 'natId' ? 'swal-toggle-natId' : 'swal-toggle-phone');
@@ -777,4 +622,155 @@ window.toggleSwalSecureData = function(type) {
         displayEl.innerText = realData;
         iconEl.className = "fa-solid fa-eye text-primary ms-2 cursor-pointer fs-6";
     }
+};
+/**
+ * ฟังก์ชันเปิด Popup สร้างของรางวัล (รองรับ แต้ม + เงินสด)
+ */
+window.openRewardModal = function() {
+    Swal.fire({
+        title: 'สร้างของรางวัลใหม่',
+        html: `
+        <div class="text-start" style="font-family:'Prompt';">
+            <label class="small fw-bold text-muted mb-1">ชื่อของรางวัล</label>
+            <input type="text" id="rewardName" class="form-control mb-3" placeholder="เช่น เสื้อยืดกองทุน, ข้าวสาร 5 กก.">
+            
+            <div class="row g-2 mb-3">
+               <div class="col-6">
+                  <label class="small fw-bold text-muted mb-1"><i class="fa-solid fa-star text-warning"></i> ใช้แต้ม (Points)</label>
+                  <input type="number" id="rewardPoints" class="form-control fw-bold text-primary" placeholder="เช่น 500">
+               </div>
+               <div class="col-6">
+                  <label class="small fw-bold text-muted mb-1"><i class="fa-solid fa-baht-sign text-success"></i> + เงินเพิ่ม (บาท)</label>
+                  <input type="number" id="rewardCash" class="form-control fw-bold text-success" placeholder="ใส่ 0 หากแลกฟรี" value="0">
+               </div>
+            </div>
+            
+            <label class="small fw-bold text-muted mb-1">จำนวนสิทธิ์ทั้งหมด (ชิ้น)</label>
+            <input type="number" id="rewardStock" class="form-control mb-3" placeholder="เช่น 10">
+            
+            <label class="small fw-bold text-muted mb-1">ลิงก์รูปภาพรางวัล</label>
+            <input type="text" id="rewardImg" class="form-control" placeholder="https://...">
+        </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-save"></i> บันทึกรางวัล',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#DC2626',
+        preConfirm: () => {
+            const name = document.getElementById('rewardName').value.trim();
+            const points = parseInt(document.getElementById('rewardPoints').value) || 0;
+            const cash = parseInt(document.getElementById('rewardCash').value) || 0;
+            const stock = parseInt(document.getElementById('rewardStock').value) || 0;
+            
+            if (!name || points <= 0 || stock <= 0) {
+                Swal.showValidationMessage('กรุณากรอกชื่อ, แต้ม และจำนวนสิทธิ์ให้ครบถ้วน');
+                return false;
+            }
+            return {
+                title: name,
+                pointsNeeded: points,
+                cashNeeded: cash, // 🌟 ฟิลด์ใหม่สำหรับเงินสดบวกเพิ่ม
+                stock: stock,
+                remaining: stock,
+                imageUrl: document.getElementById('rewardImg').value.trim() || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&q=80',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+        }
+    }).then(async (res) => {
+        if (res.isConfirmed) {
+            Swal.fire({title:'กำลังบันทึก...', didOpen: ()=>Swal.showLoading()});
+            try {
+                await db.collection("rewards").add(res.value);
+                Swal.fire('สำเร็จ', 'เพิ่มของรางวัลเข้าระบบแล้ว', 'success');
+                // เรียกฟังก์ชันโหลดของรางวัลมาแสดงใหม่ (สมมติว่าคุณมีฟังก์ชัน loadRewards)
+                if(typeof loadRewards === 'function') loadRewards(); 
+            } catch (e) {
+                Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error');
+            }
+        }
+    });
+};
+
+// ============================================================================
+// 🎁 SECTION 9: โหลดรายการของรางวัล (Rewards Showcase)
+// ============================================================================
+
+/**
+ * ดึงรายการของรางวัลจาก Firestore มาแสดงบน Dashboard สมาชิก
+ */
+async function loadMemberRewards() {
+    const container = document.getElementById('memberRewardsFeed');
+    if(!container) return;
+
+    try {
+        // ดึงของรางวัลเรียงตามข้อมูลล่าสุด
+        const snap = await db.collection("rewards").orderBy("createdAt", "desc").limit(10).get();
+        
+        if (snap.empty) {
+            container.innerHTML = `<div class="text-center text-muted small py-3 w-100 bg-white rounded-4 border">ยังไม่มีของรางวัลในขณะนี้</div>`;
+            return;
+        }
+
+        let html = "";
+        snap.forEach(doc => {
+            const r = doc.data();
+            
+            // ป้ายกำกับแจ้งจำนวนของคงเหลือ
+            let stockBadge = r.remaining > 0 
+                ? `<span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-sm">เหลือ ${r.remaining}</span>` 
+                : `<span class="badge bg-danger position-absolute top-0 end-0 m-2 shadow-sm">หมด</span>`;
+            
+            // ป้ายแสดงจำนวนเงินสดที่ต้องบวกเพิ่ม (ถ้ามี)
+            let cashTag = (r.cashNeeded > 0) 
+                ? `<small class="text-success fw-bold d-block mt-1">+ ${r.cashNeeded} ฿</small>` 
+                : '';
+            
+            // ตั้งค่ารูปภาพเริ่มต้นหากแอดมินไม่ได้ใส่ลิงก์
+            let imgUrl = r.imageUrl || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500&q=80';
+
+            html += `
+                <div class="reward-card" onclick="promptRedeemReward('${doc.id}', '${r.title}', ${r.pointsNeeded}, ${r.cashNeeded || 0}, ${r.remaining})">
+                    ${stockBadge}
+                    <img src="${imgUrl}" class="reward-img" alt="Reward">
+                    <div class="p-2 d-flex flex-column flex-grow-1">
+                        <strong class="text-dark d-block text-truncate mb-1" style="font-size: 0.8rem;">${r.title}</strong>
+                        <div class="mt-auto">
+                            <span class="text-warning fw-bold" style="font-size: 0.85rem;"><i class="fa-solid fa-star"></i> ${r.pointsNeeded} แต้ม</span>
+                            ${cashTag}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = `<div class="text-danger small p-3">โหลดข้อมูลขัดข้อง</div>`;
+    }
+}
+
+/**
+ * เด้งหน้าต่างยืนยันเมื่อสมาชิกกดแลกของรางวัล
+ */
+window.promptRedeemReward = function(docId, title, pointsNeeded, cashNeeded, remaining) {
+    if (remaining <= 0) {
+        return Swal.fire('ขออภัย', 'ของรางวัลชิ้นนี้หมดแล้วครับ', 'warning');
+    }
+
+    let msg = `ใช้แต้ม <b>${pointsNeeded} แต้ม</b>`;
+    if (cashNeeded > 0) msg += ` และชำระเงินเพิ่ม <b>${cashNeeded} บาท</b>`;
+
+    Swal.fire({
+        title: 'ยืนยันการแลกรางวัล',
+        html: `คุณต้องการแลก <b>${title}</b><br><span class="text-danger small">${msg}</span><br>ใช่หรือไม่?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยันการแลก',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#10B981'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // โค้ดส่วนนี้จะพัฒนาต่อเพื่อตัดแต้มสมาชิกและส่งคำขอไปยังแอดมิน
+            Swal.fire('รับเรื่องแล้ว!', 'คำขอแลกรางวัลถูกส่งให้ส่วนกลางแล้ว โปรดรอการติดต่อกลับ', 'success');
+        }
+    });
 };
