@@ -5,298 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบสมาชิกกองทุนสวัสดิการชุมชน</title>
   
-  <!-- ==========================================
-       [1] ส่วนโหลดฟอนต์และไลบรารีที่จำเป็น
-  =========================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- 🌟 โหลดสไตล์ CSS ที่แยกไฟล์ไว้ 🌟 -->
+  <link rel="stylesheet" href="./assets/css/member-style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-  <!-- 🚀 โหลด Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3QY1t2cY8gB_w_ZtSGqidVi65JBEVZIUs&libraries=visualization"></script>
-  <!-- ลบ Google Maps ที่ซ้ำซ้อนออก 1 บรรทัด เพื่อไม่ให้เบราว์เซอร์ Error -->
 
-  <!-- ==========================================
-       [2] ส่วนการตกแต่งหน้าตา (CSS)
-  =========================================== -->
-  <style>
-    :root { --fintech-primary: #0F172A; --fintech-accent: #2563EB; --fintech-success: #10B981; --bg-light: #F3F4F6; --card-border: #E5E7EB; }
-    body { background-color: var(--bg-light); font-family: 'Prompt', sans-serif; color: #1E293B; -webkit-tap-highlight-color: transparent; }
-    
-    /* 🎨 โครงสร้างหลัก (Layout) */
-    .app-header { background: var(--fintech-primary); background-image: radial-gradient(circle at top right, #1E293B 0%, transparent 60%); color: white; padding: 40px 20px 100px; text-align: center; }
-    .card-box { background: white; padding: 25px 20px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); max-width: 500px; margin: -60px auto 30px; position: relative; border: 1px solid var(--card-border); }
-    
-    /* 🖼️ รูปโปรไฟล์และสถานะ */
-    .profile-wrapper { position: relative; margin-top: -65px; text-align: center; margin-bottom: 15px; }
-    .profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
-    .badge-status { padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-bottom: 10px; }
-    .status-pending { background-color: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; } 
-    .status-active { background-color: #D1FAE5; color: #059669; border: 1px solid #A7F3D0; } 
-    .status-inactive { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; } 
-    .badge-tier { padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    
-    /* 🌟 สไตล์ไทม์ไลน์ติดตามเงิน */
-    .timeline { border-left: 2px dashed #CBD5E1; padding-left: 20px; margin-left: 10px; position: relative; }
-    .timeline-item { margin-bottom: 20px; position: relative; }
-    .timeline-item::before { content: ''; position: absolute; left: -27px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #F8FAFC; border: 2px solid #CBD5E1; z-index: 2; }
-    .timeline-item.active::before { background: #10B981; border-color: #059669; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
-    .timeline-item.warning::before { background: #F59E0B; border-color: #D97706; box-shadow: 0 0 8px rgba(245,158,11,0.5); }
-    .timeline-item.blue::before { background: #2563EB; border-color: #1D4ED8; }
-
-    /* 📊 การ์ดสถิติ (Stat Cards) */
-    .stat-card { border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; transition: transform 0.2s, box-shadow 0.2s; }
-    .stat-card:active { transform: scale(0.98); }
-    .stat-card-points { background: linear-gradient(135deg, #FFFBEB 0%, #FEF08A 100%); border: 1px solid #FDE047; box-shadow: 0 4px 15px rgba(253, 224, 71, 0.2); }
-    .stat-card-contrib { background: linear-gradient(135deg, #ECFDF5 0%, #A7F3D0 100%); border: 1px solid #6EE7B7; box-shadow: 0 4px 15px rgba(110, 231, 183, 0.2); }
-    .stat-card-welfare { background: linear-gradient(135deg, #EFF6FF 0%, #BFDBFE 100%); border: 1px solid #93C5FD; box-shadow: 0 4px 15px rgba(147, 197, 253, 0.2); }
-    .icon-box { width: 48px; height: 48px; border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; }
-    .stat-card-points .icon-box { background: #F59E0B; color: white; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4); }
-    .stat-card-contrib .icon-box { background: #10B981; color: white; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4); }
-    .stat-card-welfare .icon-box { background: #3B82F6; color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
-    .btn-action-sm { background: white; border-radius: 20px; padding: 6px 14px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: none; cursor: pointer;}
-    .stat-card-points .btn-action-sm { color: #D97706; border: 1px solid #FDE047; }
-    .stat-card-contrib .btn-action-sm { color: #059669; border: 1px solid #6EE7B7; }
-    .stat-card-welfare .btn-action-sm { color: #2563EB; border: 1px solid #93C5FD; }
-    
-    /* 🎮 ภารกิจและรางวัล (Mission Hub) */
-    .mission-hub { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid #334155; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3); }
-    .mission-hub .hub-title { color: #F8FAFC !important; }
-    .mission-hub .hub-icon { color: #60A5FA !important; text-shadow: 0 0 10px rgba(96, 165, 250, 0.5); }
-    .mission-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.2s; backdrop-filter: blur(10px); cursor: pointer;}
-    .mission-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); }
-    .mission-btn span { color: white !important; }
-    .mission-btn i.text-success { color: #34D399 !important; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
-    .mission-btn i.text-primary { color: #60A5FA !important; text-shadow: 0 0 15px rgba(96, 165, 250, 0.4); }
-    
-    /* 📋 รายการข้อมูล (Info Lists) */
-    .info-list { background: white; border-radius: 16px; border: 1px solid var(--card-border); margin-bottom: 20px; overflow: hidden; }
-    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #F3F4F6; }
-    .info-row:last-child { border-bottom: none; }
-    .info-label { color: #6B7280; font-size: 0.85rem; font-weight: 500; }
-    .info-data { color: #111827; font-size: 0.9rem; font-weight: 600; text-align: right; display: flex; align-items: center; gap: 8px;}
-    .section-title { font-size: 0.95rem; font-weight: 700; color: #374151; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; text-align: left; }
-    
-    /* 📝 ฟอร์มและปุ่มต่างๆ (Forms & Buttons) */
-    .form-control, .form-select { border-radius: 12px; border: 1px solid #D1D5DB; background-color: white; font-size: 0.95rem; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-    .form-control:focus, .form-select:focus { border-color: var(--fintech-accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-    .form-control:read-only { background-color: #F3F4F6; color: #6B7280; border-color: #E5E7EB; }
-    .btn-fintech { background-color: var(--fintech-primary); color: white; border-radius: 14px; padding: 14px; font-weight: 600; font-size: 1.05rem; border: none; transition: 0.3s; box-shadow: 0 4px 6px rgba(15, 23, 42, 0.2); width: 100%;}
-    .pdpa-box { background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 16px; padding: 16px; font-size: 0.85rem; text-align: left; }
-    
-    /* 🔄 ระบบโหลดและป๊อปอัป (Loaders & Modals) */
-    #systemLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-    .share-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: flex-end; }
-    .share-content { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 25px; animation: slideUp 0.3s; text-align: center; }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .social-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; border: none; margin: 0 10px; cursor: pointer; }
-    .btn-line { background: #00B900; }
-    .btn-fb { background: #1877F2; }
-    .btn-copy { background: #64748B; }
-
-    /* อื่นๆ */
-    .vulnerable-item { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; }
-    .cursor-pointer { cursor: pointer; }
-
-    /* 🌟 สไตล์พิเศษสำหรับระบบ Gamification */
-    .streak-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); border: 2px solid rgba(255,255,255,0.2); transition: 0.3s; }
-    .streak-circle.active { background: #10B981; color: white; border-color: #34D399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
-    .streak-circle.gift { background: transparent; border-color: #F59E0B; color: #F59E0B; }
-    .streak-circle.gift.active { background: #F59E0B; color: white; border-color: #FBBF24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
-    
-    .transparency-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid var(--card-border); }
-    @keyframes blinkWarning { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-    .blink-anim { animation: blinkWarning 1.5s infinite; }
-
-    /* ==========================================
-       🌟 แอนิเมชัน 3D โลโก้และเส้นพลังงาน (SmartWelf 5.0)
-    ========================================== */
-    .loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-    }
-    
-    .sw-logo-svg {
-        width: 180px; /* สามารถปรับขนาดความกว้างโลโก้ตรงนี้ได้ */
-        height: auto;
-        /* เอฟเฟกต์แสงเงาให้โลโก้ดูลอยขึ้นมา */
-        filter: 
-            drop-shadow(0 14px 18px rgba(5,150,105,.14)) 
-            drop-shadow(0 4px 5px rgba(14,116,144,.10));
-    }
-
-    /* 1. เลเยอร์สร้างมิติความหนา (3D Depth) */
-    .sw-depth path {
-        fill: #064E3B; /* สีเขียวเข้มมากเพื่อทำเป็นเงาฐาน 3D */
-        transform: translate(3px, 6px); /* ดึงเลเยอร์ลงมาขวาล่าง 3px, 6px */
-    }
-
-    /* 2. เลเยอร์หน้า (Face) */
-    .sw-face path {
-        fill: url(#smartwelfGradient); /* รับสีไล่ระดับ Gradient */
-    }
-
-    /* 3. เลเยอร์เส้นพลังงานวิ่ง (Energy Line) */
-    .sw-energy-path {
-        fill: none;
-        stroke: #6EE7B7; /* สีเขียวสว่างนีออน */
-        stroke-width: 5;
-        stroke-linecap: round;
-        stroke-dasharray: 72 928; /* ความยาวเส้นสว่าง 72, เว้นช่องว่าง 928 */
-        stroke-dashoffset: 1000;
-        animation:
-            swEnergyIntro .55s ease-out .65s forwards,
-            swEnergyRun 2.15s linear 1.2s infinite;
-    }
-
-    @keyframes swEnergyIntro {
-        from { stroke-dashoffset: 1000; }
-        to { stroke-dashoffset: 928; }
-    }
-
-    @keyframes swEnergyRun {
-        0% { stroke-dashoffset: 928; }
-        100% { stroke-dashoffset: -72; }
-    }
-
-    /* แอนิเมชันตัวหนังสือ SmartWelf 5.0 */
-    .loading-text-glow {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 0;
-        background: linear-gradient(90deg, #059669, #2563EB);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: pulseTextGlow 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulseTextGlow {
-        0% { opacity: 0.6; transform: scale(0.98); }
-        50% { opacity: 1; transform: scale(1); }
-        100% { opacity: 0.6; transform: scale(0.98); }
-    }
-
-    /* ==========================================
-       🌟 FINTECH UI COMPONENTS (การ์ดกระเป๋าเงิน & เมนูด่วน)
-    ========================================== */
-    /* การ์ดกระเป๋าเงิน (Wallet Card) */
-    .wallet-card {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        border-radius: 24px;
-        padding: 24px;
-        color: white;
-        box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.4), 0 8px 10px -6px rgba(15, 23, 42, 0.2);
-        position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.1);
-        z-index: 1;
-    }
-    /* ลวดลายวงกลมตกแต่งบนการ์ด */
-    .wallet-card::before {
-        content: ''; position: absolute; top: -50px; right: -30px; width: 150px; height: 150px;
-        background: linear-gradient(135deg, rgba(37,99,235,0.4) 0%, rgba(16,185,129,0.4) 100%);
-        border-radius: 50%; filter: blur(30px); z-index: -1;
-    }
-    .wallet-card::after {
-        content: ''; position: absolute; bottom: -30px; left: -20px; width: 100px; height: 100px;
-        background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%);
-        border-radius: 50%; filter: blur(20px); z-index: -1;
-    }
-
-    /* เมนูด่วน (Quick Actions Grid) */
-    .quick-action-wrapper {
-        display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s;
-    }
-    .quick-action-wrapper:active { transform: scale(0.92); }
-    .quick-action-btn {
-        width: 56px; height: 56px; border-radius: 20px;
-        display: flex; justify-content: center; align-items: center;
-        font-size: 1.5rem; margin-bottom: 8px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .quick-action-text {
-        font-size: 0.75rem; font-weight: 600; color: #475569;
-    }
-
-    /* ปรับแต่ง Profile Header ให้เชื่อมกับแอป */
-    .fintech-profile-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-top: -70px; padding: 0 5px 20px 5px; position: relative; z-index: 10;
-    }
-    .fintech-profile-header .profile-img { margin-top: 0; border: 3px solid rgba(255,255,255,0.8); }
-    
-  </style>
+  
 </head>
 <body>
 
-<!-- ==========================================
-     [3] SYSTEM LOADER (3D Animated SVG)
-=========================================== -->
 <div id="systemLoading">
     <div class="loading-container">
-
-        <!-- SmartWelf 3D Animated SVG -->
         <svg class="sw-logo-svg" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
-            
             <defs>
-                <!-- สีไล่ระดับเขียว-ฟ้า (อิงจากโลโก้ 834378.jpg) -->
                 <linearGradient id="smartwelfGradient" x1="0%" y1="100%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="#059669" />
                     <stop offset="100%" stop-color="#2563EB" />
                 </linearGradient>
             </defs>
-
-            <!-- เลเยอร์ที่ 1: มิติความหนา (3D Depth) -->
             <g class="sw-depth">
-                <!-- 💡 นำโค้ดรหัสโลโก้ (d="...") ของรูปสัญลักษณ์มาใส่ที่นี่ -->
-                <path d="..." />
-                
-                <!-- 💡 นำโค้ดรหัสโลโก้ (d="...") ของตัวหนังสือมาใส่ที่นี่ -->
-                <path d="..." fill-rule="evenodd" clip-rule="evenodd" />
+                <circle cx="100" cy="100" r="60" />
+                <rect x="180" y="70" width="200" height="60" rx="15" />
             </g>
-
-            <!-- เลเยอร์ที่ 2: ผิวหน้าหลัก (Face) -->
             <g class="sw-face">
-                <!-- 💡 นำโค้ดรหัสโลโก้ (d="...") ของรูปสัญลักษณ์มาใส่ที่นี่ -->
-                <path id="smartwelf-symbol" d="..." />
-                
-                <!-- 💡 นำโค้ดรหัสโลโก้ (d="...") ของตัวหนังสือมาใส่ที่นี่ -->
-                <path id="smartwelf-wordmark" d="..." fill-rule="evenodd" clip-rule="evenodd" />
+                <circle cx="100" cy="100" r="60" />
+                <rect x="180" y="70" width="200" height="60" rx="15" />
             </g>
-
-            <!-- เลเยอร์ที่ 3: เส้นพลังงาน (Energy Line) -->
-            <!-- ⚠️ แนะนำให้ใส่เส้นพลังงานวิ่งเฉพาะที่ "รูปสัญลักษณ์" (นก) อย่างเดียวเพื่อให้ดูสวยงาม ไม่รกตา -->
             <g>
-                <!-- 💡 นำโค้ดรหัสโลโก้ (d="...") ของรูปสัญลักษณ์มาใส่ที่นี่ -->
-                <path class="sw-energy-path" pathLength="1000" d="..." />
+                <circle class="sw-energy-path" cx="100" cy="100" r="60" pathLength="1000" />
             </g>
-
         </svg>
-
-        <p class="loading-text-glow text-center">
-            SmartWelf 5.0
-        </p>
-
-        <p id="systemLoadingText" class="text-muted fw-bold small mt-1 text-center">
-            กำลังเชื่อมต่อฐานข้อมูล...
-        </p>
-
+        <p class="loading-text-glow text-center">SmartWelf 5.0</p>
+        <p id="systemLoadingText" class="text-muted fw-bold small mt-1 text-center">กำลังเชื่อมต่อฐานข้อมูล...</p>
     </div>
 </div>
 
-<!-- ส่วนหัวของแอปพลิเคชัน -->
 <div class="app-header">
   <h4 class="fw-bold mb-1">กองทุนสวัสดิการชุมชน</h4>
   <p class="text-white-50 small mb-0" id="headerFundName">รอโหลดข้อมูล...</p>
@@ -304,9 +58,7 @@
 
 <div class="container mb-5 px-3">
   
-  <!-- ==========================================
-       [หน้าต่าง 1] หน้าจอลงทะเบียนสมาชิกใหม่
-  =========================================== -->
+  <!-- 📝 [หน้าต่าง 1] หน้าจอลงทะเบียนสมาชิกใหม่ -->
   <div id="registerView" class="card-box" style="display: none;">
     <div class="text-center mb-4">
       <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto mb-3"><i class="fa-solid fa-user-plus"></i></div>
@@ -317,9 +69,7 @@
     <form id="registerForm" onsubmit="handleRegister(event)">
       <input type="hidden" id="uid" name="uid">
       <input type="hidden" id="refCode" name="refCode"> 
-      <input type="hidden" id="regLatitude" name="latitude">
-      <input type="hidden" id="regLongitude" name="longitude">
-
+      
       <div class="row g-2 mb-3">
         <div class="col-4">
           <select class="form-select" name="prefix" required>
@@ -332,48 +82,45 @@
         </div>
       </div>
       <div class="mb-3">
-        <input type="tel" class="form-control fw-bold" name="nationalId" placeholder="เลขประจำตัวประชาชน (13 หลัก)" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 13);" required>
+        <input type="tel" class="form-control fw-bold" name="nationalId" placeholder="เลข ปชช. (13 หลัก)" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 13);" required>
       </div>
       <div class="mb-3">
-        <input type="tel" class="form-control" name="phone" placeholder="เบอร์โทรศัพท์ (08XXXXXXXX)" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required>
+        <input type="tel" class="form-control" name="phone" placeholder="เบอร์โทรศัพท์" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" required>
       </div>
       
+      <!-- 🌟 ข้อมูลที่เชื่อมกับ Global Settings อัตโนมัติ -->
       <div class="mb-3">
         <select class="form-select fw-bold text-dark" name="center" id="regCenterSelect" required>
           <option value="" disabled selected>-- เลือกศูนย์ประสานงานใกล้บ้าน --</option>
         </select>
       </div>
-      
       <div class="mb-4">
         <select class="form-select text-dark" name="village" id="regVillageSelect" required>
           <option value="" disabled selected>-- เลือกหมู่บ้านที่พักอาศัยปัจจุบัน --</option>
         </select>
       </div>
-      <!-- 🌟 เพิ่มช่องเลือกกรรมการผู้ดูแล ตรงนี้ -->
       <div class="mb-4">
         <select class="form-select text-dark border-primary" name="responsibleAdmin" id="regResponsibleAdmin" required>
           <option value="" disabled selected>-- เลือกกรรมการผู้ดูแลคุณ --</option>
-          <option value="ไม่มีผู้ดูแล">ไม่มีผู้ดูแล (ส่วนกลาง)</option>
+          <option value="ไม่มีผู้ดูแล">ไม่มีผู้ดูแล (ขึ้นตรงส่วนกลาง)</option>
         </select>
-        <small class="text-muted" style="font-size: 0.7rem;"><i class="fa-solid fa-circle-info"></i> เลือกกรรมการในพื้นที่เพื่อความสะดวกในการประสานงาน</small>
+        <small class="text-muted" style="font-size: 0.7rem;"><i class="fa-solid fa-circle-info"></i> ระบบดึงรายชื่อกรรมการที่แอคทีฟมาแสดงอัตโนมัติ</small>
       </div>
+
       <div class="pdpa-box mb-4">
         <div class="form-check">
           <input class="form-check-input mt-1" type="checkbox" name="pdpaConsent" id="pdpaCheck" value="true" required>
           <label class="form-check-label text-muted ms-1" for="pdpaCheck">
             <strong>นโยบายความเป็นส่วนตัว (PDPA)</strong><br>
-            ยินยอมให้จัดเก็บข้อมูลส่วนบุคคลและพิกัดภูมิศาสตร์ (GPS) เพื่อพิจารณาสิทธิประโยชน์
+            ยินยอมให้จัดเก็บข้อมูลส่วนบุคคล เพื่อพิจารณาสิทธิประโยชน์
           </label>
         </div>
       </div>
-
       <button type="submit" class="btn btn-fintech w-100" id="submitRegBtn">สมัครสมาชิก</button>
     </form>
   </div>
 
-  <!-- ==========================================
-       [หน้าต่าง 1.5] หน้าจอขอผูกบัญชีเดิม
-  =========================================== -->
+  <!-- 🔗 [หน้าต่าง 1.5] หน้าจอขอผูกบัญชีเดิม -->
   <div id="accountLinkView" class="card-box text-center" style="display: none;">
     <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">
       <i class="fa-solid fa-link"></i>
@@ -382,37 +129,34 @@
     <p class="text-muted small mb-4">ผูกบัญชี LINE กับข้อมูลเดิมที่กรรมการเคยลงทะเบียนให้ เพื่อดูยอดสะสมและขอเบิกสวัสดิการได้ทันที</p>
     <input type="tel" id="linkNatId" class="form-control text-center fw-bold mb-3 py-3" placeholder="เลขประจำตัวประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 13);">
     <button onclick="requestAccountLink()" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm mb-3">ตรวจสอบข้อมูล</button>
-    <button onclick="document.getElementById('accountLinkView').style.display='none'; document.getElementById('registerView').style.display='block'; requestLocation();" class="btn btn-light w-100 rounded-pill fw-bold py-2 text-muted">ไม่ใช่, ฉันต้องการสมัครใหม่</button>
+    <button onclick="document.getElementById('accountLinkView').style.display='none'; document.getElementById('registerView').style.display='block';" class="btn btn-light w-100 rounded-pill fw-bold py-2 text-muted">ไม่ใช่, ฉันต้องการสมัครใหม่</button>
   </div>
 
-  <!-- ==========================================
-       [หน้าต่าง 2] หน้าจอสมัครสำเร็จ
-  =========================================== -->
+  <!-- ✅ [หน้าต่าง 2] หน้าจอสมัครสำเร็จ -->
   <div id="registrationSuccessView" class="card-box text-center" style="display: none;">
     <div class="icon-box bg-success bg-opacity-10 text-success mx-auto mb-4" style="width: 80px; height: 80px; font-size: 2.5rem;">
       <i class="fa-solid fa-check"></i>
     </div>
     <h4 class="fw-bold text-dark mb-2">ลงทะเบียนสำเร็จ!</h4>
     <p class="text-muted mb-4">ข้อมูลของคุณถูกส่งไปยังคณะกรรมการแล้ว โปรดรอการตรวจสอบ</p>
-    
-    <div class="alert alert-info border-0 mb-4" style="background-color: #EFF6FF; border-radius: 16px;">
-      <p class="fw-bold text-primary mb-2" style="font-size: 0.95rem;">อย่าลืมเพิ่มเพื่อน LINE กองทุนฯ</p>
-      <p class="small text-muted mb-3">เพื่อรับข่าวสารและแจ้งเตือนสถานะการอนุมัติ</p>
-      <a href="https://lin.ee/vS4t8bq"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/th.png" alt="เพิ่มเพื่อน" height="36" border="0"></a>
-    </div>
-    
     <button onclick="location.reload()" class="btn btn-outline-primary rounded-pill px-4 mt-2">เข้าสู่หน้าหลักสมาชิก</button>
   </div>
 
-  <!-- ==========================================
-       [หน้าต่าง 3] แดชบอร์ดหลักของสมาชิก (Fintech UX/UI)
-  =========================================== -->
+  <!-- 📊 [หน้าต่าง 3] แดชบอร์ดหลักของสมาชิก -->
   <div id="dashboardView" style="display: none;">
     
-    <!-- 1. ส่วนหัวโปรไฟล์แบบใหม่ (Fintech Profile Header) -->
     <div class="fintech-profile-header">
       <div class="text-start text-white">
-        <h5 id="dashName" class="fw-bold mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);"></h5>
+        
+        <!-- 🌟 เริ่มต้นส่วนที่เพิ่มไอคอนตา -->
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h5 id="dashName" class="fw-bold mb-0" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);"></h5>
+            <div class="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 26px; height: 26px; backdrop-filter: blur(5px); cursor: pointer;" onclick="showProfilePopup()">
+                <i class="fa-solid fa-eye text-white" style="font-size: 0.8rem;"></i>
+            </div>
+        </div>
+        <!-- 🌟 สิ้นสุดส่วนที่เพิ่มไอคอนตา -->
+        
         <div class="d-flex align-items-center gap-2">
             <span id="dashStatusBadge" class="badge-status shadow-sm mb-0 px-2 py-1" style="font-size: 0.7rem;">รอตรวจสอบ</span>
             <div id="dashTierBadge" class="badge-tier shadow-sm mb-0 px-2 py-1" style="display: none; font-size: 0.7rem; margin-top: 0;"></div>
@@ -421,7 +165,7 @@
       <img id="userAvatar" src="" class="profile-img shadow" style="width: 65px; height: 65px;" alt="Profile">
     </div>
 
-    <!-- 2. การ์ดกระเป๋าเงินสวัสดิการ (Wallet Card) -->
+    <!-- การ์ดกระเป๋าเงิน -->
     <div class="wallet-card mb-4 mx-1">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <span class="text-white-50 small fw-bold"><i class="fa-solid fa-wallet me-1"></i> ยอดสมทบสะสม</span>
@@ -442,16 +186,14 @@
       </div>
     </div>
 
-    <!-- 3. เมนูด่วน 4 ปุ่ม (Quick Actions) เหมือนแอปธนาคาร -->
+    <!-- เมนูด่วน 4 ปุ่ม (เชื่อมกับ contribution.html และ claim.html) -->
     <div class="row g-2 mb-4 px-2">
-      <!-- ปุ่มที่ 1: สแกนจ่าย (เน้นสีเขียวเด่น) -->
       <div class="col-3">
         <div class="quick-action-wrapper" onclick="scanToPayAdmin()">
           <div class="quick-action-btn bg-success text-white shadow-sm" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);"><i class="fa-solid fa-qrcode"></i></div>
           <span class="quick-action-text text-dark fw-bold">สแกนจ่าย</span>
         </div>
       </div>
-      <!-- ปุ่มที่ 2: สมทบ -->
       <div class="col-3">
         <a href="contribution.html" class="text-decoration-none w-100">
           <div class="quick-action-wrapper">
@@ -460,7 +202,6 @@
           </div>
         </a>
       </div>
-      <!-- ปุ่มที่ 3: ขอเบิก -->
       <div class="col-3">
         <a href="claim.html" class="text-decoration-none w-100">
           <div class="quick-action-wrapper">
@@ -469,7 +210,6 @@
           </div>
         </a>
       </div>
-      <!-- ปุ่มที่ 4: ชวนเพื่อน -->
       <div class="col-3">
         <div class="quick-action-wrapper" onclick="openShareModal('invite')">
           <div class="quick-action-btn bg-white text-warning border"><i class="fa-solid fa-user-plus"></i></div>
@@ -480,7 +220,36 @@
 
     <hr class="my-4 border-secondary border-opacity-25 mx-2">
 
-    <!-- 4. ศูนย์ภารกิจ & เช็คอิน (Gamification Hub) -->
+    <!-- 📰 ข่าวสารและประกาศชุมชน (News Feed) -->
+    <div class="text-start mt-4 mx-1">
+      <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+        <div class="d-flex align-items-center">
+          <i class="fa-solid fa-bullhorn text-primary fs-4 me-2"></i>
+          <h6 class="fw-bold text-dark mb-0 m-0">ข่าวสารชุมชน</h6>
+        </div>
+      </div>
+      <div id="memberNewsFeed" class="horizontal-scroll-row">
+         <div class="text-center text-muted small p-3 w-100 bg-white rounded-4 border">
+            <div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดข่าวสาร...
+         </div>
+      </div>
+    </div>
+    <!-- 🎁 ของรางวัลและแลกสิทธิประโยชน์ (Rewards) -->
+    <div class="text-start mt-4 mx-1">
+      <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+        <div class="d-flex align-items-center">
+          <i class="fa-solid fa-gift text-danger fs-4 me-2"></i>
+          <h6 class="fw-bold text-dark mb-0 m-0">แลกของรางวัลชุมชน</h6>
+        </div>
+      </div>
+      <!-- คอนเทนเนอร์สำหรับเลื่อนซ้ายขวา -->
+      <div id="memberRewardsFeed" class="horizontal-scroll-row pb-2">
+         <div class="text-center text-muted small p-3 w-100 bg-white rounded-4 border">
+            <div class="spinner-border spinner-border-sm mb-2 text-danger"></div><br>กำลังโหลดของรางวัล...
+         </div>
+      </div>
+    </div>
+    <!-- ศูนย์ภารกิจ & เช็คอิน -->
     <div class="mission-hub text-start mt-4 mx-1">
       <div class="d-flex align-items-center justify-content-between mb-3">
         <div class="d-flex align-items-center">
@@ -489,8 +258,6 @@
         </div>
         <small class="text-white-50" style="font-size: 0.7rem;">(รีเซ็ตทุกสัปดาห์)</small>
       </div>
-      
-      <!-- แถบวงกลม 7 วัน -->
       <div class="d-flex justify-content-between align-items-center mb-4 px-1" id="streakContainer">
           <div class="streak-circle" id="streak-1">1</div>
           <div class="streak-circle" id="streak-2">2</div>
@@ -500,13 +267,12 @@
           <div class="streak-circle" id="streak-6">6</div>
           <div class="streak-circle gift" id="streak-7"><i class="fa-solid fa-gift"></i></div>
       </div>
-      
       <button id="btnCheckIn" class="btn btn-success w-100 rounded-pill py-2 fw-bold shadow-sm" onclick="processDailyCheckIn()" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border: none;">
         <i class="fa-solid fa-calendar-check me-1"></i> กดเช็คอินรับแต้มวันนี้
       </button>
     </div>
 
-    <!-- 5. กระดานตรวจสอบความโปร่งใสชุมชน (Transparency Board) -->
+    <!-- กระดานตรวจสอบความโปร่งใสชุมชน (ดึงบิลที่รอตรวจสอบมาแสดง) -->
     <div class="text-start mt-4 mx-1">
       <div class="d-flex align-items-center mb-3 px-1">
         <i class="fa-solid fa-magnifying-glass-chart text-primary fs-4 me-2"></i>
@@ -515,40 +281,12 @@
       <div class="alert alert-info border-0 rounded-4 small p-3 mb-3 bg-primary bg-opacity-10 text-primary shadow-sm">
         <i class="fa-solid fa-circle-info me-1"></i> ร่วมตรวจสอบรับทราบการเบิกจ่ายสวัสดิการ เพื่อชิงแต้มโควต้าพิเศษรายวัน!
       </div>
-      
-      <!-- 🌟 เพิ่ม Style เฉพาะส่วนนี้เพื่อจัดการการเลื่อนแนวนอน (Horizontal Scroll) -->
-      <style>
-        #transparencyFeed {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory; /* ทำให้ปัดแล้วหยุดตรงกลางการ์ดพอดี (Snapping) */
-            -webkit-overflow-scrolling: touch; /* ให้การปัดบนมือถือลื่นไหล */
-            scrollbar-width: none; /* ซ่อนแถบ Scrollbar ใน Firefox */
-            padding-bottom: 5px; /* เผื่อพื้นที่เงาของการ์ด */
-        }
-        #transparencyFeed::-webkit-scrollbar {
-            display: none; /* ซ่อนแถบ Scrollbar ใน Chrome/Safari */
-        }
-        
-        /* บังคับขนาดการ์ดด้านในให้กว้าง 85% เพื่อให้เห็นขอบของการ์ดใบถัดไป (บอกใบ้ว่าปัดได้) */
-        #transparencyFeed .transparency-card {
-            flex: 0 0 85%;
-            scroll-snap-align: center;
-            margin-bottom: 0 !important; /* เอา margin ด้านล่างออก */
-            margin-right: 15px; /* เปลี่ยนมาเว้นระยะห่างด้านขวาแทน */
-        }
-        #transparencyFeed .transparency-card:last-child {
-            margin-right: 0; /* ใบสุดท้ายไม่ต้องเว้นขวา */
-        }
-      </style>
-
       <div id="transparencyFeed">
-         <!-- เพิ่ม w-100 เพื่อให้ข้อความโหลดอยู่กึ่งกลางหน้าจอเสมอ -->
          <div class="text-center text-muted small p-3 w-100"><div class="spinner-border spinner-border-sm mb-2 text-primary"></div><br>กำลังโหลดกระดานชุมชน...</div>
       </div>
     </div>
 
-    <!-- 6. กระดานติดตามสถานะเงินสมทบ (Timeline) -->
+    <!-- กระดานติดตามสถานะเงินสมทบ (Timeline) -->
     <div class="text-start mt-4 mx-1">
       <div class="section-title px-1 mb-3"><i class="fa-solid fa-route text-muted me-2"></i> ติดตามเงินสมทบล่าสุด</div>
       <div id="dashTxTimeline" class="bg-white p-4 rounded-4 shadow-sm border border-light mb-4">
@@ -556,183 +294,11 @@
       </div>
     </div>
 
-    <!-- 7. ข้อมูลส่วนตัว (Profile Data) -->
+    <!-- ประวัติรับสวัสดิการล่าสุด -->
     <div class="text-start mt-4 mx-1 bg-white p-4 rounded-4 shadow-sm border border-light">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="section-title m-0"><i class="fa-solid fa-id-card text-muted me-2"></i> ข้อมูลส่วนตัว</div>
-        <button onclick="openProfileEditor()" class="btn btn-light text-primary border rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;"><i class="fa-solid fa-pen me-1"></i> แก้ไข</button>
-      </div>
-      
-      <div class="info-list shadow-none mb-0">
-        <div class="info-row px-0"><span class="info-label">รหัสสมาชิก</span><span class="info-data text-primary fs-6" id="dashMemberId"></span></div>
-        <div class="info-row px-0"><span class="info-label">ประเภทสมาชิก</span><span class="info-data"><div class="badge-type m-0" id="dashMemberTypeBadgeInfo">สมาชิกสามัญ</div></span></div>
-        <div class="info-row px-0"><span class="info-label">เลข ปชช.</span><span class="info-data"><span id="dashNatIdMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('NatId')"></i></span></div>
-        <div class="info-row px-0"><span class="info-label">เบอร์โทรศัพท์</span><span class="info-data"><span id="dashPhoneMask"></span> <i class="fa-solid fa-eye text-primary cursor-pointer" onclick="toggleMask('Phone')"></i></span></div>
-        <div class="info-row px-0"><span class="info-label">อายุสมาชิก</span><span class="info-data text-success" id="dashAgeYears"></span></div>
-        <div class="info-row px-0 border-0"><span class="info-label">วันที่สมัคร</span><span class="info-data" id="dashDate"></span></div>
-      </div>
-
-      <div class="section-title mt-4 pt-3 border-top"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i> ประวัติรับสวัสดิการล่าสุด</div>
+      <div class="section-title m-0 mb-3"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i> ประวัติรับสวัสดิการล่าสุด</div>
       <div id="dashWelfareList" class="info-list shadow-none mb-0"></div>
     </div>
-  </div>
-
-  <!-- ==========================================
-       [หน้าต่าง 4] ฟอร์มแก้ไขข้อมูลส่วนตัว
-  =========================================== -->
-  <div id="editProfileView" class="card-box" style="display: none;">
-    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-      <button onclick="closeProfileEditor()" class="btn btn-light rounded-circle me-3 border px-2 py-1"><i class="fa-solid fa-arrow-left"></i></button>
-      <h5 class="fw-bold mb-0 text-dark">แก้ไขข้อมูลส่วนตัว</h5>
-    </div>
-    
-    <form id="editProfileForm" onsubmit="handleProfileUpdate(event)">
-      <!-- ซ่อนค่า UID ไว้สำหรับอัปเดตข้อมูล -->
-      <input type="hidden" id="editUid" name="uid">
-
-      <!-- ข้อมูลระบบ -->
-      <div class="section-title"><i class="fa-solid fa-lock text-muted me-2"></i> ข้อมูลระบบ</div>
-      <div class="row g-2 mb-4">
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">รหัสสมาชิก</label><input type="text" id="editMemId" class="form-control fw-bold text-primary" readonly></div>
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">เลข ปชช.</label><input type="text" id="editNatId" class="form-control" readonly></div>
-      </div>
-
-      <!-- ข้อมูลบุคคล -->
-      <div class="section-title"><i class="fa-solid fa-user text-muted me-2"></i> ข้อมูลบุคคล</div>
-      <div class="row g-2 mb-3">
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">คำนำหน้า</label>
-          <select id="editPrefix" name="prefix" class="form-select"><option>นาย</option><option>นาง</option><option>นางสาว</option></select>
-        </div>
-        <div class="col-8"><label class="small text-muted fw-bold ms-1 mb-1">ชื่อ-นามสกุล</label><input type="text" id="editName" name="fullName" class="form-control" required></div>
-      </div>
-      <div class="mb-4"><label class="small text-muted fw-bold ms-1 mb-1">วัน/เดือน/ปีเกิด</label><input type="date" id="editBirth" name="birthDate" class="form-control"></div>
-
-      <!-- ที่อยู่และการติดต่อ -->
-      <div class="section-title"><i class="fa-solid fa-map-location-dot text-muted me-2"></i> ที่อยู่และการติดต่อ</div>
-      
-      <div class="mb-3 p-3 bg-light rounded-3 border">
-        <label class="small text-muted fw-bold mb-2 d-block">ลักษณะที่พักอาศัย (มีผลกับประเภทสมาชิก)</label>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="addressZoneType" id="zoneIn" value="ในเขต" checked>
-          <label class="form-check-label fw-bold text-success" for="zoneIn">ในเขตตำบล (สามัญ)</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="addressZoneType" id="zoneOut" value="นอกเขต">
-          <label class="form-check-label fw-bold text-danger" for="zoneOut">นอกเขตตำบล (สมทบ)</label>
-        </div>
-      </div>
-
-      <div class="mb-3"><label class="small text-muted fw-bold ms-1 mb-1">รายละเอียดที่อยู่ (บ้านเลขที่, ถนน)</label><input type="text" id="editAddrFull" name="addressDetail" class="form-control" placeholder="บ้านเลขที่, ถนน"></div>
-      
-      <div class="row g-2 mb-3">
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">หมู่ที่</label><input type="text" id="editAddrMoo" name="addressMoo" class="form-control"></div>
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">ชื่อหมู่บ้าน</label><input type="text" id="editVillage" name="village" class="form-control" placeholder="ระบุชื่อหมู่บ้าน (เขียนเอง)"></div>
-      </div>
-
-      <!-- ระบบพิกัด Dropdown จังหวัด อำเภอ ตำบล -->
-      <div class="mb-3">
-        <label class="small text-muted fw-bold ms-1 mb-1">จังหวัด</label>
-        <select id="editAddrProvince" name="addressProvince" class="form-select" onchange="updateAmphoeDropdown()">
-          <option value="">-- เลือกจังหวัด --</option>
-          <option value="นราธิวาส">นราธิวาส</option>
-          <option value="อื่นๆ">อื่นๆ</option>
-        </select>
-      </div>
-      <div class="row g-2 mb-3">
-        <div class="col-6" id="amphurContainer">
-          <label class="small text-muted fw-bold ms-1 mb-1">อำเภอ</label>
-          <select id="editAddrAmphur" name="addressAmphur" class="form-select" disabled onchange="updateTumbolDropdown()">
-            <option value="">-- เลือกอำเภอ --</option>
-          </select>
-        </div>
-        <div class="col-6" id="tumbolContainer">
-          <label class="small text-muted fw-bold ms-1 mb-1">ตำบล</label>
-          <select id="editAddrTumbol" name="addressTumbol" class="form-select" disabled>
-            <option value="">-- เลือกตำบล --</option>
-          </select>
-        </div>
-      </div>
-      <div class="mb-3"><label class="small text-muted fw-bold ms-1 mb-1">รหัสไปรษณีย์</label><input type="tel" id="editAddrZip" name="addressZip" class="form-control" maxlength="5"></div>
-
-      <div class="row g-2 mb-3">
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">เบอร์โทรศัพท์</label><input type="tel" id="editPhone" name="phone" class="form-control" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"></div>
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">อีเมล</label><input type="email" id="editEmail" name="email" class="form-control"></div>
-      </div>
-      
-      <div class="mb-3"><label class="small text-muted fw-bold ms-1 mb-1">ศูนย์ประสานงาน (แอดมินกำหนด)</label>
-        <select id="editCenter" name="center" class="form-select" style="background-color:#F3F4F6;" disabled></select>
-        <input type="hidden" id="editCenterHidden" name="center">
-      </div>
-
-      <div class="pdpa-box mb-4">
-        <label class="small text-muted fw-bold mb-2 d-block"><i class="fa-solid fa-location-crosshairs text-danger me-1"></i> ปักหมุดพิกัดบ้าน</label>
-        <div class="d-flex gap-2 mb-2">
-            <input type="text" id="editLatitude" name="latitude" class="form-control form-control-sm text-center" placeholder="ละติจูด" readonly>
-            <input type="text" id="editLongitude" name="longitude" class="form-control form-control-sm text-center" placeholder="ลองจิจูด" readonly>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-danger w-100 rounded-3" onclick="updateEditLocation(event)"><i class="fa-solid fa-map-pin me-1"></i> ดึงพิกัด GPS ปัจจุบัน</button>
-      </div>
-
-      <!-- ข้อมูลเศรษฐกิจและครัวเรือน -->
-      <div class="section-title"><i class="fa-solid fa-briefcase text-muted me-2"></i> ข้อมูลเศรษฐกิจ</div>
-      <div class="row g-2 mb-3">
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">การศึกษา</label>
-          <select id="editEdu" name="education" class="form-select">
-              <option value="">ไม่ระบุ</option><option value="ไม่ได้ศึกษา">ไม่ได้ศึกษา</option><option value="ประถมศึกษา">ประถมศึกษา</option>
-              <option value="มัธยมศึกษาตอนต้น">มัธยมศึกษาตอนต้น</option><option value="มัธยมศึกษาตอนปลาย">มัธยมศึกษาตอนปลาย</option>
-              <option value="ปวช.">ปวช.</option><option value="ปวส.">ปวส.</option><option value="อนุปริญญา">อนุปริญญา</option>
-              <option value="ปริญญาตรี">ปริญญาตรี</option><option value="ปริญญาโท">ปริญญาโท</option><option value="ปริญญาเอก">ปริญญาเอก</option>
-          </select>
-        </div>
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">อาชีพ</label>
-          <select id="editOcc" name="occupation" class="form-select">
-              <option value="">ไม่ระบุ</option><option value="เกษตรกร">เกษตรกร</option><option value="รับจ้างทั่วไป">รับจ้างทั่วไป</option>
-              <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย/ธุรกิจส่วนตัว</option><option value="พนักงานบริษัท">พนักงานบริษัท</option>
-              <option value="ข้าราชการ">ข้าราชการ</option><option value="อื่นๆ">อื่นๆ</option>
-          </select>
-        </div>
-      </div>
-      <div class="row g-2 mb-3">
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">รายได้/เดือน (บาท)</label><input type="number" id="editInc" name="income" class="form-control"></div>
-        <div class="col-6"><label class="small text-muted fw-bold ms-1 mb-1">คนในครัวเรือน (คน)</label><input type="number" id="editFam" name="familyMembers" class="form-control"></div>
-      </div>
-      
-      <!-- จัดการผู้เปราะบาง -->
-      <div class="mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-2"><label class="small text-muted fw-bold ms-1 mb-0">ผู้เปราะบางในครัวเรือน</label>
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVulnerableRow()" style="font-size: 0.7rem;">+ เพิ่ม</button></div>
-          <div id="vulnerableContainer"></div>
-          <input type="hidden" id="vulnerableData" name="vulnerableData">
-      </div>
-
-      <div class="row g-2 mb-4">
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">กรรมสิทธิ์บ้าน</label><select id="editHouseT" name="houseType" class="form-select"><option value="">ไม่ระบุ</option><option value="ของตนเอง">ของตนเอง</option><option value="เช่า">เช่า</option><option value="อาศัยผู้อื่น">อาศัยผู้อื่น</option></select></div>
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">สภาพบ้าน</label><select id="editHouseC" name="houseCondition" class="form-select"><option value="">ไม่ระบุ</option><option value="มั่นคง">มั่นคง</option><option value="ปานกลาง">ปานกลาง</option><option value="ทรุดโทรม">ทรุดโทรม</option></select></div>
-        <div class="col-4"><label class="small text-muted fw-bold ms-1 mb-1">ที่ดินทำกิน</label><select id="editLandT" name="landType" class="form-select"><option value="">ไม่ระบุ</option><option value="มีของตนเอง">มีของตนเอง</option><option value="เช่าทำกิน">เช่าทำกิน</option><option value="ไม่มีที่ดินทำกิน">ไม่มีที่ดินทำกิน</option></select></div>
-      </div>
-
-      <!-- ผู้รับผลประโยชน์ -->
-      <div class="section-title"><i class="fa-solid fa-people-roof text-muted me-2"></i> ผู้รับผลประโยชน์ (3 ลำดับ)</div>
-      <div class="pdpa-box mb-4">
-        <div class="row g-2 mb-2">
-            <div class="col-7"><input type="text" id="editBen1N" name="beneficiary1_name" class="form-control form-control-sm" placeholder="1. ชื่อ-สกุล"></div>
-            <div class="col-5"><select id="editBen1R" name="beneficiary1_relation" class="form-select form-select-sm"><option value="">สถานะ</option><option>บุตร</option><option>สามี</option><option>ภรรยา</option><option>บิดา</option><option>มารดา</option><option>ญาติ</option></select></div>
-        </div>
-        <div class="row g-2 mb-2">
-            <div class="col-7"><input type="text" id="editBen2N" name="beneficiary2_name" class="form-control form-control-sm" placeholder="2. ชื่อ-สกุล"></div>
-            <div class="col-5"><select id="editBen2R" name="beneficiary2_relation" class="form-select form-select-sm"><option value="">สถานะ</option><option>บุตร</option><option>สามี</option><option>ภรรยา</option><option>บิดา</option><option>มารดา</option><option>ญาติ</option></select></div>
-        </div>
-        <div class="row g-2">
-            <div class="col-7"><input type="text" id="editBen3N" name="beneficiary3_name" class="form-control form-control-sm" placeholder="3. ชื่อ-สกุล"></div>
-            <div class="col-5"><select id="editBen3R" name="beneficiary3_relation" class="form-select form-select-sm"><option value="">สถานะ</option><option>บุตร</option><option>สามี</option><option>ภรรยา</option><option>บิดา</option><option>มารดา</option><option>ญาติ</option></select></div>
-        </div>
-      </div>
-
-      <button type="submit" class="btn btn-fintech w-100" id="submitEditBtn">บันทึกข้อมูล</button>
-    </form>
-  </div>
-
-</div>
 
 <!-- 🌐 ป๊อปอัปสำหรับแชร์ (Share Modal) -->
 <div id="shareModal" class="share-modal" onclick="closeShareModal(event)">
@@ -747,1061 +313,11 @@
   </div>
 </div>
 
-
 <!-- ==========================================
-     [3] ส่วนของ JavaScript (ตรรกะระบบทั้งหมด)
+     JAVASCRIPT MODULES 
 =========================================== -->
-<script>
-  // -----------------------------------------------------------
-  // หมวดที่ 1: ตั้งค่า Firebase และตัวแปรระบบ (Config & Globals)
-  // -----------------------------------------------------------
-  const firebaseConfig = {
-    apiKey: "AIzaSyBs1G5k31100g6PeVvU5nUyz0QDB21jHpI",
-    authDomain: "smartwelf-f7d81.firebaseapp.com",
-    projectId: "smartwelf-f7d81",
-    storageBucket: "smartwelf-f7d81.firebasestorage.app",
-    messagingSenderId: "114126831149",
-    appId: "1:114126831149:web:66ea766f6c558b159442a4"
-  };
-  
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  
-  const LIFF_ID = "2011183541-9UDIqf8P";
-  
-  let cachedUserData = null;
-  let unmaskedData = { NatId: '', Phone: '' };
-  let isMasked = { NatId: true, Phone: true };
-  let currentShareMode = 'news';
-  let fundSettings = { inZoneVillages: [], annualFee: 365, fundName: "กองทุนสวัสดิการชุมชน" };
-  let vulnerableList = []; 
-
-  const locationData = {
-      "เมืองนราธิวาส": ["บางนาค", "ลำภู", "มะนังตายอ", "กะลุวอ", "กะลุวอเหนือ", "โคกเคียน", "โคกสุมุ"],
-      "ตากใบ": ["เจ๊ะเห", "พร่อน", "ศาลาใหม่", "บางขุนทอง", "นานาค", "โฆษิต", "เกาะสะท้อน", "ไพรวัน"],
-      "บาเจาะ": ["บาเจาะ", "ลุโบะสาวอ", "กาเยาะมาตี", "ปะลุกาสาเมาะ", "บาเระเหนือ", "บาเระใต้"],
-      "ยี่งอ": ["ยี่งอ", "จอเบาะ", "ลุโบะบือซา", "ลุโบะบายะ", "ตะปอเยาะ", "ละหาร"],
-      "ระแงะ": ["ตันหยงมัส", "ตันหยงลิมอ", "บองอ", "กาลิซา", "บาโงสะโต", "มะรือโบตก", "เฉลิม"],
-      "รือเสาะ": ["รือเสาะ", "รือเสาะออก", "สาวอ", "เรียง", "สามัคคี", "บาตง", "ลาโล๊ะ", "สุวารี", "โคกสะตอ"],
-      "ศรีสาคร": ["ศรีสาคร", "ซากอ", "ตามะยู", "เชิงคีรี", "กาหลง", "ศรีบรรพต"],
-      "แว้ง": ["แว้ง", "กายูคละ", "ฆอเลาะ", "โละจูด", "แม่ดง", "เอราวัณ"],
-      "สุคิริน": ["สุคิริน", "เกียร์", "ภูเขาทอง", "มาโมง", "ร่มไทร"],
-      "สุไหงโก-ลก": ["สุไหงโก-ลก", "ปาเสมัส", "มูโนะ", "ปูโยะ"],
-      "สุไหงปาดี": ["สุไหงปาดี", "ปะลุรู", "ริโก๋", "สากอ", "โต๊ะเด็ง", "กาวะ"],
-      "จะแนะ": ["จะแนะ", "ดุซงญอ", "ผดุงมาตร", "ช้างเผือก"],
-      "เจาะไอร้อง": ["จวบ", "บูกิต", "มะรือโบออก"]
-  };
-
-  // -----------------------------------------------------------
-  // หมวดที่ 2: เริ่มต้นระบบและตรวจสอบผู้ใช้ (Initialization & LIFF)
-  // -----------------------------------------------------------
-  document.addEventListener("DOMContentLoaded", async () => {
-    try {
-      const sysSnap = await db.collection("settings").doc("master").get();
-      if(sysSnap.exists) {
-         fundSettings = sysSnap.data();
-         document.getElementById('headerFundName').innerText = fundSettings.fundName || "กองทุนสวัสดิการชุมชน";
-         
-         const regCenter = document.getElementById('regCenterSelect');
-         const regVillage = document.getElementById('regVillageSelect');
-         (fundSettings.centers || []).forEach(c => regCenter.add(new Option(c, c)));
-         (fundSettings.inZoneVillages || []).forEach(v => regVillage.add(new Option(v, v)));
-      }
-
-      // 🌟 เพิ่มโค้ดดึงรายชื่อแอดมินที่นี่ เพื่อใส่ในช่องเลือกผู้ดูแล
-      const regAdmin = document.getElementById('regResponsibleAdmin');
-      if (regAdmin) {
-          const adminSnap = await db.collection("admins").where("status", "==", "ใช้งาน").get();
-          adminSnap.forEach(doc => {
-              const aName = doc.data().name;
-              regAdmin.add(new Option(aName, aName));
-          });
-      }
-      // 🌟 สิ้นสุดโค้ดดึงรายชื่อแอดมิน
-
-      await liff.init({ liffId: LIFF_ID });
-      const urlParams = new URLSearchParams(window.location.search);
-      if(urlParams.get('ref')) document.getElementById('refCode').value = urlParams.get('ref');
-
-      if (liff.isLoggedIn()) {
-        const profile = await liff.getProfile();
-        document.getElementById('uid').value = profile.userId;
-        await checkMemberOnCloud(profile.userId, profile.pictureUrl || "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg");
-      } else { 
-        liff.login(); 
-      }
-    } catch (err) { 
-        document.getElementById('systemLoading').innerHTML = `<div class="text-danger text-center px-4"><h6>System Error</h6><p class="small">${err.message}</p></div>`; 
-    }
-  });
-
-  async function checkMemberOnCloud(uid, pictureUrl) {
-    try {
-      const docRef = db.collection("members").doc(uid);
-      const docSnap = await docRef.get();
-      document.getElementById('systemLoading').style.display = 'none';
-
-      if (docSnap.exists) {
-        cachedUserData = docSnap.data();
-        
-        // 🌟 แก้ไข: จัดการกรณีไม่ได้ส่ง pictureUrl เข้ามา ให้ใช้รูปเดิมในฐานข้อมูล
-        let finalPicUrl = pictureUrl || cachedUserData.pictureUrl || "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg";
-        
-        // ถ้ารูปใน LINE เปลี่ยนไปจากเดิม ให้แอบอัปเดตลงฐานข้อมูล
-        if (pictureUrl && cachedUserData.pictureUrl !== pictureUrl) {
-            await docRef.update({ pictureUrl: pictureUrl });
-            cachedUserData.pictureUrl = pictureUrl;
-        }
-
-        renderDashboardData(cachedUserData, finalPicUrl);
-      } else { 
-        document.getElementById('accountLinkView').style.display = 'block'; 
-      }
-    } catch (error) { 
-       console.error("Firebase Check Error:", error);
-       document.getElementById('systemLoading').innerHTML = `<div class="text-danger text-center px-4"><h6>Database Error</h6><p class="small">ไม่สามารถเชื่อมต่อฐานข้อมูลได้</p></div>`;
-    }
-  }
-
-  // -----------------------------------------------------------
-  // หมวดที่ 3: ระบบสมัครสมาชิกและผูกบัญชี (Registration & Linking)
-  // -----------------------------------------------------------
-  
-  // 🌟 1. ฟังก์ชันสมัครสมาชิกใหม่ (เพิ่มกันเลข ปชช ซ้ำ + บันทึกผู้ดูแล)
-  async function handleRegister(e) {
-    e.preventDefault(); 
-    const btn = document.getElementById('submitRegBtn'); btn.disabled = true; btn.innerHTML = 'กำลังตรวจสอบข้อมูล...';
-    
-    const formData = new FormData(e.target);
-    const payload = Object.fromEntries(formData.entries()); 
-    payload.nationalId = payload.nationalId.replace(/\D/g, ''); 
-    payload.phone = payload.phone.replace(/\D/g, '');
-    
-    if (payload.nationalId.length !== 13) { Swal.fire('เตือน', 'เลข ปชช. ต้องมี 13 หลัก', 'warning'); btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก'; return; }
-    
-    const uid = document.getElementById('uid').value;
-
-    try {
-        // 🌟 ไฮไลท์การแก้ไข: ตรวจสอบเลข ปชช. ซ้ำในระบบ
-        const existCheck = await db.collection("members").where("nationalId", "==", payload.nationalId).get();
-        if (!existCheck.empty) {
-            Swal.fire('ปฏิเสธการสมัคร', 'เลขบัตรประจำตัวประชาชนนี้ ถูกลงทะเบียนในระบบเรียบร้อยแล้ว ไม่สามารถสมัครซ้ำได้ครับ', 'error');
-            btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก';
-            return; // หยุดการทำงานทันที
-        }
-
-        // 🌟 ดึงรูปโปรไฟล์จาก LINE (ถ้าไม่เจอให้ใช้รูป Default)
-        let userPic = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg";
-        if (liff.isLoggedIn()) {
-            try {
-                const profile = await liff.getProfile();
-                userPic = profile.pictureUrl || userPic;
-            } catch(err) { console.warn("ดึงรูปโปรไฟล์ล้มเหลว", err); }
-        }
-        
-        let mType = 'สมาชิกสมทบ';
-        if((fundSettings.inZoneVillages || []).includes(payload.village)) { mType = 'สมาชิกสามัญ'; }
-        
-        const d = new Date();
-        const thaiYear = d.getFullYear() + 543;
-        const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${thaiYear}`;
-
-        const newMemberData = {
-            ...payload, // ข้อมูลนี้จะรวม responsibleAdmin ที่สมาชิกเลือกมาด้วย
-            memberId: "CWF" + Date.now().toString().slice(-5), 
-            status: "รอตรวจสอบ",
-            memberType: mType, 
-            addressZoneType: mType === 'สมาชิกสามัญ' ? 'ในเขต' : 'นอกเขต', 
-            cwfPoints: 0, totalContribution: 0, totalWelfareReceived: 0,
-            outstandingBalance: fundSettings.annualFee || 365, 
-            welfareHistory: [], vulnerableData: [],
-            registerDateObj: d.toISOString(), 
-            timestamp: dateStr,
-            linkStatus: "linked",
-            lineUid: uid,
-            pictureUrl: userPic
-        };
-
-        btn.innerHTML = 'กำลังบันทึก...';
-        await db.collection("members").doc(uid).set(newMemberData);
-        
-        if(payload.refCode) {
-            const refSnap = await db.collection("members").where("memberId", "==", payload.refCode).get();
-            if(!refSnap.empty) { await db.collection("members").doc(refSnap.docs[0].id).update({ cwfPoints: firebase.firestore.FieldValue.increment(50) }); }
-        }
-        
-        document.getElementById('registerView').style.display = 'none';
-        document.getElementById('registrationSuccessView').style.display = 'block';
-        window.scrollTo(0, 0);
-
-    } catch (error) { 
-      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); 
-      btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก'; 
-    }
-  }
-
-  // 🌟 2. ฟังก์ชันขอผูกบัญชีเดิมด้วยเลข ปชช. (แนบรูปโปรไฟล์ไปด้วย)
-  async function requestAccountLink() { // <-- เปลี่ยนเป็น async
-      const natId = document.getElementById('linkNatId').value;
-      if(natId.length !== 13) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลข ปชช. 13 หลัก', 'warning');
-      
-      document.getElementById('systemLoading').style.display = 'flex';
-      
-      // 🌟 เตรียมรูปโปรไฟล์ก่อนส่งคำขอ
-      let userPic = "";
-      if (liff.isLoggedIn()) {
-          try {
-              const profile = await liff.getProfile();
-              userPic = profile.pictureUrl || "";
-          } catch(err) { console.warn("ดึงรูปล้มเหลว", err); }
-      }
-
-      db.collection("members").where("nationalId", "==", natId).get().then(snap => {
-          if(!snap.empty) {
-              const docId = snap.docs[0].id;
-              // 🌟 อัปเดต pictureUrl ให้แอดมินเห็นรูปตอนอนุมัติ
-              db.collection("members").doc(docId).update({ 
-                  linkStatus: "pending", 
-                  pendingLineUid: document.getElementById('uid').value,
-                  pictureUrl: userPic 
-              }).then(() => { 
-                  document.getElementById('systemLoading').style.display = 'none'; 
-                  Swal.fire('ส่งคำขอสำเร็จ', 'กรุณารอคณะกรรมการตรวจสอบ', 'success'); 
-              })
-          } else { 
-            document.getElementById('systemLoading').style.display = 'none'; 
-            Swal.fire('ไม่พบข้อมูล', 'ไม่พบเลข ปชช. นี้ในระบบ', 'error'); 
-          }
-      });
-  }
-
-  // 🌟 3. ฟังก์ชันผูกบัญชีผ่าน QR Code (เซฟรูปทันทีที่ผูกสำเร็จ)
-  async function processQRLink(lineUid, targetDocId, pictureUrl) {
-      document.getElementById('systemLoading').style.display = 'flex';
-      try {
-          const docRef = db.collection("members").doc(targetDocId);
-          const docSnap = await docRef.get();
-          if(docSnap.exists) {
-              // 🌟 อัปเดตรูปลงไปพร้อมๆ กับการผูกบัญชี
-              await docRef.update({ 
-                  lineUid: lineUid, 
-                  linkStatus: "linked",
-                  pictureUrl: pictureUrl || ""
-              });
-              Swal.fire('ผูกบัญชีสำเร็จ!', 'เข้าใช้งานระบบได้ทันที', 'success').then(() => { 
-                  checkMemberOnCloud(lineUid, pictureUrl); 
-              });
-          } else { 
-            document.getElementById('systemLoading').style.display = 'none';
-            Swal.fire('Error', 'ไม่พบข้อมูลสมาชิกรหัสนี้', 'error'); 
-          }
-      } catch(e) { 
-        document.getElementById('systemLoading').style.display = 'none';
-        Swal.fire('Error', 'ระบบขัดข้อง', 'error'); 
-      }
-  }
-
-  // -----------------------------------------------------------
-  // หมวดที่ 4: ระบบแดชบอร์ดและการซ่อนข้อมูล (Dashboard & UI Render)
-  // -----------------------------------------------------------
-  function renderDashboardData(data, pictureUrl) {
-    document.getElementById('userAvatar').src = pictureUrl;
-    document.getElementById('dashName').innerText = (data.prefix || "") + " " + data.fullName;
-    document.getElementById('dashCenterText').innerText = " " + (data.center || "ยังไม่ระบุศูนย์");
-    document.getElementById('dashCwfPoints').innerText = data.cwfPoints || 0;
-    
-    if (data.cwfPoints !== undefined) updateTierOnScreen(data.cwfPoints);
-
-    document.getElementById('dashStatusBadge').innerText = data.status || "รอตรวจสอบ";
-    document.getElementById('dashStatusBadge').className = `badge-status ${data.status === 'เป็นสมาชิก' ? 'status-active' : 'status-pending'}`;
-    
-    document.getElementById('dashMemberTypeBadgeInfo').innerText = data.memberType || "สมาชิกสามัญ";
-
-    document.getElementById('dashTotalContrib').innerText = (data.totalContribution || 0).toLocaleString();
-    document.getElementById('dashOutstanding').innerText = (data.outstandingBalance || 0).toLocaleString();
-    document.getElementById('dashTotalWelfare').innerText = (data.totalWelfareReceived || 0).toLocaleString();
-    document.getElementById('dashMemberId').innerText = data.memberId || "-";
-    
-    unmaskedData.NatId = data.nationalId || "";
-    unmaskedData.Phone = data.phone || "";
-    renderMasked('NatId'); renderMasked('Phone');
-    
-    let ageStr = "เพิ่งสมัคร/รอตรวจสอบ";
-    if (data.registerDateObj && data.status === 'เป็นสมาชิก') {
-        const regD = new Date(data.registerDateObj); const now = new Date();
-        let years = now.getFullYear() - regD.getFullYear(); let months = now.getMonth() - regD.getMonth(); let days = now.getDate() - regD.getDate();
-        if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
-        if (months < 0) { years--; months += 12; }
-        if(years >= 0) ageStr = `${years} ปี ${months} ด. ${days} ว.`;
-    }
-    document.getElementById('dashAgeYears').innerText = ageStr;
-    document.getElementById('dashDate').innerText = data.timestamp || "-";
-
-    const historyList = document.getElementById('dashWelfareList');
-    historyList.innerHTML = "";
-    if((data.welfareHistory || []).length === 0) {
-      historyList.innerHTML = `<div class="info-row text-center text-muted small"><div class="w-100 py-2">ไม่มีประวัติ</div></div>`;
-    } else {
-      data.welfareHistory.forEach(item => { 
-        let badgeClass = item.status.includes('อนุมัติ') ? 'bg-success text-white' : 'bg-warning text-dark';
-        historyList.innerHTML += `<div class="info-row"><span class="info-label text-dark">${item.type}</span><span class="badge ${badgeClass} rounded-pill">${item.status}</span></div>`; 
-      });
-    }
-    
-    document.getElementById('accountLinkView').style.display = 'none';
-    // เติม 2 บรรทัดนี้ใน renderDashboardData 
-    renderStreakUI(data.checkInStreak || 0, data.lastCheckInDate || "");
-    loadTransparencyBoard();
-    // 🌟 เพิ่มคำสั่งเรียกโหลด Timeline ตรงนี้
-    loadMemberTransactionTimeline(document.getElementById('uid').value);
-
-    document.getElementById('dashboardView').style.display = 'block';
-  }
-
-  function renderMasked(type) {
-      const val = unmaskedData[type]; const el = document.getElementById(`dash${type}Mask`);
-      if(!val) { el.innerText = "-"; return; }
-      if(isMasked[type]) el.innerText = "*".repeat(val.length - 4) + val.slice(-4);
-      else el.innerText = val;
-  }
-  function toggleMask(type) { isMasked[type] = !isMasked[type]; renderMasked(type); }
-
-  function updateTierOnScreen(points) {
-      let tierName = "ร่วมใจ (Unity)"; let tierColor = "#64748B"; 
-      if (points >= 5000) { tierName = "เกียรติภูมิชุมชน (Legacy)"; tierColor = "#D97706"; }
-      else if (points >= 2500) { tierName = "ทรงคุณค่า (Precious)"; tierColor = "#1D4ED8"; }
-      else if (points >= 1000) { tierName = "ต้นแบบ (Role Model)"; tierColor = "#059669"; }
-      else if (points >= 600) { tierName = "อุทิศตน (Dedication)"; tierColor = "#7C3AED"; }
-      else if (points >= 300) { tierName = "แบ่งปัน (Sharing)"; tierColor = "#EA580C"; }
-      else if (points >= 100) { tierName = "เกื้อกูล (Solidarity)"; tierColor = "#0284C7"; }
-      
-      const tierBadge = document.getElementById('dashTierBadge');
-      if(tierBadge) {
-          tierBadge.innerHTML = `<i class="fa-solid fa-crown"></i> ${tierName}`;
-          tierBadge.style.backgroundColor = tierColor;
-          tierBadge.style.display = 'inline-flex';
-      }
-  }
-
-  // 🌟 ฟังก์ชันดึงประวัติการส่งเงินมาทำเป็น Timeline ให้สมาชิกดู
-  async function loadMemberTransactionTimeline(uid) {
-      const container = document.getElementById('dashTxTimeline');
-      try {
-          const snap = await db.collection("transactions").orderBy("timestamp", "desc").limit(10).get();
-          let latestTx = null;
-          
-          // ค้นหาบิลล่าสุดที่เป็นของสมาชิกคนนี้
-          snap.forEach(doc => {
-              const d = doc.data();
-              if (d.uid === uid) { if(!latestTx) latestTx = d; } 
-              else if (d.uid === "BULK" && d.bulkMembers) {
-                  let found = d.bulkMembers.find(m => m.uid === uid);
-                  if (found && !latestTx) latestTx = d;
-              }
-          });
-
-          if (!latestTx) {
-              container.innerHTML = `<div class="text-center text-muted small py-2"><i class="fa-solid fa-inbox d-block fs-3 mb-2"></i>ยังไม่มีประวัติส่งเงินสมทบ</div>`;
-              return;
-          }
-
-          let amtStr = parseFloat(latestTx.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
-          let holder = latestTx.currentHolder || latestTx.fullName.replace('แอดมิน: ', '');
-          
-          // สร้างสถานะจำลองตาม Status ปัจจุบัน
-          let step1 = "active", step2 = "", step3 = "", step4 = "";
-          let step2Msg = "รอการส่งมอบเข้าศูนย์ฯ";
-          let step3Msg = "รอการเงินกองทุนรับยอด";
-          
-          if (latestTx.status === "รอส่งมอบ") {
-              step2 = "warning";
-              step2Msg = `เงินสดอยู่ที่: <strong>${holder}</strong>`;
-          } else if (latestTx.status === "รอตรวจสอบ") {
-              step2 = "active"; step3 = "warning";
-              step3Msg = `เงินสดอยู่ที่: <strong>${holder}</strong> (รอการเงินอนุมัติ)`;
-          } else if (latestTx.status === "อนุมัติแล้ว") {
-              step2 = "active"; step3 = "active"; step4 = "active";
-              step2Msg = "ส่งมอบผ่านศูนย์ประสานงาน";
-              step3Msg = "การเงินกองทุนรับยอด";
-          }
-
-          container.innerHTML = `
-              <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-receipt text-primary me-1"></i> ยอดล่าสุด: ฿${amtStr}</h6>
-              <div class="timeline">
-                  <div class="timeline-item ${step1}">
-                      <small class="fw-bold text-dark d-block">จ่ายเงินสำเร็จ</small>
-                      <span class="text-muted" style="font-size:0.7rem;">ผ่านช่องทาง: ${latestTx.paymentMethod}</span>
-                  </div>
-                  <div class="timeline-item ${step2}">
-                      <small class="fw-bold text-dark d-block">การส่งมอบ (Chain of Custody)</small>
-                      <span class="text-muted" style="font-size:0.7rem;">${step2Msg}</span>
-                  </div>
-                  <div class="timeline-item ${step3}">
-                      <small class="fw-bold text-dark d-block">ส่วนกลางตรวจสอบ</small>
-                      <span class="text-muted" style="font-size:0.7rem;">${step3Msg}</span>
-                  </div>
-                  <div class="timeline-item ${step4}">
-                      <small class="fw-bold text-success d-block">อนุมัติเข้าสมุดบัญชีหลัก</small>
-                      <span class="text-muted" style="font-size:0.7rem;">ยอดสะสมของคุณถูกอัปเดตแล้ว</span>
-                  </div>
-              </div>
-          `;
-      } catch (e) {
-          container.innerHTML = `<div class="text-center text-danger small py-2">โหลดข้อมูลไทม์ไลน์ล้มเหลว</div>`;
-      }
-  }
-
-  // -----------------------------------------------------------
-  // หมวดที่ 5: ระบบแก้ไขข้อมูลส่วนตัวและการจัดการพิกัด (Profile Edit & Location)
-  // -----------------------------------------------------------
-  function openProfileEditor() {
-    if(!cachedUserData) return; const d = cachedUserData;
-    
-    document.getElementById('editUid').value = document.getElementById('uid').value; 
-    document.getElementById('editMemId').value = d.memberId || "";
-    document.getElementById('editNatId').value = d.nationalId || "";
-    if(d.prefix) document.getElementById('editPrefix').value = d.prefix; 
-    document.getElementById('editName').value = d.fullName || ""; 
-    document.getElementById('editBirth').value = d.birthDate || ""; 
-    document.getElementById('editPhone').value = d.phone || "";
-    document.getElementById('editEmail').value = d.email || ""; 
-    
-    if(d.addressZoneType) {
-        if(d.addressZoneType === 'ในเขต') document.getElementById('zoneIn').checked = true;
-        else document.getElementById('zoneOut').checked = true;
-    }
-
-    const editCenter = document.getElementById('editCenter'); editCenter.innerHTML = '';
-    (fundSettings.centers || []).forEach(c => editCenter.add(new Option(c, c)));
-    if(d.center) {
-        editCenter.value = d.center; 
-        document.getElementById('editCenterHidden').value = d.center;
-    }
-
-    document.getElementById('editAddrFull').value = d.addressDetail || "";
-    document.getElementById('editAddrMoo').value = d.addressMoo || "";
-    document.getElementById('editVillage').value = d.village || "";
-    
-    resetAddressDropdownsToDefault();
-    
-    const provSelect = document.getElementById('editAddrProvince');
-    if(d.addressProvince) provSelect.value = d.addressProvince;
-    updateAmphoeDropdown(); 
-    
-    setTimeout(() => {
-        const ampSelect = document.getElementById('editAddrAmphur');
-        if(d.addressAmphur && ampSelect.tagName === 'SELECT') {
-            ampSelect.value = d.addressAmphur;
-            updateTumbolDropdown();
-            setTimeout(() => {
-                const tumSelect = document.getElementById('editAddrTumbol');
-                if(d.addressTumbol && tumSelect.tagName === 'SELECT') tumSelect.value = d.addressTumbol;
-            }, 100);
-        } else if (d.addressAmphur && ampSelect.tagName === 'INPUT') {
-            ampSelect.value = d.addressAmphur;
-            document.getElementById('editAddrTumbol').value = d.addressTumbol || "";
-        }
-    }, 100);
-
-    document.getElementById('editAddrZip').value = d.addressZip || "";
-
-    if(d.education) document.getElementById('editEdu').value = d.education; 
-    if(d.occupation) document.getElementById('editOcc').value = d.occupation; 
-    document.getElementById('editInc').value = d.income || ""; 
-    document.getElementById('editFam').value = d.familyMembers || ""; 
-    if(d.houseType) document.getElementById('editHouseT').value = d.houseType; 
-    if(d.houseCondition) document.getElementById('editHouseC').value = d.houseCondition;
-    if(d.landType) document.getElementById('editLandT').value = d.landType;
-    
-    document.getElementById('editBen1N').value = d.beneficiary1_name || ""; document.getElementById('editBen1R').value = d.beneficiary1_relation || ""; 
-    document.getElementById('editBen2N').value = d.beneficiary2_name || ""; document.getElementById('editBen2R').value = d.beneficiary2_relation || ""; 
-    document.getElementById('editBen3N').value = d.beneficiary3_name || ""; document.getElementById('editBen3R').value = d.beneficiary3_relation || "";
-    
-    vulnerableList = d.vulnerableData || [];
-    renderVulnerableList();
-
-    document.getElementById('dashboardView').style.display = 'none'; 
-    document.getElementById('editProfileView').style.display = 'block'; window.scrollTo(0,0);
-  }
-  
-  function closeProfileEditor() { 
-      document.getElementById('editProfileView').style.display = 'none'; 
-      document.getElementById('dashboardView').style.display = 'block'; 
-      window.scrollTo(0,0); 
-  }
-
-  async function handleProfileUpdate(e) {
-    e.preventDefault(); 
-    const btn = document.getElementById('submitEditBtn'); btn.disabled = true; btn.innerHTML = 'กำลังอัปเดต...';
-    
-    const formData = new FormData(e.target);
-    const payload = Object.fromEntries(formData.entries());
-    const uidToEdit = document.getElementById('editUid').value;
-    
-    if(!uidToEdit) {
-        Swal.fire('Error', 'ไม่พบรหัสผู้ใช้งาน', 'error');
-        btn.disabled = false; btn.innerHTML = 'บันทึกข้อมูล';
-        return;
-    }
-    
-    delete payload.uid; 
-    
-    payload.vulnerableData = vulnerableList;
-    payload.memberType = payload.addressZoneType === 'ในเขต' ? 'สมาชิกสามัญ' : 'สมาชิกสมทบ';
-
-    try {
-      await db.collection("members").doc(uidToEdit).update(payload);
-      Swal.fire('สำเร็จ', 'อัปเดตข้อมูลเรียบร้อย', 'success').then(() => location.reload()); 
-    } catch (error) { 
-      Swal.fire('Error', 'ไม่สามารถส่งข้อมูลได้', 'error'); 
-      btn.disabled = false; btn.innerHTML = 'บันทึกข้อมูล'; 
-    }
-  }
-
-  function requestLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { document.getElementById('regLatitude').value = pos.coords.latitude; document.getElementById('regLongitude').value = pos.coords.longitude; },
-        (err) => { console.warn("GPS Error:", err); }
-      );
-    }
-  }
-
-  function updateEditLocation(event) {
-    const btn = event.currentTarget; const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          document.getElementById('editLatitude').value = pos.coords.latitude; document.getElementById('editLongitude').value = pos.coords.longitude;
-          btn.innerHTML = '<i class="fa-solid fa-check"></i> สำเร็จ'; btn.classList.replace('btn-outline-danger', 'btn-success');
-          setTimeout(() => { btn.innerHTML = originalHtml; btn.disabled = false; btn.classList.replace('btn-success', 'btn-outline-danger'); }, 3000);
-        },
-        (error) => { Swal.fire('เปิด GPS ก่อน', '', 'warning'); btn.innerHTML = originalHtml; btn.disabled = false; },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
-  }
-
-  function addVulnerableRow(causeStr = "") {
-      vulnerableList.push(causeStr);
-      renderVulnerableList();
-  }
-  function removeVulnerableRow(index) {
-      vulnerableList.splice(index, 1);
-      renderVulnerableList();
-  }
-  function updateVulnerableRow(index, val) {
-      vulnerableList[index] = val;
-  }
-  function renderVulnerableList() {
-      const container = document.getElementById('vulnerableContainer');
-      container.innerHTML = "";
-      vulnerableList.forEach((cause, idx) => {
-          container.innerHTML += `
-              <div class="vulnerable-item">
-                  <select class="form-select form-select-sm" onchange="updateVulnerableRow(${idx}, this.value)">
-                      <option value="">-- สาเหตุความเปราะบาง --</option>
-                      <option value="ผู้สูงอายุ" ${cause==='ผู้สูงอายุ'?'selected':''}>ผู้สูงอายุ</option>
-                      <option value="ผู้พิการ" ${cause==='ผู้พิการ'?'selected':''}>ผู้พิการ</option>
-                      <option value="ผู้ป่วยติดเตียง" ${cause==='ผู้ป่วยติดเตียง'?'selected':''}>ผู้ป่วยติดเตียง</option>
-                      <option value="ยากไร้/ด้อยโอกาส" ${cause==='ยากไร้/ด้อยโอกาส'?'selected':''}>ยากไร้/ด้อยโอกาส</option>
-                      <option value="อื่นๆ" ${cause==='อื่นๆ'?'selected':''}>อื่นๆ</option>
-                  </select>
-                  <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeVulnerableRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
-              </div>
-          `;
-      });
-  }
-
-  function resetAddressDropdownsToDefault() {
-      document.getElementById('amphurContainer').innerHTML = `
-        <label class="small text-muted fw-bold ms-1 mb-1">อำเภอ</label>
-        <select id="editAddrAmphur" name="addressAmphur" class="form-select" disabled onchange="updateTumbolDropdown()">
-          <option value="">-- เลือกอำเภอ --</option>
-        </select>
-      `;
-      document.getElementById('tumbolContainer').innerHTML = `
-        <label class="small text-muted fw-bold ms-1 mb-1">ตำบล</label>
-        <select id="editAddrTumbol" name="addressTumbol" class="form-select" disabled>
-          <option value="">-- เลือกตำบล --</option>
-        </select>
-      `;
-  }
-
-  function updateAmphoeDropdown() {
-      const prov = document.getElementById('editAddrProvince').value;
-      const ampSelect = document.getElementById('editAddrAmphur');
-      const tumSelect = document.getElementById('editAddrTumbol');
-      
-      if(ampSelect.tagName !== 'SELECT') { resetAddressDropdownsToDefault(); }
-      
-      const newAmp = document.getElementById('editAddrAmphur');
-      const newTum = document.getElementById('editAddrTumbol');
-      
-      newAmp.innerHTML = '<option value="">-- เลือกอำเภอ --</option>';
-      newTum.innerHTML = '<option value="">-- เลือกตำบล --</option>';
-      newTum.disabled = true;
-
-      if(prov === 'นราธิวาส') {
-          newAmp.disabled = false;
-          Object.keys(locationData).forEach(amp => { newAmp.add(new Option(amp, amp)); });
-      } else if (prov === 'อื่นๆ') {
-          newAmp.outerHTML = '<input type="text" id="editAddrAmphur" name="addressAmphur" class="form-control" placeholder="พิมพ์ชื่ออำเภอ">';
-          newTum.outerHTML = '<input type="text" id="editAddrTumbol" name="addressTumbol" class="form-control" placeholder="พิมพ์ชื่อตำบล">';
-      } else {
-          newAmp.disabled = true;
-      }
-  }
-
-  function updateTumbolDropdown() {
-      const amp = document.getElementById('editAddrAmphur').value;
-      const tumSelect = document.getElementById('editAddrTumbol');
-      
-      tumSelect.innerHTML = '<option value="">-- เลือกตำบล --</option>';
-      if(locationData[amp]) {
-          tumSelect.disabled = false;
-          locationData[amp].forEach(tum => { tumSelect.add(new Option(tum, tum)); });
-      } else {
-          tumSelect.disabled = true;
-      }
-  }
-
-  // =========================================================
-  // หมวดที่ 6: ระบบภารกิจและการแชร์รับแต้ม (Gamification & Transparency)
-  // =========================================================
-
-  // 🌟 1. ฟังก์ชันโหลดกระดานโปร่งใส (ปรับใหม่: แสดงเฉพาะรายการที่กรรมการยังไม่อนุมัติ)
-  async function loadTransparencyBoard() {
-      const feed = document.getElementById('transparencyFeed');
-      try {
-          // ดึงข้อมูลล่าสุดมา 30 รายการ เพื่อนำมากรองด้วย JS
-          const snap = await db.collection("transactions").orderBy("timestamp", "desc").limit(30).get();
-          let html = "";
-          let validCount = 0; // ตัวนับรายการที่จะแสดงบนกระดาน
-          
-          // โหลดค่า Tokenomics จากตัวแปร fundSettings
-          let t1 = fundSettings.fomoTier1 || 5;
-          let t2 = fundSettings.fomoTier2 || 3;
-          let t3 = fundSettings.fomoTier3 || 1;
-          
-          snap.forEach(doc => {
-              const d = doc.data();
-              
-              // 🌟 ไฮไลท์การแก้ไข: ถ้าสถานะเป็น "อนุมัติแล้ว" ให้ตัดทิ้ง (ข้ามไปเลย) 
-              // จะแสดงเฉพาะบิลที่ "รอตรวจสอบ" หรือ "รอส่งมอบ" เท่านั้น (และโชว์สูงสุด 5 รายการต่อวัน)
-              if (d.status === "อนุมัติแล้ว" || validCount >= 5) return;
-              validCount++;
-
-              const currentUserUid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
-              let verifiedByArray = d.verifiedBy || [];
-              let verifiedCount = verifiedByArray.length;
-              
-              let pointsToGive = t3;
-              let badgeHtml = "";
-              let btnColor = "btn-outline-secondary";
-              let btnText = "ตรวจสอบและเป็นพยาน"; // ปรับคำให้ดูเป็นการ Audit 
-              
-              // กำหนดแต้มแบบขั้นบันได
-              if(verifiedCount < 10) { 
-                  pointsToGive = t1; 
-                  badgeHtml = `<span class="badge bg-danger rounded-pill blink-anim shadow-sm" style="font-size:0.65rem;">🔥 โควต้า ${t1} แต้ม (เหลือ ${10 - verifiedCount})</span>`; 
-                  btnColor = "btn-success"; 
-              } else if(verifiedCount < 30) { 
-                  pointsToGive = t2; 
-                  badgeHtml = `<span class="badge bg-warning text-dark rounded-pill shadow-sm" style="font-size:0.65rem;">⚡ โควต้า ${t2} แต้ม (เหลือ ${30 - verifiedCount})</span>`; 
-                  btnColor = "btn-warning text-dark"; 
-              } else { 
-                  badgeHtml = `<span class="badge bg-light text-muted border rounded-pill" style="font-size:0.65rem;">✅ โควต้าพิเศษหมด (ได้ ${t3} แต้ม)</span>`; 
-                  btnColor = "btn-outline-primary";
-              }
-
-              let alreadyVerified = verifiedByArray.includes(currentUserUid);
-              
-              let btnHtml = alreadyVerified 
-                  ? `<button class="btn btn-sm btn-light text-success w-100 rounded-pill fw-bold" disabled><i class="fa-solid fa-circle-check"></i> คุณเป็นพยานรายการนี้แล้ว</button>`
-                  : `<button class="btn btn-sm ${btnColor} w-100 rounded-pill fw-bold" onclick="verifyTransaction('${doc.id}', ${pointsToGive})"><i class="fa-solid fa-eye"></i> ${btnText} (+${pointsToGive})</button>`;
-
-              let amtStr = parseFloat(d.amount).toLocaleString('en-US', {minimumFractionDigits: 2});
-              let dateStr = d.transactionDate || "ไม่ระบุวันที่";
-              
-              // 🌟 เพิ่มป้ายบอกสถานะปัจจุบัน ให้สมาชิกรู้ว่ารายการนี้อยู่ขั้นตอนไหน
-              let statusBadge = `<span class="badge bg-warning text-dark rounded-pill shadow-sm mt-1" style="font-size:0.65rem;">${d.status}</span>`;
-
-              html += `
-              <div class="transparency-card">
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                          <h6 class="fw-bold text-dark mb-0" style="font-size:0.85rem;"><i class="fa-solid fa-file-invoice text-primary me-1"></i> ${d.type}</h6>
-                          <small class="text-muted" style="font-size:0.75rem;">${d.note || d.fullName}</small>
-                      </div>
-                      <div class="text-end">
-                          <h6 class="fw-bold text-success mb-0 bg-success bg-opacity-10 px-2 py-1 rounded-3">฿${amtStr}</h6>
-                          ${statusBadge}
-                      </div>
-                  </div>
-                  <div class="d-flex justify-content-between align-items-center mb-3 mt-3 border-top pt-2">
-                      <small class="text-muted" style="font-size:0.7rem;"><i class="fa-regular fa-calendar"></i> ${dateStr}</small>
-                      ${badgeHtml}
-                  </div>
-                  ${btnHtml}
-              </div>`;
-          });
-          
-          feed.innerHTML = html || '<div class="text-center text-success fw-bold small p-4 bg-white rounded-4 border border-success border-opacity-25"><i class="fa-solid fa-shield-check fs-2 mb-2 d-block"></i> โปร่งใส 100%<br><span class="text-muted fw-normal">ขณะนี้ไม่มีรายการสวัสดิการที่รอตรวจสอบครับ</span></div>';
-      } catch(e) {
-          console.error("Board Error:", e); feed.innerHTML = '<div class="text-center text-danger small p-3">โหลดข้อมูลกระดานล้มเหลว</div>';
-      }
-  }
-
-  // 🌟 2. ฟังก์ชันกดรับทราบ (เช็คและหักแต้มจาก Global Pool ของส่วนกลาง)
-  async function verifyTransaction(txId, pointsToGive) {
-      if (typeof showLoader === "function") showLoader(true, "กำลังประมวลผล...");
-      else Swal.fire({ title: 'กำลังประมวลผล...', didOpen: () => Swal.showLoading() });
-      
-      try {
-          const uid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
-          if (!uid) throw new Error("ไม่พบข้อมูลผู้ใช้งาน");
-
-          const masterRef = db.collection("settings").doc("master");
-          const txRef = db.collection("transactions").doc(txId);
-          const memberRef = db.collection("members").doc(uid);
-          
-          // ดึงยอดแต้มส่วนกลางล่าสุด
-          const masterSnap = await masterRef.get();
-          let currentPool = masterSnap.data().globalPointPool || 0;
-          
-          if (currentPool <= 0) {
-              if (typeof showLoader === "function") showLoader(false); else Swal.close();
-              return Swal.fire('โควต้าหมด', 'งบประมาณแต้มรวมประจำปีหมดแล้ว ขอขอบคุณที่ร่วมตรวจสอบครับ', 'info');
-          }
-          
-          // ถ้ายอดส่วนกลางเหลือน้อยกว่าแต้มที่จะแจก ให้แจกเท่าที่เหลือ
-          let actualGive = pointsToGive;
-          if (currentPool < pointsToGive) { actualGive = currentPool; }
-
-          const batch = db.batch();
-          batch.update(txRef, { verifiedBy: firebase.firestore.FieldValue.arrayUnion(uid) });
-          batch.update(memberRef, { cwfPoints: firebase.firestore.FieldValue.increment(actualGive) });
-          // หักแต้มออกจากกองกลาง
-          batch.update(masterRef, { globalPointPool: firebase.firestore.FieldValue.increment(-actualGive) });
-          
-          await batch.commit();
-          
-          if (typeof showLoader === "function") showLoader(false); else Swal.close();
-          
-          Swal.fire({
-              icon: 'success',
-              title: `รับ ${actualGive} แต้ม`,
-              text: 'ขอบคุณที่ร่วมตรวจสอบความโปร่งใสให้ชุมชนครับ',
-              confirmButtonColor: '#10B981'
-          });
-          
-          // อัปเดตตัวแปรและหน้าจอ
-          fundSettings.globalPointPool -= actualGive;
-          loadTransparencyBoard();
-          checkMemberOnCloud(uid, cachedUserData ? cachedUserData.pictureUrl : ""); 
-          
-      } catch(e) {
-          console.error(e);
-          if (typeof showLoader === "function") showLoader(false); else Swal.close();
-          Swal.fire('Error', 'เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
-      }
-  }
-
-  // 🌟 3. ฟังก์ชันเช็คอินรายวัน (เช็คและหักแต้มจาก Global Pool ของส่วนกลาง)
-  async function processDailyCheckIn() {
-      Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-      try {
-          const uid = document.getElementById('uid').value || (cachedUserData ? cachedUserData.lineUid : "");
-          if (!uid) return Swal.fire('Error', 'ไม่พบข้อมูลผู้ใช้งาน', 'error');
-
-          const masterRef = db.collection("settings").doc("master");
-          const docRef = db.collection("members").doc(uid);
-          
-          // ดึงยอดแต้มส่วนกลางล่าสุด
-          const masterSnap = await masterRef.get();
-          let currentPool = masterSnap.data().globalPointPool || 0;
-          if (currentPool <= 0) return Swal.fire('โควต้าหมด', 'งบประมาณแต้มรวมประจำปีหมดแล้ว ไม่สามารถรับแต้มเช็คอินได้', 'info');
-
-          const docSnap = await docRef.get();
-          if (docSnap.exists) {
-              const d = docSnap.data();
-              const lastCheckIn = d.lastCheckInDate;
-              let currentStreak = d.checkInStreak || 0;
-              
-              const now = new Date();
-              const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
-              
-              if (lastCheckIn === todayStr) {
-                  return Swal.fire({ icon: 'info', title: 'คุณเช็คอินไปแล้ว', text: 'ไว้มาเช็คอินใหม่พรุ่งนี้นะครับ!', confirmButtonColor: '#2563EB' });
-              }
-
-              let isContinuous = false;
-              if (lastCheckIn) {
-                  const parts = lastCheckIn.split('/');
-                  const lastDate = new Date(parts[2], parts[1]-1, parts[0]);
-                  const diffTime = Math.abs(now - lastDate);
-                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays === 1) isContinuous = true;
-              }
-
-              if (isContinuous) currentStreak += 1; else currentStreak = 1;
-
-              let pointsToGive = 2; // แต้มรายวัน
-              let alertMsg = 'ได้รับแต้มจากการเช็คอินวันนี้';
-              let alertIcon = 'success';
-              let alertTitle = 'ยอดเยี่ยม!';
-
-              if (currentStreak >= 7) {
-                  pointsToGive = 15; // แต้มโบนัสวันที่ 7
-                  currentStreak = 0;
-                  alertMsg = 'คุณเช็คอินครบ 7 วัน! เปิดกล่องของขวัญรับแต้มโบนัส!';
-                  alertTitle = '🎉 แจ็คพอตแตก!';
-              }
-
-              let actualGive = pointsToGive;
-              if (currentPool < pointsToGive) actualGive = currentPool;
-
-              const batch = db.batch();
-              batch.update(docRef, { 
-                  cwfPoints: firebase.firestore.FieldValue.increment(actualGive), 
-                  lastCheckInDate: todayStr,
-                  checkInStreak: currentStreak
-              });
-              // หักแต้มออกจากกองกลาง
-              batch.update(masterRef, { globalPointPool: firebase.firestore.FieldValue.increment(-actualGive) });
-              await batch.commit();
-
-              fundSettings.globalPointPool -= actualGive;
-              renderStreakUI(currentStreak, todayStr);
-              checkMemberOnCloud(uid, d.pictureUrl);
-              
-              Swal.fire({ icon: alertIcon, title: alertTitle, text: `${alertMsg} (+${actualGive} แต้ม)`, confirmButtonColor: '#10B981' });
-          }
-      } catch (error) { 
-          console.error(error); Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); 
-      }
-  }
-
-  // 🌟 ฟังก์ชันวาดสีวงกลม Streak (ไม่เปลี่ยนแปลง)
-  function renderStreakUI(streakCount, lastCheckInStr) {
-      const now = new Date();
-      const todayStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
-      const isCheckedInToday = (lastCheckInStr === todayStr);
-
-      for (let i = 1; i <= 7; i++) {
-          const circle = document.getElementById(`streak-${i}`);
-          if (!circle) continue;
-          
-          circle.classList.remove('active');
-          if (i === 7) circle.innerHTML = '<i class="fa-solid fa-gift"></i>';
-          else circle.innerHTML = i;
-
-          if (i <= streakCount) {
-              circle.classList.add('active');
-              if (i !== 7) circle.innerHTML = '<i class="fa-solid fa-check"></i>';
-          }
-      }
-
-      const btn = document.getElementById('btnCheckIn');
-      if (isCheckedInToday) {
-          btn.classList.replace('btn-success', 'btn-secondary');
-          btn.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> เช็คอินแล้ว (รอกดใหม่พรุ่งนี้)';
-          btn.disabled = true;
-      } else {
-          btn.classList.replace('btn-secondary', 'btn-success');
-          btn.innerHTML = '<i class="fa-solid fa-calendar-check me-1"></i> กดเช็คอินรับแต้มวันนี้';
-          btn.disabled = false;
-      }
-  }
-
-  // 🌟 การแชร์รับแต้ม (ไม่เปลี่ยนแปลง)
-  function openShareModal(mode) {
-      currentShareMode = mode;
-      document.getElementById('shareTitleText').innerText = mode === 'invite' ? 'ชวนเพื่อนสมัครสมาชิก' : 'แชร์ข่าวสารกองทุน';
-      document.getElementById('shareModal').style.display = 'flex';
-  }
-  
-  function closeShareModal(force) { 
-      if(force===true || typeof force !== 'boolean') document.getElementById('shareModal').style.display = 'none'; 
-  }
-  
-  async function executeShare(platform) {
-      closeShareModal(true);
-      const url = `https://liff.line.me/${LIFF_ID}` + (currentShareMode==='invite' ? `?ref=${cachedUserData.memberId}` : '');
-      const text = currentShareMode==='invite' ? 'มาสมัครกองทุนสวัสดิการชุมชนกันเถอะ!' : 'ข่าวสารใหม่จากกองทุนสวัสดิการชุมชน';
-      
-      if(platform === 'line') window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + " " + url)}`);
-      else if(platform === 'facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
-      else { navigator.clipboard.writeText(url); Swal.fire('สำเร็จ', 'คัดลอกลิงก์แล้ว', 'success'); }
-
-      if(currentShareMode === 'news') {
-          const uid = document.getElementById('uid').value;
-          const d = new Date(); const today = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-          const docRef = db.collection("members").doc(uid);
-          const docSnap = await docRef.get();
-          
-          if(docSnap.data().lastShareDate !== today) {
-              Swal.fire({ title: 'กำลังประมวลผลคะแนน...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-              await docRef.update({ cwfPoints: firebase.firestore.FieldValue.increment(10), lastShareDate: today });
-              const updatedData = (await docRef.get()).data();
-              document.getElementById('dashCwfPoints').innerText = updatedData.cwfPoints;
-              updateTierOnScreen(updatedData.cwfPoints);
-              Swal.fire('แชร์สำเร็จ', 'ได้รับ 10 แต้มจากการแชร์ข่าวสาร', 'success');
-          }
-      }
-  }
-
-  // =========================================================
-  // 🌟 ฟังก์ชันสำหรับสมาชิก: สแกน QR Code เพื่อยืนยันจ่ายเงินให้แอดมิน
-  // =========================================================
-  async function scanToPayAdmin() {
-      if (!liff.isLoggedIn()) {
-          return Swal.fire('แจ้งเตือน', 'กรุณาเปิดแอปผ่าน LINE เพื่อใช้งานกล้องครับ', 'warning');
-      }
-
-      try {
-          if (!liff.scanCodeV2) {
-              return Swal.fire('ไม่รองรับ', 'แอป LINE ของคุณเวอร์ชันเก่า หรืออุปกรณ์ไม่รองรับการสแกนผ่าน LIFF', 'error');
-          }
-
-          // 1. เปิดกล้องสแกน
-          const result = await liff.scanCodeV2();
-          if (result.value) {
-              
-              // ตรวจสอบว่าโหลด Firebase หรือยัง
-              if (typeof showLoader === "function") showLoader(true, "กำลังดึงข้อมูลบิล...");
-              else Swal.fire({ title: 'กำลังดึงข้อมูลบิล...', didOpen: () => Swal.showLoading() });
-
-              let qrData;
-              try {
-                  qrData = JSON.parse(result.value);
-              } catch (e) {
-                  if (typeof showLoader === "function") showLoader(false); else Swal.close();
-                  return Swal.fire('ข้อมูลไม่ถูกต้อง', 'QR Code นี้ไม่ใช่บิลเรียกเก็บเงินของระบบ SmartWelf', 'error');
-              }
-
-              // 2. ตรวจสอบ Action ว่าเป็น QR จ่ายเงินใช่หรือไม่
-              if ((qrData.action === "member_pay" || qrData.action === "member_pay_bulk") && qrData.ref) {
-                  
-                  // ดึงข้อมูลบิลจากฐานข้อมูล
-                  const payRef = db.collection("pending_payments").doc(qrData.ref);
-                  const paySnap = await payRef.get();
-                  
-                  if (typeof showLoader === "function") showLoader(false); else Swal.close();
-
-                  // เช็คว่าบิลยังรอจ่ายอยู่ไหม
-                  if (!paySnap.exists || paySnap.data().status !== "waiting_member_scan") {
-                      return Swal.fire('หมดอายุ', 'รายการนี้ถูกยืนยันไปแล้ว หรือถูกยกเลิกโดยแอดมิน', 'error');
-                  }
-
-                  const payData = paySnap.data();
-
-                  // 3. ตรวจสอบว่าเป็นบิลของตัวเองหรือไม่ (ดึง UID ของคนสแกนจาก LINE)
-                  const profile = await liff.getProfile();
-                  const memberQuery = await db.collection("members").where("lineUid", "==", profile.userId).get();
-                  let currentMemberDocId = "";
-                  if (!memberQuery.empty) currentMemberDocId = memberQuery.docs[0].id;
-
-                  if (qrData.action === "member_pay" && payData.uid !== currentMemberDocId) {
-                      return Swal.fire('ผิดพลาด', 'QR Code นี้เป็นบิลของสมาชิกท่านอื่น คุณไม่สามารถกดยืนยันแทนได้ครับ', 'error');
-                  }
-
-                  // 4. แสดง Pop-up ให้สมาชิกกดยืนยันยอดเงิน
-                  Swal.fire({
-                      title: 'ยืนยันการจ่ายเงิน',
-                      html: `
-                          <div class="text-start" style="font-family:'Prompt';">
-                              <p class="mb-1 text-muted small">ผู้รับเงิน (แอดมิน):</p>
-                              <h6 class="fw-bold text-dark"><i class="fa-solid fa-user-shield text-info me-1"></i> ${payData.adminName}</h6>
-                              <hr>
-                              <p class="mb-1 text-muted small">ยอดเงินที่ต้องชำระ:</p>
-                              <h1 class="fw-bold text-success text-center mb-1">฿${payData.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</h1>
-                              ${qrData.action === "member_pay_bulk" ? `<p class="text-center text-primary small">ชำระแบบกลุ่ม จำนวน ${payData.bulkMembers.length} คน</p>` : ''}
-                              <p class="small text-danger text-center mt-3"><i class="fa-solid fa-triangle-exclamation"></i> เมื่อกดยืนยัน ถือว่าท่านได้มอบเงินสดให้แอดมินเรียบร้อยแล้ว</p>
-                          </div>
-                      `,
-                      showCancelButton: true,
-                      confirmButtonText: 'ยืนยันจ่ายเงิน',
-                      cancelButtonText: 'ยกเลิก',
-                      confirmButtonColor: '#10B981'
-                  }).then(async (res) => {
-                      if (res.isConfirmed) {
-                          if (typeof showLoader === "function") showLoader(true, "กำลังบันทึกรายการ...");
-                          else Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-
-                          try {
-                              const batch = db.batch();
-
-                              // ก. สร้างประวัติธุรกรรม (Transaction) มอบเงินให้แอดมิน
-                              const newTxRef = db.collection("transactions").doc();
-                              let txPayload = {
-                                  txId: payData.txId,
-                                  type: 'สมทบเงินกองทุน',
-                                  amount: payData.amount,
-                                  paymentMethod: 'เงินสด',
-                                  transactionDate: payData.date,
-                                  fullName: 'แอดมิน: ' + payData.adminName,
-                                  status: 'รอส่งมอบ', // เงินอยู่ในมือแอดมินที่สร้าง QR
-                                  currentHolder: payData.adminEmail,
-                                  note: payData.note,
-                                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                              };
-
-                              if (qrData.action === "member_pay_bulk") {
-                                  txPayload.uid = "BULK";
-                                  txPayload.bulkMembers = payData.bulkMembers;
-                              } else {
-                                  txPayload.uid = payData.uid;
-                              }
-                              
-                              batch.set(newTxRef, txPayload);
-
-                              // ข. เปลี่ยนสถานะบิลรอจ่ายเป็น "เสร็จสิ้น"
-                              batch.update(payRef, { 
-                                  status: "completed", 
-                                  scannedByUid: currentMemberDocId,
-                                  completedAt: firebase.firestore.FieldValue.serverTimestamp() 
-                              });
-
-                              // ส่งคำสั่งขึ้น Database
-                              await batch.commit();
-                              
-                              if (typeof showLoader === "function") showLoader(false);
-
-                              // ค. แจ้งเตือนความสำเร็จ
-                              Swal.fire({
-                                  icon: 'success',
-                                  title: 'ชำระเงินสำเร็จ!',
-                                  text: 'ระบบได้บันทึกการส่งมอบเงินให้แอดมินเรียบร้อยแล้ว',
-                                  confirmButtonColor: '#10B981'
-                              }).then(() => {
-                                  // โหลดหน้าจอสมาชิกใหม่เพื่อรีเฟรชข้อมูล
-                                  if (typeof checkMemberOnCloud === "function") {
-                                      checkMemberOnCloud(currentMemberDocId);
-                                  } else {
-                                      window.location.reload();
-                                  }
-                              });
-
-                          } catch(err) {
-                              if (typeof showLoader === "function") showLoader(false);
-                              console.error("Payment Confirmation Error:", err);
-                              Swal.fire('Error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
-                          }
-                      }
-                  });
-
-              } else {
-                  if (typeof showLoader === "function") showLoader(false); else Swal.close();
-                  Swal.fire('Error', 'QR Code ไม่ตรงกับรูปแบบการจ่ายเงิน', 'error');
-              }
-          }
-      } catch (err) {
-          console.warn("Scan cancelled or failed", err);
-      }
-  }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="./assets/js/member-config.js"></script>
+<script src="./assets/js/modules/member-main.js"></script>
 </body>
 </html>
