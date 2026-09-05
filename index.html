@@ -279,7 +279,7 @@
       <button type="submit" class="btn btn-fintech w-100" id="submitEditBtn"><i class="fa-solid fa-save me-1"></i> บันทึกข้อมูล</button>
     </form>
   </div>
-
+  
   <!-- 📊 [หน้าต่าง 3] แดชบอร์ดหลักของสมาชิก -->
   <div id="dashboardView" style="display: none;">
     
@@ -300,17 +300,8 @@
             <div id="dashTierBadge" class="badge-tier shadow-sm mb-0 px-2 py-1" style="display: none; font-size: 0.7rem; margin-top: 0;"></div>
         </div>
       </div>
-      <!-- 🌟 กดที่รูปโปรไฟล์เพื่อแก้ไขข้อมูล -->
-      <div class="position-relative" style="cursor: pointer; transition: transform 0.2s;" onclick="openProfileEditor()" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-        
-        <img id="userAvatar" src="" class="profile-img shadow" style="width: 65px; height: 65px; object-fit: cover; border: 3px solid rgba(255,255,255,0.9);" alt="Profile">
-        
-        <!-- ไอคอนดินสอเล็กๆ มุมขวาล่างของรูป -->
-        <div class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; border: 2px solid #0F172A; font-size: 0.65rem;">
-          <i class="fa-solid fa-pen"></i>
-        </div>
-        
-      </div>
+      <img id="userAvatar" src="" class="profile-img shadow" style="width: 65px; height: 65px;" alt="Profile">
+    </div>
 
     <!-- การ์ดกระเป๋าเงิน -->
     <div class="wallet-card mb-4 mx-1">
@@ -446,40 +437,7 @@
       <div class="section-title m-0 mb-3"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i> ประวัติรับสวัสดิการล่าสุด</div>
       <div id="dashWelfareList" class="info-list shadow-none mb-0"></div>
     </div>
-<!-- 📱 แถบเมนูด้านล่าง (Bottom Navigation) -->
-<nav class="app-bottom-nav" id="memberBottomNav" style="display: none;">
-    <!-- 1. หน้าหลัก -->
-    <button class="nav-tab active" onclick="location.reload()">
-        <i class="fa-solid fa-house"></i>
-        <span>หน้าหลัก</span>
-    </button>
-    
-    <!-- 2. ประวัติ/ของฉัน -->
-    <button class="nav-tab" onclick="location.href='contribution.html'">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <span>ประวัติ</span>
-    </button>
 
-    <!-- 🌟 3. ปุ่มสแกนจ่ายตรงกลาง (ลอยขึ้นมา) 🌟 -->
-    <button class="nav-tab center-scan" onclick="scanToPayAdmin()">
-        <div class="scan-fab">
-            <i class="fa-solid fa-expand"></i> <!-- ไอคอนกรอบสแกน -->
-        </div>
-        <span class="text-dark fw-bold" style="font-size: 0.75rem;">สแกนจ่าย</span>
-    </button>
-
-    <!-- 4. แจ้งเตือน -->
-    <button class="nav-tab position-relative" onclick="openShareModal('invite')">
-        <i class="fa-regular fa-bell"></i>
-        <span>แจ้งเตือน</span>
-    </button>
-    
-    <!-- 5. โปรไฟล์สมาชิก -->
-    <button class="nav-tab" onclick="openProfileEditor()">
-        <i class="fa-regular fa-user"></i>
-        <span>สมาชิก</span>
-    </button>
-</nav>
 <!-- 🌐 ป๊อปอัปสำหรับแชร์ (Share Modal) -->
 <div id="shareModal" class="share-modal" onclick="closeShareModal(event)">
   <div class="share-content" onclick="event.stopPropagation()">
