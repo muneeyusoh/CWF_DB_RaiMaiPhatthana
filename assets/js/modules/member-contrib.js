@@ -1,7 +1,7 @@
 // =========================================================
 // 💸 member-contrib.js: ควบคุมหน้าสมทบเงิน (contribution.html)
 // =========================================================
-const LIFF_ID_CONTRIB = "2011183541-lPBacDBx";
+const LIFF_ID_CONTRIB = "2011183541-zDAQXVLM";
 let annualFee = 365;
 
 document.addEventListener("DOMContentLoaded", async () => {
