@@ -1,147 +1,140 @@
 // =========================================================
-// 💸 member-contrib.js: ควบคุมหน้าสมทบเงิน (contribution.html)
+// 🏥 member-claim.js: ควบคุมหน้าขอรับสวัสดิการ (claim.html)
 // =========================================================
-const LIFF_ID_CONTRIB = "2011183541-zDAQXVLM";
-let annualFee = 365;
+const LIFF_ID_CLAIM = "2011183541-zDAQXVLM"; // 🌟 อัปเดตใช้ ID เดียวกันกับหน้าหลัก
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-      await liff.init({ liffId: LIFF_ID_CONTRIB }); 
+      await liff.init({ liffId: LIFF_ID_CLAIM }); 
+      
       if(liff.isLoggedIn()) {
         const profile = await liff.getProfile(); 
         document.getElementById('uid').value = profile.userId;
         
+        // 🌟 ดึงข้อมูลส่วนกลาง (Settings) แทนการดึง Collection: rules
         const sysSnap = await db.collection("settings").doc("master").get();
-        if(sysSnap.exists) {
-            annualFee = sysSnap.data().annualFee || 365;
-            document.getElementById('annualFeeText').innerText = annualFee.toLocaleString();
-        }
+        let fundSettings = {};
+        if(sysSnap.exists) { fundSettings = sysSnap.data(); }
 
-        const docRef = db.collection("members").doc(profile.userId);
-        const docSnap = await docRef.get();
+        const docSnap = await db.collection("members").doc(profile.userId).get();
         
-        if (docSnap.exists) {
-            const d = docSnap.data();
-            document.getElementById('fullName').value = d.fullName;
-            document.getElementById('memberCenter').value = d.center || "ไม่ระบุศูนย์";
-            
-            const total = d.totalContribution || 0;
-            document.getElementById('dashTotalContrib').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2});
-            
-            let debt = (d.outstandingBalance !== undefined) ? d.outstandingBalance : (annualFee - total);
-            if (debt < 0) debt = 0;
-            
-            document.getElementById('debtText').innerText = debt.toLocaleString('en-US', {minimumFractionDigits: 2});
-            
-            let percent = (total / annualFee) * 100;
-            if (percent > 100) percent = 100;
-            document.getElementById('progressBar').style.width = percent + "%";
-            
-            if (debt > 0) {
-                document.getElementById('statusBadge').innerText = "ค้างชำระ";
-                document.getElementById('statusBadge').classList.replace('text-success', 'text-warning');
-            }
+        if(docSnap.exists) {
+          document.getElementById('fullName').value = docSnap.data().fullName; 
+          
+          let listHtml = "";
+          const rules = fundSettings.welfareRules || []; // ดึงจากส่วนกลาง
+          
+          rules.forEach(r => {
+             // หายอดเงินสูงสุดจากเงื่อนไขในระเบียบ
+             let maxAmt = 0;
+             if (r.conditions && Array.isArray(r.conditions)) {
+                 let maxCond = r.conditions.find(c => c.type === "จ่ายสูงสุดต่อครั้ง");
+                 if (maxCond) maxAmt = parseFloat(maxCond.value);
+             }
 
-            const adminSnap = await db.collection("admins").where("status", "==", "ใช้งาน").get();
-            const select = document.getElementById('committeeSelect');
-            select.innerHTML = '<option value="" disabled selected>-- เลือกกรรมการผู้รับเงิน --</option>';
-            
-            if(d.responsibleAdmin && d.responsibleAdmin !== "ไม่มีผู้ดูแล") {
-                select.innerHTML += `<option value="${d.responsibleAdmin}">⭐ ${d.responsibleAdmin} (กรรมการประจำสาย)</option>`;
-            }
-            adminSnap.forEach(a => { 
-                if(a.data().name !== d.responsibleAdmin) {
-                    select.innerHTML += `<option value="${a.data().name}">${a.data().name}</option>`; 
-                }
-            });
+             listHtml += `<div class="welfare-card eligible" onclick="openForm('${r.name}', ${maxAmt})">
+                <div>
+                    <h6 class="mb-1 fw-bold text-dark">${r.name}</h6>
+                    ${maxAmt > 0 ? `<small class="text-primary fw-bold bg-primary bg-opacity-10 px-2 py-1 rounded-pill">สูงสุด ${maxAmt.toLocaleString()} ฿</small>` : `<small class="text-muted">โปรดส่งหลักฐานพิจารณา</small>`}
+                </div>
+                <div class="icon-box bg-light rounded-circle text-muted" style="width:30px; height:30px;"><i class="fa-solid fa-chevron-right"></i></div>
+             </div>`;
+          });
+          
+          // ถ้าแอดมินยังไม่ได้ตั้งระเบียบเลย ให้แสดงของพื้นฐานไปก่อน
+          if(!listHtml) {
+              listHtml = `
+              <div class="welfare-card eligible" onclick="openForm('สวัสดิการเจ็บป่วย (นอน รพ.)', 1000)">
+                  <div><h6 class="mb-1 fw-bold text-dark">สวัสดิการเจ็บป่วย</h6><small class="text-primary fw-bold bg-primary bg-opacity-10 px-2 py-1 rounded-pill">สูงสุด 1,000 ฿</small></div>
+                  <div class="icon-box bg-light rounded-circle text-muted" style="width:30px; height:30px;"><i class="fa-solid fa-chevron-right"></i></div>
+              </div>
+              <div class="welfare-card eligible" onclick="openForm('สวัสดิการเสียชีวิต', 10000)">
+                  <div><h6 class="mb-1 fw-bold text-dark">สวัสดิการเสียชีวิต</h6><small class="text-primary fw-bold bg-primary bg-opacity-10 px-2 py-1 rounded-pill">สูงสุด 10,000 ฿</small></div>
+                  <div class="icon-box bg-light rounded-circle text-muted" style="width:30px; height:30px;"><i class="fa-solid fa-chevron-right"></i></div>
+              </div>`;
+          }
 
-            document.getElementById('systemLoading').style.display = 'none';
+          document.getElementById('welfareList').innerHTML = listHtml;
+          document.getElementById('systemLoading').style.display = 'none';
         } else {
-            Swal.fire('ข้อผิดพลาด', 'ไม่พบข้อมูลสมาชิก กรุณาลงทะเบียนก่อน', 'error').then(()=> liff.closeWindow());
+            Swal.fire('ข้อผิดพลาด', 'ไม่พบประวัติสมาชิก กรุณาลงทะเบียนผ่านหน้าแรกก่อน', 'error').then(()=>liff.closeWindow());
         }
-      } else { liff.login(); }
+      } else { 
+        liff.login(); 
+      }
   } catch(e) {
       document.getElementById('systemLoading').innerHTML = `<h6 class="text-danger">Error: ${e.message}</h6>`;
   }
 });
 
-function togglePaymentSection() {
-  const pType = document.querySelector('input[name="paymentType"]:checked').value;
-  const lblT = document.getElementById('lblTransfer'); const lblC = document.getElementById('lblCash');
+function openForm(name, max) {
+  document.getElementById('welfareListSection').style.display='none'; 
+  document.getElementById('claimFormSection').style.display='block';
   
-  lblT.classList.remove('active'); lblC.classList.remove('active');
-  lblT.querySelector('.check-icon').classList.replace('text-primary', 'text-muted');
-  lblT.querySelector('.check-icon').classList.add('opacity-25');
-  lblC.querySelector('.check-icon').classList.replace('text-primary', 'text-muted');
-  lblC.querySelector('.check-icon').classList.add('opacity-25');
+  document.getElementById('titleWelfare').innerText = name; 
+  document.getElementById('welfareName').value = name;
+  document.getElementById('claimMaxBadge').innerHTML = max > 0 ? `<i class="fa-solid fa-circle-info"></i> เบิกได้สูงสุด ${parseFloat(max).toLocaleString()} บาท` : '';
+  
+  // ถ้าตั้งค่า max = 0 (ไม่ได้ระบุ) ก็ไม่ต้องไปล็อกเพดาน
+  if(max > 0) document.getElementById('claimAmount').max = max;
+  else document.getElementById('claimAmount').removeAttribute('max');
 
-  if (pType === 'transfer') { 
-      lblT.classList.add('active'); 
-      lblT.querySelector('.check-icon').classList.replace('text-muted', 'text-primary');
-      lblT.querySelector('.check-icon').classList.remove('opacity-25');
-      document.getElementById('transferSection').style.display='block'; 
-      document.getElementById('cashSection').style.display='none'; 
-      document.getElementById('committeeSelect').required = false;
-  } else { 
-      lblC.classList.add('active'); 
-      lblC.querySelector('.check-icon').classList.replace('text-muted', 'text-primary');
-      lblC.querySelector('.check-icon').classList.remove('opacity-25');
-      document.getElementById('transferSection').style.display='none'; 
-      document.getElementById('cashSection').style.display='block'; 
-      document.getElementById('committeeSelect').required = true;
+  if(name.includes('เจ็บป่วย') || name.includes('รพ') || name.includes('รักษา')) {
+      document.getElementById('sicknessSection').style.display = 'block';
+      document.getElementById('diseaseCategory').required = true;
+      document.getElementById('hospitalName').required = true;
+  } else {
+      document.getElementById('sicknessSection').style.display = 'none';
+      document.getElementById('diseaseCategory').required = false;
+      document.getElementById('hospitalName').required = false;
   }
+  window.scrollTo(0,0);
+}
+
+function goBack() { 
+    document.getElementById('welfareListSection').style.display='block'; 
+    document.getElementById('claimFormSection').style.display='none'; 
 }
 
 function convertImg(input) { 
   const f = input.files[0]; if (!f) return;
+  document.getElementById('fileNameDisplay').innerHTML = `<span class="text-success fw-bold"><i class="fa-solid fa-check-circle"></i> เลือกไฟล์แล้ว: ${f.name}</span>`;
   const reader = new FileReader(); reader.onload = function(e) {
     const img = new Image(); img.onload = function() {
       const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-      const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width;
+      const MAX_WIDTH = 1000; const scaleSize = MAX_WIDTH / img.width;
       canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      document.getElementById('slipBase64').value = canvas.toDataURL('image/jpeg', 0.6); 
+      document.getElementById('docBase64').value = canvas.toDataURL('image/jpeg', 0.6);
     }; img.src = e.target.result;
   }; reader.readAsDataURL(f); 
 }
 
-async function submitContrib(e) {
+async function submitClaim(e) {
   e.preventDefault(); 
+  const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> กำลังส่งเอกสาร...';
   
   const formDataObj = Object.fromEntries(new FormData(e.target));
+  const d = new Date(); const dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+543}`;
   
-  if (formDataObj.paymentType === 'transfer' && !formDataObj.slipBase64) {
-      Swal.fire('แจ้งเตือน', 'กรุณาแนบรูปภาพสลิปโอนเงินครับ', 'warning');
-      return;
-  }
-
-  const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> กำลังส่งข้อมูล...';
-  
-  const d = new Date(); 
-  const txIdString = "TX" + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100).toString().padStart(2,'0');
-  
-  let noteText = "ทำรายการด้วยตนเองผ่านมือถือ";
-  if(formDataObj.paymentType === 'cash') noteText = `ฝากเงินสดผ่านกรรมการ: ${formDataObj.committeeName}`;
-
-  const txData = {
-      txId: txIdString,
+  const claimData = {
       uid: formDataObj.uid, 
       fullName: formDataObj.fullName, 
-      type: "สมทบเงินกองทุน", 
-      amount: parseFloat(formDataObj.amount),
-      paymentMethod: formDataObj.paymentType === 'transfer' ? "ธนาคาร" : "เงินสด", 
+      claimType: formDataObj.welfareName, 
+      claimAmount: parseFloat(formDataObj.claimAmount), 
+      evidenceUrl: formDataObj.docBase64 || null, 
+      disease: formDataObj.diseaseCategory || null, 
+      hospital: formDataObj.hospitalName || null,
       status: "รอตรวจสอบ", 
-      transactionDate: d.toISOString().split('T')[0], 
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      note: noteText,
-      evidenceUrl: formDataObj.slipBase64 || null 
+      dateStr: dateStr, 
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
-    await db.collection("transactions").doc(txIdString).set(txData);
-    Swal.fire({ title: 'ส่งข้อมูลสำเร็จ!', text: 'กรุณารอแอดมินตรวจสอบยอดเงิน', icon: 'success', confirmButtonColor: '#2563EB' }).then(()=>liff.closeWindow());
-  } catch (err) { 
-    btn.disabled = false; btn.innerHTML = 'ยืนยันทำรายการ'; 
-    Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+    await db.collection("claims").add(claimData);
+    Swal.fire({ title: 'ส่งเอกสารสำเร็จ', text: 'คณะกรรมการจะตรวจสอบเอกสารและแจ้งผลให้ทราบ', icon: 'success', confirmButtonColor: '#2563EB' }).then(()=>liff.closeWindow());
+  } catch(err) { 
+      btn.disabled = false; btn.innerHTML = 'ยืนยันส่งคำขอตรวจสอบ'; 
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งข้อมูล: ' + err.message, 'error');
   }
 }
