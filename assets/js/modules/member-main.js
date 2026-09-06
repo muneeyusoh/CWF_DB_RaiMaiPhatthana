@@ -3,17 +3,27 @@
 // ============================================================================
 
 // 📌 SECTION 1: ตัวแปรและการเริ่มต้นระบบ (Initialization)
-// (ลบตัวแปร const LIFF_ID ออกเพื่อป้องกันการชนกับ config)
+// 🌟 แก้ไข: ใช้ LIFF ID ที่ถูกต้องของคุณมุนี
+const LIFF_ID = "2011183541-zDAQXVLM";
 let unmaskedData = { NatId: '', Phone: '' };
 let isDataMasked = { natId: true, phone: true };
 let currentShareMode = 'news';
 
+// ฟังก์ชันผู้ช่วยสำหรับอัปเดตข้อความตอนโหลด
+function updateLoadingText(text) {
+    const loadingTxt = document.getElementById('systemLoadingText');
+    if (loadingTxt) loadingTxt.innerText = text;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    updateLoadingText("กำลังเชื่อมต่อฐานข้อมูล (1/3)...");
+    
     const sysSnap = await db.collection("settings").doc("master").get();
     if(sysSnap.exists) {
        fundSettings = sysSnap.data();
-       document.getElementById('headerFundName').innerText = fundSettings.fundName || "กองทุนสวัสดิการชุมชน";
+       const headerFundName = document.getElementById('headerFundName');
+       if(headerFundName) headerFundName.innerText = fundSettings.fundName || "กองทุนสวัสดิการชุมชน";
        
        const regCenter = document.getElementById('regCenterSelect');
        const regVillage = document.getElementById('regVillageSelect');
@@ -23,25 +33,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const regAdmin = document.getElementById('regResponsibleAdmin');
     if (regAdmin) {
-        // 🌟 แก้ไข: ดึงรายชื่อกรรมการจากส่วนกลางแทนการดึงจาก admins เพื่อไม่ให้ผิดกฎ Security Rules
         if (fundSettings.committee && fundSettings.committee.length > 0) {
             fundSettings.committee.forEach(com => { regAdmin.add(new Option(com.name, com.name)); });
         }
     }
 
-    // 🌟 แก้ไข: ใส่ LIFF ID ลงไปตรงๆ แทนการใช้ตัวแปรที่ซ้ำซ้อน
-    await liff.init({ liffId: "2011183541-9UDIqf8P" });
+    updateLoadingText("กำลังเชื่อมต่อระบบ LINE (2/3)...");
+    
+    // 🌟 แก้ไข: Initialize LIFF ด้วย ID ที่ถูกต้อง
+    await liff.init({ liffId: LIFF_ID });
+    
     const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('ref') && document.getElementById('refCode')) document.getElementById('refCode').value = urlParams.get('ref');
+    if(urlParams.get('ref') && document.getElementById('refCode')) {
+        document.getElementById('refCode').value = urlParams.get('ref');
+    }
 
+    updateLoadingText("กำลังตรวจสอบสถานะผู้ใช้ (3/3)...");
+    
     if (liff.isLoggedIn()) {
       const profile = await liff.getProfile();
       if(document.getElementById('uid')) document.getElementById('uid').value = profile.userId;
       await checkMemberOnCloud(profile.userId, profile.pictureUrl || "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg");
-    } else { liff.login(); }
+    } else { 
+      liff.login(); 
+    }
   } catch (err) { 
-      // ปรับรูปแบบ Error ให้แสดงได้แม้ UI จะเพี้ยน
-      document.getElementById('systemLoading').innerHTML = `<div class="text-danger text-center px-4" style="margin-top: 40vh;"><h6>System Error</h6><p class="small">${err.message}</p></div>`; 
+      document.getElementById('systemLoading').innerHTML = `<div class="text-danger text-center px-4" style="margin-top: 40vh;"><h6>System Error</h6><p class="small">${err.message}</p><button class="btn btn-sm btn-outline-danger mt-3" onclick="location.reload()">ลองใหม่</button></div>`; 
   }
 });
 
@@ -51,15 +68,15 @@ async function checkMemberOnCloud(uid, pictureUrl) {
     const docRef = db.collection("members").doc(uid);
     const docSnap = await docRef.get();
     
-    // โหลดข้อมูลเสร็จ สั่งซ่อน Loader
-    if (typeof showLoader === 'function') showLoader(false);
-    else document.getElementById('systemLoading').style.display = 'none';
+    const loader = document.getElementById('systemLoading');
+    if (loader) loader.style.display = 'none';
 
     if (docSnap.exists) {
       cachedUserData = docSnap.data();
       let finalPicUrl = pictureUrl || cachedUserData.pictureUrl || "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/person-circle.svg";
       if (pictureUrl && cachedUserData.pictureUrl !== pictureUrl) {
-          await docRef.update({ pictureUrl: pictureUrl }); cachedUserData.pictureUrl = pictureUrl;
+          await docRef.update({ pictureUrl: pictureUrl }); 
+          cachedUserData.pictureUrl = pictureUrl;
       }
       renderDashboardData(cachedUserData, finalPicUrl);
     } else { 
@@ -132,8 +149,9 @@ async function handleRegister(e) {
 async function requestAccountLink() {
     const natId = document.getElementById('linkNatId').value;
     if(natId.length !== 13) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลข ปชช. 13 หลัก', 'warning');
-    if (typeof showLoader === 'function') showLoader(true);
-    else document.getElementById('systemLoading').style.display = 'flex';
+    
+    const loader = document.getElementById('systemLoading');
+    if (loader) loader.style.display = 'flex';
     
     let userPic = "";
     if (liff.isLoggedIn()) { try { const profile = await liff.getProfile(); userPic = profile.pictureUrl || ""; } catch(err) {} }
@@ -144,13 +162,11 @@ async function requestAccountLink() {
             db.collection("members").doc(docId).update({ 
                 linkStatus: "pending", pendingLineUid: document.getElementById('uid').value, pictureUrl: userPic 
             }).then(() => { 
-                if (typeof showLoader === 'function') showLoader(false);
-                else document.getElementById('systemLoading').style.display = 'none';
+                if (loader) loader.style.display = 'none';
                 Swal.fire('ส่งคำขอสำเร็จ', 'กรุณารอคณะกรรมการตรวจสอบ', 'success'); 
             })
         } else { 
-          if (typeof showLoader === 'function') showLoader(false);
-          else document.getElementById('systemLoading').style.display = 'none';
+          if (loader) loader.style.display = 'none';
           Swal.fire('ไม่พบข้อมูล', 'ไม่พบเลข ปชช. นี้ในระบบ', 'error'); 
         }
     });
@@ -268,7 +284,7 @@ async function processDailyCheckIn() {
             fundSettings.globalPointPool -= actualGive; renderStreakUI(currentStreak, todayStr); checkMemberOnCloud(uid, d.pictureUrl);
             Swal.fire({ icon: 'success', title: alertTitle, text: `${alertMsg} (+${actualGive} แต้ม)`, confirmButtonColor: '#10B981' });
         }
-    } catch (error) { Swal.fire('Error', 'ประมวลผลล้มเหลว (หากคุณติดปัญหาเรื่องสิทธิ์ โปรดให้แอดมินอัปเดต Security Rules ส่วน Settings)', 'error'); }
+    } catch (error) { Swal.fire('Error', 'ประมวลผลล้มเหลว', 'error'); }
 }
 
 function renderStreakUI(streakCount, lastCheckInStr) {
@@ -413,8 +429,7 @@ function closeShareModal() { document.getElementById('shareModal').style.display
 
 async function executeShare(platform) {
     closeShareModal();
-    // ดึง LIFF ID จากตัวแปรตรงๆ เพราะเราลบ Global ไปแล้ว
-    const url = `https://liff.line.me/2011183541-9UDIqf8P` + (currentShareMode==='invite' ? `?ref=${cachedUserData.memberId}` : '');
+    const url = `https://liff.line.me/${LIFF_ID}` + (currentShareMode==='invite' ? `?ref=${cachedUserData.memberId}` : '');
     const text = currentShareMode==='invite' ? 'มาสมัครกองทุนสวัสดิการชุมชนกันเถอะ!' : 'ข่าวสารใหม่จากกองทุนสวัสดิการชุมชน';
     if(platform === 'line') window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + " " + url)}`);
     else if(platform === 'facebook') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
