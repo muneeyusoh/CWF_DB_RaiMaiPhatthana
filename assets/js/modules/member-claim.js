@@ -1,47 +1,32 @@
 // =========================================================
 // 🏥 member-claim.js: ควบคุมหน้าขอรับสวัสดิการ (claim.html)
 // =========================================================
-const LIFF_ID_CLAIM = "2011183541-zDAQXVLM"; // 🌟 อัปเดตใช้ ID เดียวกันกับหน้าหลัก
+const LIFF_ID_CLAIM = "2011183541-uvW1j86T"; 
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
       await liff.init({ liffId: LIFF_ID_CLAIM }); 
-      
       if(liff.isLoggedIn()) {
         const profile = await liff.getProfile(); 
         document.getElementById('uid').value = profile.userId;
-        
-        // 🌟 ดึงข้อมูลส่วนกลาง (Settings) แทนการดึง Collection: rules
-        const sysSnap = await db.collection("settings").doc("master").get();
-        let fundSettings = {};
-        if(sysSnap.exists) { fundSettings = sysSnap.data(); }
-
         const docSnap = await db.collection("members").doc(profile.userId).get();
         
         if(docSnap.exists) {
           document.getElementById('fullName').value = docSnap.data().fullName; 
           
+          const rulesSnap = await db.collection("rules").get();
           let listHtml = "";
-          const rules = fundSettings.welfareRules || []; // ดึงจากส่วนกลาง
-          
-          rules.forEach(r => {
-             // หายอดเงินสูงสุดจากเงื่อนไขในระเบียบ
-             let maxAmt = 0;
-             if (r.conditions && Array.isArray(r.conditions)) {
-                 let maxCond = r.conditions.find(c => c.type === "จ่ายสูงสุดต่อครั้ง");
-                 if (maxCond) maxAmt = parseFloat(maxCond.value);
-             }
-
-             listHtml += `<div class="welfare-card eligible" onclick="openForm('${r.name}', ${maxAmt})">
+          rulesSnap.forEach(r => {
+             const d = r.data();
+             listHtml += `<div class="welfare-card eligible" onclick="openForm('${d.name}', ${d.maxPerClaim})">
                 <div>
-                    <h6 class="mb-1 fw-bold text-dark">${r.name}</h6>
-                    ${maxAmt > 0 ? `<small class="text-primary fw-bold bg-primary bg-opacity-10 px-2 py-1 rounded-pill">สูงสุด ${maxAmt.toLocaleString()} ฿</small>` : `<small class="text-muted">โปรดส่งหลักฐานพิจารณา</small>`}
+                    <h6 class="mb-1 fw-bold text-dark">${d.name}</h6>
+                    <small class="text-primary fw-bold bg-primary bg-opacity-10 px-2 py-1 rounded-pill">สูงสุด ${parseFloat(d.maxPerClaim).toLocaleString()} ฿</small>
                 </div>
                 <div class="icon-box bg-light rounded-circle text-muted" style="width:30px; height:30px;"><i class="fa-solid fa-chevron-right"></i></div>
              </div>`;
           });
           
-          // ถ้าแอดมินยังไม่ได้ตั้งระเบียบเลย ให้แสดงของพื้นฐานไปก่อน
           if(!listHtml) {
               listHtml = `
               <div class="welfare-card eligible" onclick="openForm('สวัสดิการเจ็บป่วย (นอน รพ.)', 1000)">
@@ -53,15 +38,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                   <div class="icon-box bg-light rounded-circle text-muted" style="width:30px; height:30px;"><i class="fa-solid fa-chevron-right"></i></div>
               </div>`;
           }
-
           document.getElementById('welfareList').innerHTML = listHtml;
           document.getElementById('systemLoading').style.display = 'none';
         } else {
-            Swal.fire('ข้อผิดพลาด', 'ไม่พบประวัติสมาชิก กรุณาลงทะเบียนผ่านหน้าแรกก่อน', 'error').then(()=>liff.closeWindow());
+            Swal.fire('ข้อผิดพลาด', 'ไม่พบประวัติสมาชิก กรุณาลงทะเบียนก่อน', 'error').then(()=>liff.closeWindow());
         }
-      } else { 
-        liff.login(); 
-      }
+      } else { liff.login(); }
   } catch(e) {
       document.getElementById('systemLoading').innerHTML = `<h6 class="text-danger">Error: ${e.message}</h6>`;
   }
@@ -73,11 +55,8 @@ function openForm(name, max) {
   
   document.getElementById('titleWelfare').innerText = name; 
   document.getElementById('welfareName').value = name;
-  document.getElementById('claimMaxBadge').innerHTML = max > 0 ? `<i class="fa-solid fa-circle-info"></i> เบิกได้สูงสุด ${parseFloat(max).toLocaleString()} บาท` : '';
-  
-  // ถ้าตั้งค่า max = 0 (ไม่ได้ระบุ) ก็ไม่ต้องไปล็อกเพดาน
-  if(max > 0) document.getElementById('claimAmount').max = max;
-  else document.getElementById('claimAmount').removeAttribute('max');
+  document.getElementById('claimMaxBadge').innerHTML = `<i class="fa-solid fa-circle-info"></i> เบิกได้สูงสุด ${parseFloat(max).toLocaleString()} บาท`;
+  document.getElementById('claimAmount').max = max;
 
   if(name.includes('เจ็บป่วย') || name.includes('รพ') || name.includes('รักษา')) {
       document.getElementById('sicknessSection').style.display = 'block';
@@ -122,7 +101,7 @@ async function submitClaim(e) {
       fullName: formDataObj.fullName, 
       claimType: formDataObj.welfareName, 
       claimAmount: parseFloat(formDataObj.claimAmount), 
-      evidenceUrl: formDataObj.docBase64 || null, 
+      evidenceUrl: formDataObj.docBase64, 
       disease: formDataObj.diseaseCategory || null, 
       hospital: formDataObj.hospitalName || null,
       status: "รอตรวจสอบ", 
@@ -135,6 +114,6 @@ async function submitClaim(e) {
     Swal.fire({ title: 'ส่งเอกสารสำเร็จ', text: 'คณะกรรมการจะตรวจสอบเอกสารและแจ้งผลให้ทราบ', icon: 'success', confirmButtonColor: '#2563EB' }).then(()=>liff.closeWindow());
   } catch(err) { 
       btn.disabled = false; btn.innerHTML = 'ยืนยันส่งคำขอตรวจสอบ'; 
-      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งข้อมูล: ' + err.message, 'error');
+      Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งข้อมูล', 'error');
   }
 }
